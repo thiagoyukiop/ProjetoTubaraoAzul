@@ -112,7 +112,7 @@ shinyApp(
   server = function(input, output, session) {
     # Leitura dos dados
     dados_tubaroes <- reactive({
-      read.table("dados_brutos/dados_brutos.csv",
+      read.table("dados_brutos/dados_tubaroes_criados.csv",
                  header = TRUE, sep = ";", dec = ",")
     })
     
