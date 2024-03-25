@@ -24,24 +24,25 @@ shinyApp(
             width: 240px; /* Largura fixa para os títulos das abas */
             text-align: center; /* Centraliza o texto */
           }
-          /* Estilo para alterar a cor do texto do sidebar para preto */
-          #sidebar .sidebar-menu li a,
-          #sidebar .sidebar-menu li a:hover,
-          #sidebar .sidebar-menu label {
-            color: #000000 !important; /* Cor preta */
-          }
+          # /* Estilo para alterar a cor do texto do sidebar para preto */
+          # #sidebar .sidebar-menu li a,
+          # #sidebar .sidebar-menu li a:hover,
+          # #sidebar .sidebar-menu label {
+          #   color: #000000 !important; /* Cor preta */
+          # }
           .texto-accordion {
             display: inline-block;
-            margin: 10px auto;
+            # margin: 10px auto;
           }
-          .texto-accordion .accordion-title {
-            text-align: center; /* Centraliza o texto apenas nos títulos */
-          }
-          .graficos-accordion {
-            margin: 0 auto;
-          }
-        '))
-      ),
+          # .texto-accordion .accordion-title {
+          #   text-align: center; /* Centraliza o texto apenas nos títulos */
+          # }
+          # .graficos-accordion {
+          #   margin: 0 auto;
+          # }
+                        ')
+                   )
+        ),
       sidebarMenu(
         id = "sidebarMenu",
         sidebarLayout(
@@ -98,12 +99,7 @@ shinyApp(
             selected = c("Albacora bandolim","Albacora branca",
                          "Albacora laje", "Meca","Outros")
           )
-        )#,
-        # controlbarItem(
-        #   "Tema",
-        #   "Bem-Vindo ao Seletor de Tema",
-        #   skinSelector()
-        # )
+        )
       )
     ),
     title = "Teste ShinyDashboardPlus"
