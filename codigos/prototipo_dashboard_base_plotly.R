@@ -11,7 +11,7 @@ senha_admin <- "senha123"
 
 shinyApp(
   ui = dashboardPage(
-    skin = "blue",
+    skin = "blue-light",
     # Definições de layout
     header = dashboardHeader(title = "Projeto Tubarão Azul"),
     sidebar =  dashboardSidebar(
@@ -59,8 +59,8 @@ shinyApp(
                 ),
               tabPanel(
                 "Distribuição de comprimentos",
-                value = "tab2header
-                "),
+                value = "tab2header"
+                ),
               tabPanel(
                 "Desembarques",
                 value = "tab3header"
@@ -257,6 +257,7 @@ shinyApp(
             )
         )
       } else if(input$headerTab == "tab2header") {
+        # print("Entrou na tab2header")
         div(class = "graficos-accordion",
             accordion(
               id = "accordion2",
