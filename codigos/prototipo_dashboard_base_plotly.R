@@ -7,9 +7,11 @@ pacman::p_load(
   readtext, dplyr, ggplot2, ggrepel, scales, plotly
 )
 
+senha_admin <- "senha123"
+
 shinyApp(
   ui = dashboardPage(
-    skin = "blue-light",
+    skin = "blue",
     # Definições de layout
     header = dashboardHeader(title = "Projeto Tubarão Azul"),
     sidebar =  dashboardSidebar(
@@ -36,34 +38,72 @@ shinyApp(
           }
           .texto-accordion .accordion-title {
             text-align: center; /* Centraliza o texto apenas nos títulos */
+            width: 680px;
           }
-          .graficos-accordion {
-            margin: 0 auto;
-          }
+          # .graficos-accordion {
+          #   margin: 0 auto;
+          # }
         '))
       ),
       sidebarMenu(
         id = "sidebarMenu",
         sidebarLayout(
           sidebarPanel(
-            width = 250,class = "custom-sidebar",
+            width = 250,
+            class = "custom-sidebar",
             tabsetPanel(
               id = "headerTab",
-              tabPanel("Apresentação", value = "tab1header"),
-              tabPanel("Distribuição de comprimentos", value = "tab2header"),
-              tabPanel("Desembarques", value = "tab3header"),
-              tabPanel("Distribuição espacial das capturas", value = "tab4header")
-            ),
-            imageOutput("creditos_img")
+              tabPanel(
+                "Apresentação",
+                value = "tab1header"
+                ),
+              tabPanel(
+                "Distribuição de comprimentos",
+                value = "tab2header
+                "),
+              tabPanel(
+                "Desembarques",
+                value = "tab3header"
+                ),
+              tabPanel(
+                "Distribuição espacial das capturas",
+                value = "tab4header"
+                ),
+              tabPanel(
+                "Administrador",
+                value = "tab5header",
+                       fluidRow(
+                         column(
+                           width = 4,
+                           offset = 4,
+                           passwordInput(
+                            inputId = "senha",
+                             label = "Senha", 
+                             value = ""
+                             ),
+                           actionButton(
+                             inputId = "entrar",
+                             label = "Entrar"
+                             )
+                         ),
+                         uiOutput("mensagemSenha") # Mensagem dinâmica sobre a senha
+                         )
+                )
+              )
           ),
-          mainPanel()
+          mainPanel(imageOutput("creditos_img"))
         )
       )
     ),
     body = dashboardBody(
+      uiOutput("conteudoAdmin"),
+      dataTableOutput("tabela_tub"),
       uiOutput("tabset_ui"),
       fluidRow(
-        column(9, uiOutput("accordion_ui"))
+        column(
+          9,
+          uiOutput("accordion_ui")
+          )
       )
     ),
     controlbar = dashboardControlbar(
@@ -98,12 +138,7 @@ shinyApp(
             selected = c("Albacora bandolim","Albacora branca",
                          "Albacora laje", "Meca","Outros")
           )
-        )#,
-        # controlbarItem(
-        #   "Tema",
-        #   "Bem-Vindo ao Seletor de Tema",
-        #   skinSelector()
-        # )
+        )
       )
     ),
     title = "Teste ShinyDashboardPlus"
@@ -119,6 +154,71 @@ shinyApp(
     # Leitura dos arquivos PDF
     pdf_content1 <- readtext("dados_brutos/testepdf.pdf")
     pdf_content2 <- readtext("dados_brutos/leiame.pdf")
+    
+    conteudo_admin <- eventReactive(input$entrar,{
+      if (!is.null(input$entrar) && input$entrar > 0) {
+        if (input$senha == senha_admin) {
+          # Se a senha estiver correta, renderize o conteúdo desejado
+          fluidRow(
+            column(
+              width = 12,
+              h3("Conteúdo Confidencial do Administrador")
+            )
+          )
+        } else {
+          showModal(modalDialog(
+            title = "Erro",
+            "Senha incorreta. Tente novamente.",
+            easyClose = TRUE
+          ))
+          return(NULL)
+        }
+      }
+    })
+    
+    output$conteudoAdmin <- renderUI({
+      conteudo_admin()
+    })
+    
+    # tabela_reativa <- eventReactive(input$entrar, {
+    #   if (!is.null(input$senha) && input$senha == senha_admin) {
+    #     dadostub <- dados_tubaroes()
+    #     # dadostub <- subset(dadostub,
+    #     #                    Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2])
+    #     # if (input$sexo_escolhido == "Macho") {
+    #     #   dadostub <- subset(dadostub, Sexo == "M")
+    #     # } else if (input$sexo_escolhido == "Fêmea") {
+    #     #   dadostub <- subset(dadostub, Sexo == "F")
+    #     # }
+    #     return(dadostub)
+    #   } else {
+    #     return(NULL)
+    #   }
+    # })
+    # 
+    # output$tabela_tub <- renderDataTable({
+    #   tabela_reativa()
+    # })
+    
+    output$tabela_tub <- renderDataTable({
+
+      dadostub <- dados_tubaroes()
+
+      dadostub <- subset(dadostub,
+                         Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2])
+
+      if (input$sexo_escolhido == "Macho") {
+        dadostub <- subset(dadostub, Sexo == "M")
+      } else if (input$sexo_escolhido == "Fêmea") {
+        dadostub <- subset(dadostub, Sexo == "F")
+      }
+
+      if (!is.null(input$entrar) && input$entrar > 0) {
+        if (input$senha == senha_admin) {
+          dadostub
+        }
+      }
+    })
     
     # Geração dinâmica dos painéis de abas
     output$tabset_ui <- renderUI({
@@ -193,29 +293,31 @@ shinyApp(
         type = "histogram",
         histnorm = "percent",
         xbins = list(size = 5),
-        # hoverinfo = "text",
-        # text = ~paste(
-        #   "Intervalo: ", cut(Tamanho,
-        #                      breaks = seq(min(Tamanho),
-        #                                   max(Tamanho) + 5, by = 5),
-        #                      include.lowest = TRUE,
-        #                      right = FALSE),
-        #   ", ",
-        #   round(prop.table(table(cut(Tamanho,
-        #                              breaks = seq(min(Tamanho),
-        #                                           max(Tamanho) + 5, by = 5),
-        #                              include.lowest = TRUE,
-        #                              right = FALSE)
-        #   )
-        #   ) * 100,
-        #   2),
-        #   "%"
-        # ),
         marker = list(
+          color = "#3C8DBC",
           line = list(
             color = "black",
             width = 1
           )
+        ),
+        hoverinfo = "text",
+        hovertext = ~paste(
+          "Intervalo: ",
+          cut(Tamanho,
+              breaks = seq(min(Tamanho),
+                           max(Tamanho) + 5, by = 5),
+              include.lowest = TRUE,
+              right = FALSE),
+          ", ",
+          round(prop.table(table(cut(Tamanho,
+                                     breaks = seq(min(Tamanho),
+                                                  max(Tamanho) + 5, by = 5),
+                                     include.lowest = TRUE,
+                                     right = FALSE)
+                                 )
+                           ) * 100,
+                2),
+          "%"
         )
       ) %>% 
         layout(
@@ -229,6 +331,8 @@ shinyApp(
           )
         )
     })
+    
+
     
     # Renderização do gráfico de rosca
     output$graficoRosca <- renderPlotly({
