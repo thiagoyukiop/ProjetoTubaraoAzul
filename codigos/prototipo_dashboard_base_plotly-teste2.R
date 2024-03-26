@@ -11,9 +11,44 @@ senha_admin <- "senha123"
 
 shinyApp(
   ui = dashboardPage(
-    skin = "blue-light",
+    skin = "blue",
     # Definições de layout
-    header = dashboardHeader(title = "Projeto Tubarão Azul"),
+    header = dashboardHeader(
+      title = "Projeto Tubarão Azul",
+      dropdownMenu(type = "messages",
+                   messageItem(
+                     from = "Departamento de vendas",
+                     message = "As vendas estão estáveis este mês."
+                   ),
+                   messageItem(
+                     from = "Novo Usuário",
+                     message = "Como eu registro?",
+                     # icon = icon("question"),
+                     time = "13:45"
+                   ),
+                   messageItem(
+                     from = "Suporte",
+                     message = "O novo servidor está pronto.",
+                     # icon = icon("life-ring"),
+                     time = "2014-12-01"
+                   )
+      ),
+      dropdownMenu(type = "tasks", badgeStatus = "success",
+                   taskItem(value = 90, color = "green",
+                            "Documentação"
+                   ),
+                   taskItem(value = 17, color = "aqua",
+                            "Projeto X"
+                   ),
+                   taskItem(value = 75, color = "yellow",
+                            "Desenvolvimento do Servidor"
+                   ),
+                   taskItem(value = 80, color = "red",
+                            "Projeto em Geral"
+                   )
+      )
+      
+      ),
     sidebar =  dashboardSidebar(
       id = "sidebar",
       minified = FALSE,
@@ -26,15 +61,18 @@ shinyApp(
             width: 240px; /* Largura fixa para os títulos das abas */
             text-align: center; /* Centraliza o texto */
           }
-          /* Estilo para alterar a cor do texto do sidebar para preto */
-          #sidebar .sidebar-menu li a,
-          #sidebar .sidebar-menu li a:hover,
-          #sidebar .sidebar-menu label {
-            color: #000000 !important; /* Cor preta */
-          }
+          # /* Estilo para alterar a cor do texto do sidebar para preto */
+          # #sidebar .sidebar-menu li a,
+          # #sidebar .sidebar-menu li a:hover,
+          # #sidebar .sidebar-menu label {
+          #   color: #000000 !important; /* Cor preta */
+          # }
           .texto-accordion {
-            display: inline-block;
-            margin: 10px auto;
+            # display: inline-block;
+            # margin: auto auto;
+            # display: inline-block;
+            padding: 10px;
+            width: 1450px;
           }
           .texto-accordion .accordion-title {
             text-align: center; /* Centraliza o texto apenas nos títulos */
@@ -48,7 +86,10 @@ shinyApp(
       ),
       sidebarMenu(
         id = "sidebarMenu",
-        menuItem("Apresentação", tabName = "tab1header"),
+        menuItem("Apresentação",
+                 menuSubItem("Projeto",tabName = "tab1body"),
+                 menuSubItem("Leia-me",tabName = "tab2body")
+                 ),
         menuItem("Distribuição de comprimentos",tabName = "tab2header"),
         menuItem("Desembarques", tabName = "tab3header"),
         menuItem("Distribuição espacial das capturas", tabName = "tab4header"),
@@ -59,31 +100,41 @@ shinyApp(
     body = dashboardBody(
       tabItems(
         tabItem(
-          "tab1header",
-                tabsetPanel(
-                  id = "bodyTab",
-                  tabPanel("Projeto", value = "tab1body"),
-                  tabPanel("Leia-me", value = "tab2body")
-                ),
-                column(
-                  9,
-                  uiOutput("accordiontxt_ui")
-                )
+          "tab1body",
+          div(class = "texto-accordion",
+            box(
+              solidHeader = T,
+              title = "Projeto",
+              status = "primary",
+              uiOutput("textOut1")
+            )
+          )
+        ),
+        tabItem(
+          "tab2body",
+          div(class = "texto-accordion",
+              box(
+                solidHeader = T,
+                title = "Leia-me",
+                status = "primary",
+                uiOutput("textOut2")
+              )
+          )
         ),
         tabItem(
           "tab2header",
                 div(class = "graficos-accordion",
-                    accordion(
-                      id = "accordion2",
-                      accordionItem(
-                        title = "Visualização dos Dados",
-                        status = "primary",
-                        collapsed = FALSE,
-                        fluidRow(
-                          column(6, plotlyOutput("graficoBarra")),
-                          column(6, plotlyOutput("graficoRosca"))
-                        )
-                      )
+                    box(
+                      solidHeader = T,
+                      title = "Histograma",
+                      status = "primary",
+                      plotlyOutput("graficoBarra")
+                    ),
+                    box(
+                      solidHeader = F,
+                      title = "Gráfico de Rosca",
+                      status = "primary",
+                      plotlyOutput("graficoRosca")
                     )
                 )
         ),
@@ -161,9 +212,7 @@ shinyApp(
         })
         
         output$tabela_tub <- renderDataTable({
-          
           dadostub <- dados_tubaroes()
-          
           dadostub <- subset(dadostub,
                              Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2])
           
@@ -193,7 +242,6 @@ shinyApp(
       conteudo_admin()
     })
     
-    
     # Leitura dos dados
     dados_tubaroes <- reactive({
       read.table("dados_brutos/dados_tubaroes_criados.csv",
@@ -206,13 +254,11 @@ shinyApp(
     
     # Geração dinâmica dos painéis de abas
     output$tabset_ui <- renderUI({
-      # if(input$headerTab == "tab1header") {
         tabsetPanel(
           id = "bodyTab",
           tabPanel("Projeto", value = "tab1body"),
           tabPanel("Leia-me", value = "tab2body")
         )
-      # }
     })
     
     # Renderização da imagem
@@ -221,25 +267,6 @@ shinyApp(
            contentType = "image/png",
            alt = "Créditos")  # Texto alternativo para acessibilidade
     }, deleteFile = FALSE)
-    
-    output$accordiontxt_ui <- renderUI({
-      div(class = "texto-accordion",
-          accordion(
-            id = "accordion1",
-            accordionItem(
-              title = "Visualização de Texto",
-              status = "primary",
-              collapsed = FALSE,
-              if(input$bodyTab == "tab1body") {
-                uiOutput("textOut1")
-              } else {
-                uiOutput("textOut2")
-              }
-            )
-          )
-      )
-    })
-    
     # Renderização do gráfico de barras
     output$graficoBarra <- renderPlotly({
       dadostub <- dados_tubaroes()
@@ -280,9 +307,9 @@ shinyApp(
                                                   max(Tamanho) + 5, by = 5),
                                      include.lowest = TRUE,
                                      right = FALSE)
-          )
-          ) * 100,
-          2),
+                                 )
+                           ) * 100,
+                2),
           "%"
         )
       ) %>% 
@@ -298,12 +325,9 @@ shinyApp(
         )
     })
     
-    
-    
     # Renderização do gráfico de rosca
     output$graficoRosca <- renderPlotly({
       dadostub <- dados_tubaroes()
-      
       dadostub <- subset(
         dadostub,
         Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2]
@@ -325,18 +349,12 @@ shinyApp(
     
     # Renderização do texto da aba 1
     output$textOut1 <- renderUI({
-      # if(input$headerTab == "tab1header" && input$bodyTab == "tab1body") {
-      if(input$bodyTab == "tab1body"){
         HTML(paste0("<pre>", pdf_content1$text, "</pre>"))
-      }
     })
     
     # Renderização do texto da aba 2
     output$textOut2 <- renderUI({
-      # if(input$headerTab == "tab1header" && input$bodyTab == "tab2body") {
-      if(input$bodyTab == "tab2body"){
         HTML(paste0("<pre>", pdf_content2$text, "</pre>"))
-      }
     })
   }
 )
