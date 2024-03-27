@@ -3,7 +3,7 @@ if (!require("pacman")) {
   install.packages("pacman")
 }
 pacman::p_load(
-  shiny, shinydashboard, shinydashboardPlus, shinythemes,
+  shiny, shinydashboard, shinydashboardPlus, htmltools,
   readtext, dplyr, ggplot2, ggrepel, scales, plotly
 )
 
@@ -14,44 +14,50 @@ shinyApp(
     skin = "blue",
     # Definições de layout
     header = dashboardHeader(
-      title = "Projeto Tubarão Azul",
+      title = tags$a(href = "https://lrpdc.shinyapps.io/proj_tubarao_azul/",
+                     "Projeto Tubarão Azul", class = "logo"),
+      # title = "Projeto Tubarão Azul",
+      controlbarIcon = icon("sliders"),
       dropdownMenu(type = "messages",
                    messageItem(
-                     from = "Departamento de vendas",
-                     message = "As vendas estão estáveis este mês."
+                     from = "Embarcação 1",
+                     message = "Nova embarcação ocorrerá dia 20/03.",
+                     time = "08:45 - 14/03/2023", 
+                     href = "https://lrpdc.shinyapps.io/proj_tubarao_azul/",
+                     icon = icon("ship")
                    ),
                    messageItem(
-                     from = "Novo Usuário",
+                     from = "Embarcação 2",
                      message = "Como eu registro?",
-                     # icon = icon("question"),
+                     icon = icon("ferry"),
                      time = "13:45"
                    ),
                    messageItem(
-                     from = "Suporte",
+                     from = "Embarcação 3",
                      message = "O novo servidor está pronto.",
-                     # icon = icon("life-ring"),
+                     icon = icon("fish"),
                      time = "2014-12-01"
                    )
-      ),
-      dropdownMenu(type = "tasks", badgeStatus = "success",
-                   taskItem(value = 90, color = "green",
-                            "Documentação"
-                   ),
-                   taskItem(value = 17, color = "aqua",
-                            "Projeto X"
-                   ),
-                   taskItem(value = 75, color = "yellow",
-                            "Desenvolvimento do Servidor"
-                   ),
-                   taskItem(value = 80, color = "red",
-                            "Projeto em Geral"
-                   )
-      )
+      )#,
+      # dropdownMenu(type = "tasks", badgeStatus = "success",
+      #              taskItem(value = 90, color = "green",
+      #                       "Documentação"
+      #              ),
+      #              taskItem(value = 17, color = "aqua",
+      #                       "Projeto X"
+      #              ),
+      #              taskItem(value = 75, color = "yellow",
+      #                       "Desenvolvimento do Servidor"
+      #              ),
+      #              taskItem(value = 80, color = "red",
+      #                       "Projeto em Geral"
+      #              )
+      # )
       
       ),
     sidebar =  dashboardSidebar(
       id = "sidebar",
-      minified = FALSE,
+      minified = T,
       collapsed = FALSE,
       width = 250,
       tags$head(
@@ -68,11 +74,10 @@ shinyApp(
           #   color: #000000 !important; /* Cor preta */
           # }
           .texto-accordion {
-            # display: inline-block;
+            display: inline-block;
             # margin: auto auto;
-            # display: inline-block;
             padding: 10px;
-            width: 1450px;
+            # width: 1450px;
           }
           .texto-accordion .accordion-title {
             text-align: center; /* Centraliza o texto apenas nos títulos */
@@ -87,39 +92,95 @@ shinyApp(
       sidebarMenu(
         id = "sidebarMenu",
         menuItem("Apresentação",
-                 menuSubItem("Projeto",tabName = "tab1body"),
-                 menuSubItem("Leia-me",tabName = "tab2body")
+                 icon = icon("house"),
+                 menuSubItem(
+                   "Projeto",
+                   tabName = "tab1body",
+                   icon = icon("r-project")
+                   ),
+                 menuSubItem(
+                   "Leia-me",
+                   tabName = "tab2body",
+                   icon = icon("readme")
+                   )
                  ),
-        menuItem("Distribuição de comprimentos",tabName = "tab2header"),
-        menuItem("Desembarques", tabName = "tab3header"),
-        menuItem("Distribuição espacial das capturas", tabName = "tab4header"),
-        menuItem("Admin", tabName = "tab5header"),
-        mainPanel(imageOutput("creditos_img"))
+        menuItem(
+          "Distribuição de comprimentos",
+          tabName = "tab2header",
+          icon = icon("chart-simple")
+          ),
+        menuItem(
+          "Desembarques",
+          tabName = "tab3header",
+          icon = icon("chart-area")
+          ),
+        menuItem(
+          "Distribuição espacial das capturas",
+          tabName = "tab4header",
+          icon = icon("earth-americas")
+          ),
+        menuItem(
+          "Admin",
+          tabName = "tab5header",
+          icon = icon("user-tie")
+          # icon = icon("user-shield")
+          ),
+        imageOutput("creditos_img")
       )
     ),
     body = dashboardBody(
+      tags$head(
+        tags$style(HTML('
+        /* Mantém a cor padrão do título */
+        .logo {
+          color: #555;
+        }
+      '))
+      ),
       tabItems(
         tabItem(
           "tab1body",
           div(class = "texto-accordion",
-            box(
-              solidHeader = T,
-              title = "Projeto",
-              status = "primary",
-              uiOutput("textOut1")
-            )
+              accordion(
+                id = "accordion1",
+                accordionItem(
+                  title = "Visualização de Texto",
+                  status = "primary",
+                  collapsed = FALSE,
+                  uiOutput("textOut1")
+                )
+              )
           )
+          # div(class = "texto-accordion",
+          #   box(
+          #     solidHeader = T,
+          #     title = "Projeto",
+          #     status = "primary",
+          #     uiOutput("textOut1")
+          #   )
+          # )
         ),
         tabItem(
           "tab2body",
           div(class = "texto-accordion",
-              box(
-                solidHeader = T,
-                title = "Leia-me",
-                status = "primary",
-                uiOutput("textOut2")
+              accordion(
+                id = "accordion2",
+                accordionItem(
+                  title = "Visualização de Texto",
+                  status = "primary",
+                  collapsed = FALSE,
+                  uiOutput("textOut2")
+                )
               )
           )
+          # div(class = "texto-accordion",
+          #     box(
+          #       solidHeader = T,
+          #       title = "Leia-me",
+          #       status = "primary",
+          #       uiOutput("textOut2")
+          #     )
+          # )
         ),
         tabItem(
           "tab2header",
@@ -131,7 +192,7 @@ shinyApp(
                       plotlyOutput("graficoBarra")
                     ),
                     box(
-                      solidHeader = F,
+                      solidHeader = T,
                       title = "Gráfico de Rosca",
                       status = "primary",
                       plotlyOutput("graficoRosca")
@@ -142,24 +203,39 @@ shinyApp(
         tabItem("tab4header"),
         tabItem(
           "tab5header",
-                value = "tab5header",
-                fluidRow(
-                  column(
-                    width = 4,
-                    offset = 4,
-                    passwordInput(
-                      inputId = "senha",
-                      label = "Senha", 
-                      value = ""
-                    ),
-                    actionButton(
-                      inputId = "entrar",
-                      label = "Entrar"
-                    ),
-                    uiOutput("tabelaAdmin")
-                  ),
-                  uiOutput("mensagemSenha") # Mensagem dinâmica sobre a senha
-                  )
+          value = "tab5header",
+          fluidRow(
+            column(
+              width = 4,
+              offset = 4,
+              passwordInput(
+                inputId = "senha",
+                label = "Senha",
+                value = ""
+              ),
+              actionButton(
+                inputId = "entrar",
+                label = "Entrar"
+              )
+            )
+          ),
+          tags$head(
+            tags$style(HTML("
+            
+                      .dataTables_wrapper {
+                        height: 100vh !important;
+                        width: 80vw !important;
+                        padding: 10px;
+                      }
+                    "))
+          ),
+          fluidRow(
+            column(
+              width = 12,
+              uiOutput("tabelaAdmin")
+            )
+          ),
+          uiOutput("mensagemSenha") # Mensagem dinâmica sobre a senha
                 )
         )
     ),
@@ -194,7 +270,8 @@ shinyApp(
               "Meca", "Outros"),
             selected = c("Albacora bandolim","Albacora branca",
                          "Albacora laje", "Meca","Outros")
-          )
+          ),
+          actionButton("reset","Reiniciar Valores",icon = icon("repeat"))
         )
       )
     ),
@@ -202,6 +279,18 @@ shinyApp(
   ),
   
   server = function(input, output, session) {
+    
+    observeEvent(input$reset, {
+      updateSliderInput(session, "intervalo_anos", value = c(2018, 2023))
+      updateRadioButtons(session, "sexo_escolhido", selected = "Todos")
+      updateCheckboxGroupInput(session, "species", 
+                               selected = c("Albacora bandolim","Albacora branca",
+                                            "Albacora laje", "Meca","Outros"))
+    })
+    
+    # observeEvent(input$entrar, {
+    #   
+    # })
     
     conteudo_admin <- reactiveVal(NULL)
     
@@ -213,8 +302,9 @@ shinyApp(
         
         output$tabela_tub <- renderDataTable({
           dadostub <- dados_tubaroes()
-          dadostub <- subset(dadostub,
-                             Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2])
+          dadostub <- subset(
+            dadostub,
+            Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2])
           
           if (input$sexo_escolhido == "Macho") {
             dadostub <- subset(dadostub, Sexo == "M")
@@ -227,7 +317,7 @@ shinyApp(
               dadostub
             }
           }
-        })
+        },options = list( paging = T, searching = FALSE))
       } else {
         showModal(modalDialog(
           title = "Erro de login",
