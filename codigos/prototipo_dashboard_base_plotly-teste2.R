@@ -12,48 +12,24 @@ senha_admin <- "senha123"
 shinyApp(
   ui = dashboardPage(
     skin = "blue",
-    # Definições de layout
     header = dashboardHeader(
       title = tags$a(href = "https://lrpdc.shinyapps.io/proj_tubarao_azul/",
                      "Projeto Tubarão Azul", class = "logo"),
       # title = "Projeto Tubarão Azul",
       controlbarIcon = icon("sliders"),
-      dropdownMenu(type = "messages",
-                   messageItem(
-                     from = "Embarcação 1",
-                     message = "Nova embarcação ocorrerá dia 20/03.",
-                     time = "08:45 - 14/03/2023", 
-                     href = "https://lrpdc.shinyapps.io/proj_tubarao_azul/",
-                     icon = icon("ship")
-                   ),
-                   messageItem(
-                     from = "Embarcação 2",
-                     message = "Como eu registro?",
-                     icon = icon("ferry"),
-                     time = "13:45"
-                   ),
-                   messageItem(
-                     from = "Embarcação 3",
-                     message = "O novo servidor está pronto.",
-                     icon = icon("fish"),
-                     time = "2014-12-01"
-                   )
-      )#,
-      # dropdownMenu(type = "tasks", badgeStatus = "success",
-      #              taskItem(value = 90, color = "green",
-      #                       "Documentação"
-      #              ),
-      #              taskItem(value = 17, color = "aqua",
-      #                       "Projeto X"
-      #              ),
-      #              taskItem(value = 75, color = "yellow",
-      #                       "Desenvolvimento do Servidor"
-      #              ),
-      #              taskItem(value = 80, color = "red",
-      #                       "Projeto em Geral"
-      #              )
-      # )
-      
+      dropdownMenu(
+        type = "notifications",
+        icon = icon("bell"),
+        notificationItem(
+          text = "Nova embarcação ocorrerá dia 20/03.",
+          href = "https://lrpdc.shinyapps.io/proj_tubarao_azul/",
+          icon = icon("ship")
+          ),
+        notificationItem(
+          text = "Nova embarcação ocorrerá dia 17/04.",
+          icon = icon("ferry"),
+          )
+        )
       ),
     sidebar =  dashboardSidebar(
       id = "sidebar",
@@ -151,14 +127,6 @@ shinyApp(
                 )
               )
           )
-          # div(class = "texto-accordion",
-          #   box(
-          #     solidHeader = T,
-          #     title = "Projeto",
-          #     status = "primary",
-          #     uiOutput("textOut1")
-          #   )
-          # )
         ),
         tabItem(
           "tab2body",
@@ -173,14 +141,6 @@ shinyApp(
                 )
               )
           )
-          # div(class = "texto-accordion",
-          #     box(
-          #       solidHeader = T,
-          #       title = "Leia-me",
-          #       status = "primary",
-          #       uiOutput("textOut2")
-          #     )
-          # )
         ),
         tabItem(
           "tab2header",
@@ -208,15 +168,9 @@ shinyApp(
             column(
               width = 4,
               offset = 4,
-              passwordInput(
-                inputId = "senha",
-                label = "Senha",
-                value = ""
-              ),
-              actionButton(
-                inputId = "entrar",
-                label = "Entrar"
-              )
+              uiOutput("senhaAdm"),
+              uiOutput("entrarAdm")
+              
             )
           ),
           tags$head(
@@ -232,13 +186,12 @@ shinyApp(
           fluidRow(
             column(
               width = 12,
-              uiOutput("tabelaAdmin")
+              uiOutput("tabelaAdm")
+              )
             )
-          ),
-          uiOutput("mensagemSenha") # Mensagem dinâmica sobre a senha
-                )
+          )
         )
-    ),
+      ),
     controlbar = dashboardControlbar(
       collapsed = F,
       id = "controlbar",
@@ -274,62 +227,88 @@ shinyApp(
           actionButton("reset","Reiniciar Valores",icon = icon("repeat"))
         )
       )
-    ),
-    title = "Teste ShinyDashboardPlus"
+    )
   ),
   
   server = function(input, output, session) {
     
+    conteudo_senha_adm({
+      output$senhaOutput <- renderUI({
+        passwordInput(
+          inputId = "senha",
+          label = "Senha",
+          value = ""
+        )
+      })
+    }) 
+    
+    conteudo_entrar_adm({
+      output$entrarOutput <- renderUI({
+        actionButton(
+          inputId = "entrar",
+          label = "Entrar"
+        )
+      })
+    })
+    
     observeEvent(input$reset, {
       updateSliderInput(session, "intervalo_anos", value = c(2018, 2023))
       updateRadioButtons(session, "sexo_escolhido", selected = "Todos")
-      updateCheckboxGroupInput(session, "species", 
-                               selected = c("Albacora bandolim","Albacora branca",
-                                            "Albacora laje", "Meca","Outros"))
+      updateCheckboxGroupInput(
+        session, 
+        "species",
+        selected = c("Albacora bandolim","Albacora branca","Albacora laje",
+                     "Meca","Outros")
+        )
     })
     
-    # observeEvent(input$entrar, {
-    #   
-    # })
-    
-    conteudo_admin <- reactiveVal(NULL)
-    
     observeEvent(input$entrar, {
-      if (input$senha == senha_correta) {
-        conteudo_admin({
+      if (input$senha == senha_admin) {
+        conteudo_tabela_adm({
           dataTableOutput("tabela_tub")
         })
-        
+        conteudo_senha_adm(NULL)
+        conteudo_entrar_adm(NULL)
         output$tabela_tub <- renderDataTable({
           dadostub <- dados_tubaroes()
           dadostub <- subset(
             dadostub,
             Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2])
-          
+
           if (input$sexo_escolhido == "Macho") {
             dadostub <- subset(dadostub, Sexo == "M")
           } else if (input$sexo_escolhido == "Fêmea") {
             dadostub <- subset(dadostub, Sexo == "F")
           }
-          
+
           if (!is.null(input$entrar) && input$entrar > 0) {
             if (input$senha == senha_admin) {
               dadostub
             }
           }
         },options = list( paging = T, searching = FALSE))
-      } else {
+      } else{
         showModal(modalDialog(
           title = "Erro de login",
           "Senha incorreta. Tente novamente.",
           easyClose = TRUE,
-        ))
-        conteudo_admin(NULL)
+          ))
+        conteudo_tabela_adm(NULL)
       }
     })
+      
+    conteudo_tabela_adm <- reactiveVal(NULL)
     
-    output$tabelaAdmin <- renderUI({
-      conteudo_admin()
+    output$senhaAdm <- renderUI({
+      conteudo_senha_adm()
+    })
+    
+    output$entrarAdm <- renderUI({
+      conteudo_entrar_adm()
+    })
+    
+    output$tabelaAdm <- renderUI({
+      conteudo_tabela_adm()
     })
     
     # Leitura dos dados
@@ -353,7 +332,7 @@ shinyApp(
     
     # Renderização da imagem
     output$creditos_img <- renderImage({
-      list(src = "dados_brutos/ImagemTeste.png",  # Substitua pelo caminho da sua imagem PNG
+      list(src = "dados_brutos/ImagemTeste.png", 
            contentType = "image/png",
            alt = "Créditos")  # Texto alternativo para acessibilidade
     }, deleteFile = FALSE)
@@ -361,7 +340,9 @@ shinyApp(
     output$graficoBarra <- renderPlotly({
       dadostub <- dados_tubaroes()
       
-      dadostub <- subset(dadostub, Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2])
+      dadostub <- subset(
+        dadostub,
+        Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2])
       
       # Filtra os dados com base na escolha do sexo
       if (input$sexo_escolhido == "Macho") {
@@ -426,10 +407,10 @@ shinyApp(
       gender <- dadostub %>%
         count(Sexo)
       
-      gender_list <- as.list(gender) # Convertendo o vetor nomeado em uma lista
+      # gender_list <- as.list(gender)
       
       plot_ly(
-        data = gender, # Usando a lista nomeada como entrada
+        data = gender, 
         labels = ~Sexo,
         values = ~n,
         type = "pie",
