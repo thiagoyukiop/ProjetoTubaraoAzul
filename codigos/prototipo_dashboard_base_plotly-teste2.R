@@ -7,6 +7,20 @@ pacman::p_load(
   readtext, dplyr, ggplot2, ggrepel, scales, plotly
 )
 
+# separar_data <- function(dados) {
+#   dados <- mutate(dados,
+#                   Ano = year(as.Date(Data)),
+#                   Mes = month(as.Date(Data)),
+#                   Dia = day(as.Date(Data)))
+#   return(dados)
+# }
+
+capturaMediaMes <- function(dados) {
+  dados$Mes <- format(dados$Data, "%Y-%m")
+  media_por_mes <- dados[, .(Captura_Media = mean(Tonelada)), by = Mes]
+  return(media_por_mes)
+}
+
 senha_admin <- "senha123"
 
 shinyApp(
@@ -61,7 +75,8 @@ shinyApp(
           }
           .graficos-accordion {
             margin: 0 auto;
-            width: 80%;
+            # width: 80%;
+            width: 100%;
           }
         '))
       ),
@@ -144,22 +159,51 @@ shinyApp(
         ),
         tabItem(
           "tab2header",
-                div(class = "graficos-accordion",
-                    box(
-                      solidHeader = T,
-                      title = "Histograma",
-                      status = "primary",
-                      plotlyOutput("graficoBarra")
-                    ),
-                    box(
-                      solidHeader = T,
-                      title = "Gráfico de Rosca",
-                      status = "primary",
-                      plotlyOutput("graficoRosca")
-                    )
+          div(class = "graficos-accordion",
+              box(
+                solidHeader = T,
+                title = "Histograma",
+                status = "primary",
+                plotlyOutput("graficoBarra")
+                ),
+              box(
+                solidHeader = T,
+                title = "Gráfico de Rosca",
+                status = "primary",
+                plotlyOutput("graficoRosca")
                 )
-        ),
-        tabItem("tab3header"),
+              )
+          ),
+        tabItem(
+          "tab3header",
+          div(
+            class = "graficos-accordion",
+            fluidRow(
+              box(
+                solidHeader = T,
+                title = "Captura Média por Viagem",
+                status = "primary",
+                plotlyOutput("graficoCaptura")
+              )
+            ),
+            fluidRow(
+              box(
+                solidHeader = T,
+                title = "Desembarque Total (ton)",
+                status = "primary"#,
+                # plotlyOutput("graficoDesembarque")
+              )
+            ),
+            fluidRow(
+              box(
+                solidHeader = T,
+                title = "Composição de espécies",
+                status = "primary"#,
+                # plotlyOutput("graficoEspecies")
+                )
+              )
+            )
+          ),
         tabItem("tab4header"),
         tabItem(
           "tab5header",
@@ -193,12 +237,15 @@ shinyApp(
         )
       ),
     controlbar = dashboardControlbar(
+      overlay = F,
       collapsed = F,
+      skin = "dark",
       id = "controlbar",
       controlbarMenu(
         id = "controlbarMenu",
         controlbarItem(
           "Opções",
+          icon = icon("gear"),
           sliderInput(
             "intervalo_anos",
             "Intervalo de Anos:",
@@ -231,6 +278,94 @@ shinyApp(
   ),
   
   server = function(input, output, session) {
+    
+    dados_capturas <- reactive({
+      read.table("dados_brutos/tabela_dados_ficticios.csv",
+                 header = TRUE, sep = ";", dec = ",")
+    })
+    
+    output$graficoCaptura <- renderPlotly({
+      dadosSeparados <- dados_capturas()
+      
+      
+      # dadosSeparados <- separar_data(dados_capturas_teste)
+      
+      dadosSeparados <- subset(
+        dadosSeparados,
+        Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2])
+      
+      # Filtra os dados com base na escolha do sexo
+      if (input$sexo_escolhido == "Macho") {
+        dadosSeparados <- subset(dadosSeparados, Sexo == "M")
+      } else if (input$sexo_escolhido == "Fêmea") {
+        dadosSeparados <- subset(dadosSeparados, Sexo == "F")
+      }
+      
+      CapturasMediasPorMes <- dadosSeparados %>%
+        group_by(Especie, Ano, Mes) %>%
+        summarise(Media_Toneladas = mean(Toneladas)) %>%
+        group_by(Especie, Mes) %>%
+        summarise(Media_Toneladas_por_Mes = mean(Media_Toneladas)) %>%
+        mutate(MediaTonMes = round(Media_Toneladas_por_Mes, 2)) %>%
+        select(-Media_Toneladas_por_Mes)
+      
+      nomes_meses <- c(
+        "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+        "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+      )
+      
+      CapturasMediasPorMes <- CapturasMediasPorMes %>% 
+        mutate(Mes_Nome = case_when(
+          Mes == 1 ~ "Janeiro",
+          Mes == 2 ~ "Fevereiro",
+          Mes == 3 ~ "Março",
+          Mes == 4 ~ "Abril",
+          Mes == 5 ~ "Maio",
+          Mes == 6 ~ "Junho",
+          Mes == 7 ~ "Julho",
+          Mes == 8 ~ "Agosto",
+          Mes == 9 ~ "Setembro",
+          Mes == 10 ~ "Outubro",
+          Mes == 11 ~ "Novembro",
+          Mes == 12 ~ "Dezembro",
+          TRUE ~ as.character(Mes)  # Se não for nenhum dos casos, mantém o número do mês
+        ))
+      cores <- c("Albacora bandolim" = "purple","Albacora branca" = "red",
+                 "Albacora laje" = "green", "Meca" = "yellow",
+                 "Outros" = "orange", "Tubarão Azul" = "blue")
+      plot_ly(
+        data = CapturasMediasPorMes,
+        x = ~Mes,
+        y = ~MediaTonMes,
+        type = 'scatter',
+        mode = 'lines+markers',
+        color = ~Especie,
+        colors = cores,
+        marker = list(size = 10),
+        hoverinfo = "text",
+        text = ~paste(
+          "Espécie: ", Especie, "<br>",
+          "Mês: ", Mes_Nome, "<br>",
+          "Média de Toneladas: ", MediaTonMes, "<br>"
+        )
+      ) %>% 
+        layout(
+          title = "Captura Média por Viagem por Mês",
+          xaxis = list(title = "Mês"),
+          yaxis = list(
+            title = "Captura Média (ton) por Viagem"#,
+            #range = c(0,5)
+            )
+        )
+      })
+    
+    output$graficoDesembarque <- renderPlotly({
+      
+    })
+    
+    output$graficoEspecies <- renderPlotly({
+      
+    })
     
     conteudo_senha_adm({
       output$senhaOutput <- renderUI({
