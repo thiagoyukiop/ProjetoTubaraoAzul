@@ -1,4 +1,3 @@
-# Pacotes necessários
 if (!require("pacman")) {
   install.packages("pacman")
 }
@@ -6,14 +5,6 @@ pacman::p_load(
   shiny, shinydashboard, shinydashboardPlus, htmltools,
   readtext, dplyr, ggplot2, ggrepel, scales, plotly
 )
-
-# separar_data <- function(dados) {
-#   dados <- mutate(dados,
-#                   Ano = year(as.Date(Data)),
-#                   Mes = month(as.Date(Data)),
-#                   Dia = day(as.Date(Data)))
-#   return(dados)
-# }
 
 capturaMediaMes <- function(dados) {
   dados$Mes <- format(dados$Data, "%Y-%m")
@@ -78,6 +69,9 @@ shinyApp(
             # width: 80%;
             width: 100%;
           }
+        #   .box-desembarque {
+        #   
+        # }
         '))
       ),
       sidebarMenu(
@@ -176,26 +170,31 @@ shinyApp(
           ),
         tabItem(
           "tab3header",
-          div(
-            class = "graficos-accordion",
+          # div(
+            class = "box-desembarque",
             fluidRow(
-              box(
-                solidHeader = T,
-                title = "Captura Média por Viagem",
-                status = "primary",
-                plotlyOutput("graficoCaptura")
+              column(
+                width = 12,
+                # offset = 3,
+                box(
+                  solidHeader = T,
+                  title = "Captura Média por Viagem",
+                  status = "primary",
+                  plotlyOutput("graficoCaptura")
+                ),
+                box(
+                  solidHeader = T,
+                  title = "Desembarque Total (ton)",
+                  status = "primary",
+                  plotlyOutput("graficoDesembarque")
+                )
               )
             ),
             fluidRow(
-              box(
-                solidHeader = T,
-                title = "Desembarque Total (ton)",
-                status = "primary"#,
-                # plotlyOutput("graficoDesembarque")
-              )
-            ),
-            fluidRow(
-              box(
+              column(
+                width = 12,
+                offset = 3,
+                box(
                 solidHeader = T,
                 title = "Composição de espécies",
                 status = "primary"#,
@@ -214,19 +213,17 @@ shinyApp(
               offset = 4,
               uiOutput("senhaAdm"),
               uiOutput("entrarAdm")
-              
             )
           ),
           tags$head(
             tags$style(HTML("
-            
-                      .dataTables_wrapper {
-                        height: 100vh !important;
-                        width: 80vw !important;
-                        padding: 10px;
-                      }
-                    "))
-          ),
+            .dataTables_wrapper {
+            height: 100vh !important;
+            width: 80vw !important;
+            padding: 10px;
+            }
+                            "))
+            ),
           fluidRow(
             column(
               width = 12,
@@ -266,10 +263,10 @@ shinyApp(
           ),
           checkboxGroupInput(
             "species", "Seletor de Espécies:",
-            c("Albacora bandolim","Albacora branca","Albacora laje",
-              "Meca", "Outros"),
-            selected = c("Albacora bandolim","Albacora branca",
-                         "Albacora laje", "Meca","Outros")
+            choices = c("Albacora bandolim","Albacora branca","Albacora laje",
+                          "Meca", "Outros","Tubarao Azul"),
+            selected = c("Albacora bandolim","Albacora branca","Albacora laje",
+            "Meca","Outros", "Tubarao Azul")
           ),
           actionButton("reset","Reiniciar Valores",icon = icon("repeat"))
         )
@@ -279,42 +276,27 @@ shinyApp(
   
   server = function(input, output, session) {
     
-    dados_capturas <- reactive({
-      read.table("dados_brutos/tabela_dados_ficticios.csv",
-                 header = TRUE, sep = ";", dec = ",")
+    dados_capturas <- read.table("dados_brutos/tabela_dados_ficticios.csv",
+                                 header = TRUE, sep = ";", dec = ",")
+    
+    dados_capturas_filtrados <- reactive({
+      dados_capturas <- subset(dados_capturas, Especie %in% input$species)
+      if (input$sexo_escolhido == "Macho") {
+        dados_capturas <- subset(dados_capturas, Sexo == "M")
+      } else if (input$sexo_escolhido == "Fêmea") {
+        dados_capturas <- subset(dados_capturas, Sexo == "F")
+      } else if (input$sexo_escolhido == "Todos"){
+        
+      }
+      subset(dados_capturas,
+             Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2])
     })
     
-    output$graficoCaptura <- renderPlotly({
-      dadosSeparados <- dados_capturas()
-      
-      
-      # dadosSeparados <- separar_data(dados_capturas_teste)
-      
-      dadosSeparados <- subset(
-        dadosSeparados,
-        Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2])
-      
-      # Filtra os dados com base na escolha do sexo
-      if (input$sexo_escolhido == "Macho") {
-        dadosSeparados <- subset(dadosSeparados, Sexo == "M")
-      } else if (input$sexo_escolhido == "Fêmea") {
-        dadosSeparados <- subset(dadosSeparados, Sexo == "F")
-      }
-      
-      CapturasMediasPorMes <- dadosSeparados %>%
-        group_by(Especie, Ano, Mes) %>%
+    CapturasPorMesDesembarque <- reactive({
+      dados_capturas_filtrados() %>%
+        group_by(Especie, Ano, Mes) %>% 
         summarise(Media_Toneladas = mean(Toneladas)) %>%
-        group_by(Especie, Mes) %>%
-        summarise(Media_Toneladas_por_Mes = mean(Media_Toneladas)) %>%
-        mutate(MediaTonMes = round(Media_Toneladas_por_Mes, 2)) %>%
-        select(-Media_Toneladas_por_Mes)
-      
-      nomes_meses <- c(
-        "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-        "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
-      )
-      
-      CapturasMediasPorMes <- CapturasMediasPorMes %>% 
+        mutate(Media_Toneladas = round(Media_Toneladas, 2)) %>%
         mutate(Mes_Nome = case_when(
           Mes == 1 ~ "Janeiro",
           Mes == 2 ~ "Fevereiro",
@@ -328,13 +310,39 @@ shinyApp(
           Mes == 10 ~ "Outubro",
           Mes == 11 ~ "Novembro",
           Mes == 12 ~ "Dezembro",
-          TRUE ~ as.character(Mes)  # Se não for nenhum dos casos, mantém o número do mês
-        ))
-      cores <- c("Albacora bandolim" = "purple","Albacora branca" = "red",
-                 "Albacora laje" = "green", "Meca" = "yellow",
-                 "Outros" = "orange", "Tubarão Azul" = "blue")
+          TRUE ~ as.character(Mes) 
+        )) %>%
+        mutate(mes_ano = as.yearmon(paste0(Ano, "-", sprintf("%02d", Mes))))
+    })
+    
+    CapturasMediasPorMes <- reactive({
+      dados_capturas_filtrados() %>%
+        group_by(Especie, Ano, Mes) %>%
+        summarise(Media_Toneladas = mean(Toneladas)) %>%
+        group_by(Especie, Mes) %>%
+        summarise(Media_Toneladas_por_Mes = mean(Media_Toneladas)) %>%
+        mutate(MediaTonMes = round(Media_Toneladas_por_Mes, 2)) %>%
+        select(-Media_Toneladas_por_Mes) %>%
+        mutate(Mes_Nome = case_when(
+          Mes == 1 ~ "Janeiro",
+          Mes == 2 ~ "Fevereiro",
+          Mes == 3 ~ "Março",
+          Mes == 4 ~ "Abril",
+          Mes == 5 ~ "Maio",
+          Mes == 6 ~ "Junho",
+          Mes == 7 ~ "Julho",
+          Mes == 8 ~ "Agosto",
+          Mes == 9 ~ "Setembro",
+          Mes == 10 ~ "Outubro",
+          Mes == 11 ~ "Novembro",
+          Mes == 12 ~ "Dezembro",
+          TRUE ~ as.character(Mes) 
+        )) 
+    })
+    
+    output$graficoCaptura <- renderPlotly({
       plot_ly(
-        data = CapturasMediasPorMes,
+        data = CapturasMediasPorMes(),
         x = ~Mes,
         y = ~MediaTonMes,
         type = 'scatter',
@@ -348,19 +356,41 @@ shinyApp(
           "Mês: ", Mes_Nome, "<br>",
           "Média de Toneladas: ", MediaTonMes, "<br>"
         )
-      ) %>% 
+      ) %>%
         layout(
           title = "Captura Média por Viagem por Mês",
           xaxis = list(title = "Mês"),
           yaxis = list(
-            title = "Captura Média (ton) por Viagem"#,
-            #range = c(0,5)
-            )
+            title = "Captura Média (ton) por Viagem"
+          ), showlegend = FALSE
         )
-      })
+    })
     
     output$graficoDesembarque <- renderPlotly({
-      
+      plot_ly(
+        data = CapturasPorMesDesembarque(),
+        x = ~mes_ano,
+        y = ~Media_Toneladas,
+        type = 'scatter',
+        mode = 'lines+markers',
+        color = ~Especie,
+        colors = cores,
+        marker = list(size = 5),
+        hoverinfo = "text",
+        text = ~paste(
+          "Espécie: ", Especie, "<br>",
+          "Mês: ", Mes_Nome, "<br>",
+          "Ano: ", Ano, "<br>",
+          "Média de Toneladas: ", Media_Toneladas, "<br>"
+        )
+      ) %>% 
+        layout(
+          title = "Captura Média por Viagem por Mês em cada Ano",
+          xaxis = list(title = "Mês"),
+          yaxis = list(
+            title = "Captura Média (ton) por Viagem"
+          ), showlegend = FALSE
+        )
     })
     
     output$graficoEspecies <- renderPlotly({
@@ -393,7 +423,7 @@ shinyApp(
         session, 
         "species",
         selected = c("Albacora bandolim","Albacora branca","Albacora laje",
-                     "Meca","Outros")
+                     "Meca","Outros","Tubarao Azul")
         )
     })
     
@@ -446,12 +476,6 @@ shinyApp(
       conteudo_tabela_adm()
     })
     
-    # Leitura dos dados
-    dados_tubaroes <- reactive({
-      read.table("dados_brutos/dados_tubaroes_criados.csv",
-                 header = TRUE, sep = ";", dec = ",")
-    })
-    
     # Leitura dos arquivos PDF
     pdf_content1 <- readtext("dados_brutos/testepdf.pdf")
     pdf_content2 <- readtext("dados_brutos/leiame.pdf")
@@ -469,25 +493,32 @@ shinyApp(
     output$creditos_img <- renderImage({
       list(src = "dados_brutos/ImagemTeste.png", 
            contentType = "image/png",
-           alt = "Créditos")  # Texto alternativo para acessibilidade
+           alt = "Créditos")
     }, deleteFile = FALSE)
+    
+    
+    dados_tubaroes <- read.table("dados_brutos/dados_tubaroes_criados.csv",header = TRUE, sep = ";", dec = ",")
+    
+    dadostub_filtrados <- reactive({
+      # dados <- dados_tubaroes
+      if (input$sexo_escolhido == "Macho") {
+        dados_tubaroes <- subset(dados_tubaroes, Sexo == "M")
+      } else if (input$sexo_escolhido == "Fêmea") {
+        dados_tubaroes <- subset(dados_tubaroes, Sexo == "F")
+      } else if (input$sexo_escolhido == "Todos"){
+        
+      }
+      subset(dados_tubaroes, Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2])
+    })
+    
+    dadostub_filtrados_Sexo <- reactive({
+      subset(dados_tubaroes, Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2])
+    })
+    
     # Renderização do gráfico de barras
     output$graficoBarra <- renderPlotly({
-      dadostub <- dados_tubaroes()
-      
-      dadostub <- subset(
-        dadostub,
-        Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2])
-      
-      # Filtra os dados com base na escolha do sexo
-      if (input$sexo_escolhido == "Macho") {
-        dadostub <- subset(dadostub, Sexo == "M")
-      } else if (input$sexo_escolhido == "Fêmea") {
-        dadostub <- subset(dadostub, Sexo == "F")
-      }
-      
       plot_ly(
-        data = dadostub,
+        data = dadostub_filtrados(),
         x = ~Tamanho,
         type = "histogram",
         histnorm = "percent",
@@ -533,16 +564,9 @@ shinyApp(
     
     # Renderização do gráfico de rosca
     output$graficoRosca <- renderPlotly({
-      dadostub <- dados_tubaroes()
-      dadostub <- subset(
-        dadostub,
-        Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2]
-      )
       
-      gender <- dadostub %>%
+      gender <- dadostub_filtrados_Sexo() %>%
         count(Sexo)
-      
-      # gender_list <- as.list(gender)
       
       plot_ly(
         data = gender, 
