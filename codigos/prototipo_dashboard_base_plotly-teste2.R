@@ -3,7 +3,7 @@ if (!require("pacman")) {
 }
 pacman::p_load(
   shiny, shinydashboard, shinydashboardPlus, htmltools,
-  readtext, dplyr, ggplot2, ggrepel, scales, plotly
+  readtext, dplyr, ggplot2, ggrepel, scales, plotly, zoo
 )
 
 capturaMediaMes <- function(dados) {
@@ -197,8 +197,8 @@ shinyApp(
                 box(
                 solidHeader = T,
                 title = "Composição de espécies",
-                status = "primary"#,
-                # plotlyOutput("graficoEspecies")
+                status = "primary",
+                plotlyOutput("graficoEspecies")
                 )
               )
             )
@@ -275,6 +275,31 @@ shinyApp(
   ),
   
   server = function(input, output, session) {
+    
+    # observeEvent(input$sidebarCollapsed, {
+    #   if (input$sidebarCollapsed) {
+    #     output$creditos_img <- renderImage({
+    #       list(src = "dados_brutos/ImagemTeste.png",
+    #            contentType = "image/png",
+    #            width = "0%",
+    #            height = "0%",
+    #            alt = "Créditos")
+    #     }, deleteFile = FALSE)
+    #     
+    #   } else {
+    #     output$creditos_img <- renderImage({
+    #       list(src = "dados_brutos/ImagemTeste.png",
+    #            contentType = "image/png",
+    #            width = "100%",
+    #            height = "100%",
+    #            alt = "Créditos")
+    #     }, deleteFile = FALSE)
+    #   }
+    # })
+    
+    cores <- c("Albacora bandolim" = "purple","Albacora branca" = "red",
+               "Albacora laje" = "green", "Meca" = "yellow",
+               "Outros" = "orange", "Tubarao Azul" = "blue")
     
     dados_capturas <- read.table("dados_brutos/tabela_dados_ficticios.csv",
                                  header = TRUE, sep = ";", dec = ",")
@@ -394,7 +419,35 @@ shinyApp(
     })
     
     output$graficoEspecies <- renderPlotly({
+      tiposEspecies <- dados_capturas_filtrados() %>%
+        group_by(Especie) %>%
+        summarise(n = n(),
+                  toneladas_totais = sum(Toneladas)) %>%
+        mutate(porc = n/sum(n))
+        # count(Especie) %>% 
+        # mutate(porc = n/sum(n)) 
       
+      cores <- c("Albacora bandolim" = "purple","Albacora branca" = "red",
+                 "Albacora laje" = "green", "Meca" = "yellow",
+                 "Outros" = "orange", "Tubarao Azul" = "blue")
+
+      plot_ly(
+        data = tiposEspecies,
+        labels = ~Especie,
+        values = ~n,
+        type = "pie",
+        hole = 0.6,
+        textinfo = 'label',
+        hoverinfo = "text",
+        text = ~paste(
+          # "Espécie: ", Especie, "<br>",
+          "Quantidade: ", n, "<br>",
+          "Porcentagem: ", percent(porc, accuracy = 0.1), "<br>",
+          "Toneladas Totais: ", toneladas_totais, " ton"  # Corrigido aqui
+        ),
+        marker = list(colors = cores)
+      ) %>% 
+        layout(showlegend = FALSE)
     })
     
     conteudo_senha_adm({
@@ -427,54 +480,7 @@ shinyApp(
         )
     })
     
-    observeEvent(input$entrar, {
-      if (input$senha == senha_admin) {
-        conteudo_tabela_adm({
-          dataTableOutput("tabela_tub")
-        })
-        conteudo_senha_adm(NULL)
-        conteudo_entrar_adm(NULL)
-        output$tabela_tub <- renderDataTable({
-          dadostub <- dados_tubaroes()
-          dadostub <- subset(
-            dadostub,
-            Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2])
-
-          if (input$sexo_escolhido == "Macho") {
-            dadostub <- subset(dadostub, Sexo == "M")
-          } else if (input$sexo_escolhido == "Fêmea") {
-            dadostub <- subset(dadostub, Sexo == "F")
-          }
-
-          if (!is.null(input$entrar) && input$entrar > 0) {
-            if (input$senha == senha_admin) {
-              dadostub
-            }
-          }
-        },options = list( paging = T, searching = FALSE))
-      } else{
-        showModal(modalDialog(
-          title = "Erro de login",
-          "Senha incorreta. Tente novamente.",
-          easyClose = TRUE,
-          ))
-        conteudo_tabela_adm(NULL)
-      }
-    })
-      
-    conteudo_tabela_adm <- reactiveVal(NULL)
     
-    output$senhaAdm <- renderUI({
-      conteudo_senha_adm()
-    })
-    
-    output$entrarAdm <- renderUI({
-      conteudo_entrar_adm()
-    })
-    
-    output$tabelaAdm <- renderUI({
-      conteudo_tabela_adm()
-    })
     
     # Leitura dos arquivos PDF
     pdf_content1 <- readtext("dados_brutos/testepdf.pdf")
@@ -489,13 +495,12 @@ shinyApp(
         )
     })
     
-    # Renderização da imagem
     output$creditos_img <- renderImage({
-      list(src = "dados_brutos/ImagemTeste.png", 
+      list(src = "dados_brutos/ImagemTeste.png",
            contentType = "image/png",
            alt = "Créditos")
     }, deleteFile = FALSE)
-    
+
     
     dados_tubaroes <- read.table("dados_brutos/dados_tubaroes_criados.csv",header = TRUE, sep = ";", dec = ",")
     
@@ -509,6 +514,45 @@ shinyApp(
         
       }
       subset(dados_tubaroes, Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2])
+    })
+    
+    observeEvent(input$entrar, {
+      if (input$senha == senha_admin) {
+        conteudo_tabela_adm({
+          dataTableOutput("tabela_tub")
+        })
+        conteudo_senha_adm(NULL)
+        conteudo_entrar_adm(NULL)
+        output$tabela_tub <- renderDataTable({
+          if (!is.null(input$entrar) && input$entrar > 0) {
+            if (input$senha == senha_admin) {
+              # dadostub
+              dadostub_filtrados()
+            }
+          }
+        },options = list( paging = T, searching = FALSE))
+      } else{
+        showModal(modalDialog(
+          title = "Erro de login",
+          "Senha incorreta. Tente novamente.",
+          easyClose = TRUE,
+        ))
+        conteudo_tabela_adm(NULL)
+      }
+    })
+    
+    conteudo_tabela_adm <- reactiveVal(NULL)
+    
+    output$senhaAdm <- renderUI({
+      conteudo_senha_adm()
+    })
+    
+    output$entrarAdm <- renderUI({
+      conteudo_entrar_adm()
+    })
+    
+    output$tabelaAdm <- renderUI({
+      conteudo_tabela_adm()
     })
     
     dadostub_filtrados_Sexo <- reactive({
@@ -564,16 +608,24 @@ shinyApp(
     
     # Renderização do gráfico de rosca
     output$graficoRosca <- renderPlotly({
-      
       gender <- dadostub_filtrados_Sexo() %>%
         count(Sexo)
+      
+      cores_sexo = c("F" = "red", "M" = "blue")
       
       plot_ly(
         data = gender, 
         labels = ~Sexo,
         values = ~n,
         type = "pie",
-        hole = 0.6
+        hole = 0.6,
+        textinfo = 'percent',
+        hoverinfo = "text",
+        text = ~paste(
+          "Sexo: ", Sexo, "<br>",
+          "Quantidade: ", n, "<br>"
+        ),
+        marker = list(colors = cores_sexo)
       )
     })
     
