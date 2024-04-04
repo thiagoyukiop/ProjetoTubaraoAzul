@@ -32,7 +32,6 @@ shinyApp(
     ),
     sidebar = dashboardSidebar(
       sidebarMenu(
-        
         id = "sidebar",
         minified = T,
         collapsed = FALSE,
@@ -421,8 +420,6 @@ shinyApp(
         summarise(n = n(),
                   toneladas_totais = sum(Toneladas)) %>%
         mutate(porc = n/sum(n))
-      # count(Especie) %>% 
-      # mutate(porc = n/sum(n)) 
       
       cores <- c("Albacora bandolim" = "purple","Albacora branca" = "red",
                  "Albacora laje" = "green", "Meca" = "yellow",
@@ -437,10 +434,8 @@ shinyApp(
         textinfo = 'label',
         hoverinfo = "text",
         text = ~paste(
-          # "Espécie: ", Especie, "<br>",
           "Quantidade: ", n, "<br>",
           "Porcentagem: ", percent(porc, accuracy = 0.1), "<br>",
-          "Toneladas Totais: ", toneladas_totais, " ton"  # Corrigido aqui
         ),
         marker = list(colors = cores)
       ) %>% 
@@ -477,8 +472,6 @@ shinyApp(
       )
     })
     
-    
-    
     # Leitura dos arquivos PDF
     pdf_content1 <- readtext("dados_brutos/testepdf.pdf")
     pdf_content2 <- readtext("dados_brutos/leiame.pdf")
@@ -497,7 +490,6 @@ shinyApp(
            contentType = "image/png",
            alt = "Créditos")
     }, deleteFile = FALSE)
-    # 
     
     dados_tubaroes <- read.table("dados_brutos/dados_tubaroes_criados.csv",header = TRUE, sep = ";", dec = ",")
     
@@ -523,7 +515,6 @@ shinyApp(
         output$tabela_tub <- renderDataTable({
           if (!is.null(input$entrar) && input$entrar > 0) {
             if (input$senha == senha_admin) {
-              # dadostub
               dadostub_filtrados()
             }
           }
