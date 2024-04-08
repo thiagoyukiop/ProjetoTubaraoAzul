@@ -31,83 +31,70 @@ shinyApp(
       )
     ),
     sidebar = dashboardSidebar(
+      width = 250,
+      minified = T,
+      collapsed = FALSE,
+      tags$head(
+        tags$style(HTML('
+        /* Ajuste o tamanho dos títulos das abas dentro do sidebarPanel */
+        .custom-sidebar .nav-tabs > li > a {
+          width: 240px; /* Largura fixa para os títulos das abas */
+          text-align: center; /* Centraliza o texto */
+        }
+        .texto-accordion {
+          display: inline-block;
+          # margin: auto auto;
+          padding: 10px;
+          # width: 1450px;
+        }
+        .texto-accordion .accordion-title {
+          text-align: center; /* Centraliza o texto apenas nos títulos */
+          width: 680px;
+        }
+        .graficos-accordion {
+          margin: 0 auto;
+          width: 100%;
+        }
+      '))
+      ),
       sidebarMenu(
-        id = "sidebar",
-        minified = T,
-        collapsed = FALSE,
-        width = 250,
-        tags$head(
-          tags$style(HTML('
-          /* Ajuste o tamanho dos títulos das abas dentro do sidebarPanel */
-          .custom-sidebar .nav-tabs > li > a {
-            width: 240px; /* Largura fixa para os títulos das abas */
-            text-align: center; /* Centraliza o texto */
-          }
-          # /* Estilo para alterar a cor do texto do sidebar para preto */
-          # #sidebar .sidebar-menu li a,
-          # #sidebar .sidebar-menu li a:hover,
-          # #sidebar .sidebar-menu label {
-          #   color: #000000 !important; /* Cor preta */
-          # }
-          .texto-accordion {
-            display: inline-block;
-            # margin: auto auto;
-            padding: 10px;
-            # width: 1450px;
-          }
-          .texto-accordion .accordion-title {
-            text-align: center; /* Centraliza o texto apenas nos títulos */
-            width: 680px;
-          }
-          .graficos-accordion {
-            margin: 0 auto;
-            # width: 80%;
-            width: 100%;
-          }
-        #   .box-desembarque {
-        #   
-        # }
-        '))
+        id = "sidebarMenu",
+        menuItem(
+          text = "Apresentação",
+          icon = icon("house"),
+          menuSubItem(
+           text = "Projeto",
+           tabName = "tab1body",
+           icon = icon("r-project")
+          ),
+          menuSubItem(
+           text = "Leia-me",
+           tabName = "tab2body",
+           icon = icon("readme")
+          )
         ),
-        sidebarMenu(
-          id = "sidebarMenu",
-          menuItem("Apresentação",
-                   icon = icon("house"),
-                   menuSubItem(
-                     "Projeto",
-                     tabName = "tab1body",
-                     icon = icon("r-project")
-                   ),
-                   menuSubItem(
-                     "Leia-me",
-                     tabName = "tab2body",
-                     icon = icon("readme")
-                   )
-          ),
-          menuItem(
-            "Distribuição de comprimentos",
-            tabName = "tab2header",
-            icon = icon("chart-simple")
-          ),
-          menuItem(
-            "Desembarques",
-            tabName = "tab3header",
-            icon = icon("chart-area")
-          ),
-          menuItem(
-            "Distribuição espacial das capturas",
-            tabName = "tab4header",
-            icon = icon("earth-americas")
-          ),
-          menuItem(
-            "Admin",
-            tabName = "tab5header",
-            icon = icon("user-tie")
-            # icon = icon("user-shield")
-          ),
-          imageOutput("creditos_img")
-        )
-        # imageOutput("creditos_img")
+        menuItem(
+          text = "Distribuição de comprimentos",
+          tabName = "tab2header",
+          icon = icon("chart-simple")
+        ),
+        menuItem(
+          text = "Desembarques",
+          tabName = "tab3header",
+          icon = icon("chart-area")
+        ),
+        menuItem(
+          text = "Distribuição espacial das capturas",
+          tabName = "tab4header",
+          icon = icon("earth-americas")
+        ),
+        menuItem(
+          "Admin",
+          tabName = "tab5header",
+          icon = icon("user-tie")
+          # icon = icon("user-shield")
+        ),
+        imageOutput("creditos_img")
       )
     ),
     body = dashboardBody(
@@ -167,12 +154,10 @@ shinyApp(
         ),
         tabItem(
           "tab3header",
-          # div(
           class = "box-desembarque",
           fluidRow(
             column(
               width = 12,
-              # offset = 3,
               box(
                 solidHeader = T,
                 title = "Captura Média por Viagem",
@@ -200,7 +185,10 @@ shinyApp(
             )
           )
         ),
-        tabItem("tab4header"),
+        tabItem(
+          "tab4header",
+          plotlyOutput("mapa_calor")
+          ),
         tabItem(
           "tab5header",
           value = "tab5header",
@@ -272,6 +260,44 @@ shinyApp(
   ),
   server <- function(input, output, session) {
     
+    dados_coordenadas <- read.table("dados_brutos/dados_captura_coordenadas.csv",
+                                    header = TRUE, sep = ",", dec = ".")
+    
+    dados_coordenadas_filtrados <- reactive({
+      dados_filtrados <- subset(dados_coordenadas, Especie %in% input$species)
+      if (input$sexo_escolhido == "Macho") {
+        dados_filtrados <- subset(dados_filtrados, Sexo == "M")
+      } else if (input$sexo_escolhido == "Fêmea") {
+        dados_filtrados <- subset(dados_filtrados, Sexo == "F")
+      }
+      dados_filtrados <- subset(dados_filtrados,
+                                Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2])
+      # Convertendo o resultado para data frame
+      data.frame(dados_filtrados)
+    })
+    
+    output$mapa_calor <- renderPlotly({
+      dados_filtrados <- dados_coordenadas_filtrados()
+      plot_ly(
+        data = dados_filtrados,
+        type = 'scattergeo',
+        mode = 'markers',
+        color = ~Especie,
+        colors = cores,
+        hoverinfo = "text",
+        text = ~paste(
+          "Espécie: ", Especie, "<br>",
+          "Coordenada: ", round(latitude,3), "º, ", round(longitude,3), "º<br>"
+        ),
+        lat = ~latitude,
+        lon = ~longitude) %>%
+        layout(title = "Coordenadas da captura das espécies marinhas",
+               geo = list(projection = list(type = 'robinson')),
+               showlegend = FALSE
+               )
+    })
+    
+    
     observeEvent(input$sidebarCollapsed, {
       if (input$sidebarCollapsed) {
         output$creditos_img <- renderImage({
@@ -296,6 +322,8 @@ shinyApp(
     cores <- c("Albacora bandolim" = "purple","Albacora branca" = "red",
                "Albacora laje" = "green", "Meca" = "yellow",
                "Outros" = "orange", "Tubarao Azul" = "blue")
+    
+    
     
     dados_capturas <- read.table("dados_brutos/tabela_dados_ficticios.csv",
                                  header = TRUE, sep = ";", dec = ",")
@@ -421,10 +449,6 @@ shinyApp(
                   toneladas_totais = sum(Toneladas)) %>%
         mutate(porc = n/sum(n))
       
-      cores <- c("Albacora bandolim" = "purple","Albacora branca" = "red",
-                 "Albacora laje" = "green", "Meca" = "yellow",
-                 "Outros" = "orange", "Tubarao Azul" = "blue")
-      
       plot_ly(
         data = tiposEspecies,
         labels = ~Especie,
@@ -435,7 +459,7 @@ shinyApp(
         hoverinfo = "text",
         text = ~paste(
           "Quantidade: ", n, "<br>",
-          "Porcentagem: ", percent(porc, accuracy = 0.1), "<br>",
+          "Porcentagem: ", percent(porc, accuracy = 0.1), "<br>"
         ),
         marker = list(colors = cores)
       ) %>% 
