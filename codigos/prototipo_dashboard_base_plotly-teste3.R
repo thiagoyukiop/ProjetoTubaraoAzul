@@ -108,31 +108,135 @@ shinyApp(
       ),
       tabItems(
         tabItem(
-          "tab1body",
-          div(class = "texto-accordion",
-              accordion(
-                id = "accordion1",
-                accordionItem(
-                  title = "Visualização de Texto",
-                  status = "primary",
-                  collapsed = FALSE,
-                  uiOutput("textOut1")
+          tabName = "tab1body",
+          fluidPage(
+            fluidRow(
+              column(
+                width = 6,
+                h2("Geração de subsídios e elaboração do Plano de gestão da
+                   pesca do Tubarão Azul, e monitoramento da atividade no 
+                   Estado do Rio Grande do Sul"),
+                h3("Como surgiu o Projeto Tubarão Azul?"),
+                p("O tubarão-azul ",tags$em("Prionace glauca", .noWS = "after"),
+                " é um dos tubarões mais abundantes e de mais ampla 
+                distribuição nos oceanos do planeta, sendo a espécie mais
+                frequente nas capturas da frota de espinhel e superfície no
+                Oceano Atlântico Sul."),
+                p("Em 2014 o tubarão-azul foi classificado como Vulnerável à
+                  extinção a nível estadual (Decreto Estadual 51.797/2014).
+                  Tal classificação impõe, por meio de leis federais, 
+                  restrição à captura, desembarque e comercialização da 
+                  espécie no estado do Rio Grande do Sul."),
+                p("Em 2016, 17 especialistas de diferentes instituições 
+                  concordaram com a classificação da espécie como vulnerável. 
+                  Avaliaram, no entanto, que a proibição pontual da pesca do 
+                  tubarão-azul em águas gaúchas não seria uma medida adequada 
+                  para a sua conservação, devido aos seguintes motivos:"),
+                p(strong("1) Por ser fauna acompanhante de outras espécies
+                         comerciais, tubarões azuis continuariam sendo 
+                         capturados em quantidades expressivas.")),
+                p(strong("2) O procedimento de liberação dos exemplares 
+                         capturados poderia inviabilizar economicamente a 
+                         frota de espinhel pelágico.")),
+                p(strong("3) A pesca clandestina e a descarga em locais fora
+                         do Rio Grande do Sul continuariam ocorrendo.")),
+                p(strong("4) Perder-se-ia a pesca regularizada e 
+                         sistematicamente acompanhada como fonte de dados 
+                         para o monitoramento do estoque.")),
+                p("Como parte do processo, foi criado um Grupo Técnico para a
+                  elaboração de um Plano de Gestão da Pesca do tubarão-azul no
+                  Rio Grande do Sul, surgindo daí o Projeto Tubarão Azul."),
+                h3("Legal, mas o que é um Plano de Gestão da Pesca?"),
+                p("Trata-se de um documento que estabelece as orientações para
+                  o uso sustentável dos recursos pesqueiros e tem como objetivo 
+                  assegurar a sustentabilidade tanto da pesca quanto do 
+                  ambiente natural, levando em conta os aspectos sociais, 
+                  econômicos e ecológicos das pescarias."),
+                p("A equipe técnica vem realizando levantamento de informações 
+                  através de ações de monitoramento e coleta de amostras 
+                  biológicas na descarga das embarcações de espinhel e da 
+                  realização de embarque de observadores de bordo - 
+                  profissionais treinados que participam das viagens de pesca 
+                  coletando amostra e informações, com vistas a avaliação do 
+                  estoque e proposição/adoção de medidas para os órgãos de 
+                  manejo responsáveis, conforme o fluxograma."),
+                h3("Fluxograma do Plano de Gestão da pesca de Tubarão Azul 
+                   no Rio Grande do Sul"),
+                imageOutput("FluxogramaTubAzul")
+              ),
+              column(
+                width = 6,
+                infoBox(
+                  fill = T,
+                  title = "Tubarões Medidos",
+                  width = 10,
+                  color = "light-blue",
+                  value = 28954,
+                  icon = icon("fish")
+                ),
+                infoBox(
+                  fill = T,
+                  title = "Entrevista de desembarque",
+                  width = 10,
+                  color = "light-blue",
+                  value = 731,
+                  icon = icon("paste")
+                ),
+                infoBox(
+                  fill = T,
+                  title = "Cadernos de bordo",
+                  width = 10,
+                  color = "light-blue",
+                  value = 465,
+                  icon = icon("book-open")
+                ),
+                infoBox(
+                  fill = T,
+                  title = "Embarcações Monitoradas",
+                  width = 10,
+                  color = "light-blue",
+                  value = 92,
+                  icon = icon("ship")
                 )
               )
+            )
           )
         ),
         tabItem(
-          "tab2body",
-          div(class = "texto-accordion",
-              accordion(
-                id = "accordion2",
-                accordionItem(
-                  title = "Visualização de Texto",
-                  status = "primary",
-                  collapsed = FALSE,
-                  uiOutput("textOut2")
-                )
+          tabName = "tab2body",
+          fluidPage(
+            fluidRow(
+              column(
+                width = 4,
+                offset = 2,
+                p("Prezado Usuário,")
+              ),
+              column(
+                width = 6,
+                offset = 2,
+                p("Esta plataforma foi desenvolvida para disponibilizar 
+                  informações atualizadas sobre as capturas de tubarão azul e 
+                  da frota de espinhel pelágico que vêm sendo coletadas pela 
+                  equipe do projeto Tubarão Azul. Os dados são referentes à 
+                  desembarques realizados pela frota no porto de Rio Grande,
+                  RS."),
+                p("Na aba “Distribuição de comprimentos” você encontrará as 
+                  composições de comprimentos dos indivíduos amostrados em cada
+                  ano para machos, fêmeas e sexos agrupados. Está disponível 
+                  também a proporção de sexos dos indivíduos capturados."),
+                p("Na aba “Desembarques” você encontrará as capturas mensais
+                  médias por viagem para todas as espécies e também 
+                  discriminado por espécie."),
+                p("Na aba “Distribuição espacial das capturas” você encontrará 
+                  os lances de pesca realizados distribuídos espacialmente, 
+                  assim como as densidades especializadas de lances em que cada
+                  uma das espécies foi capturada."),
+                p("Para a construção dos gráficos apresentados nesta plataforma
+                  são utilizados dados atualizados anualmente."),
+                p("Para maiores informações, por favor, entre em contato através
+                  do",strong("e-mail proj.tubaraoazul.furg@gmail.com."))
               )
+            )
           )
         ),
         tabItem(
@@ -260,24 +364,49 @@ shinyApp(
   ),
   server <- function(input, output, session) {
     
-    dados_coordenadas <- read.table("dados_brutos/dados_captura_coordenadas.csv",
-                                    header = TRUE, sep = ",", dec = ".")
+    dados_gerais <- read.table("dados_brutos/dados_PTA.csv",
+                               header = TRUE, sep = ",", dec = ".")
     
-    dados_coordenadas_filtrados <- reactive({
-      dados_filtrados <- subset(dados_coordenadas, Especie %in% input$species)
+    dados_gerais_filtrados <- reactive({
+      dados_filtrados <- subset(dados_gerais, Especie %in% input$species)
       if (input$sexo_escolhido == "Macho") {
         dados_filtrados <- subset(dados_filtrados, Sexo == "M")
       } else if (input$sexo_escolhido == "Fêmea") {
         dados_filtrados <- subset(dados_filtrados, Sexo == "F")
       }
-      dados_filtrados <- subset(dados_filtrados,
-                                Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2])
+      dados_filtrados <- subset(
+        dados_filtrados,
+        Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2])
       # Convertendo o resultado para data frame
       data.frame(dados_filtrados)
     })
     
+    output$FluxogramaTubAzul <- renderImage({
+      list(src = "dados_brutos/Fluxograma.png",
+           width = "100%",
+           contentType = "image/png",
+           alt = "Créditos")
+    }, deleteFile = FALSE)
+    
+    # dados_coordenadas<-read.table("dados_brutos/dados_captura_coordenadas.csv",
+    #                                 header = TRUE, sep = ",", dec = ".")
+    
+    # dados_coordenadas_filtrados <- reactive({
+    #   dados_filtrados <- subset(dados_coordenadas, Especie %in% input$species)
+    #   if (input$sexo_escolhido == "Macho") {
+    #     dados_filtrados <- subset(dados_filtrados, Sexo == "M")
+    #   } else if (input$sexo_escolhido == "Fêmea") {
+    #     dados_filtrados <- subset(dados_filtrados, Sexo == "F")
+    #   }
+    #   dados_filtrados <- subset(
+    #     dados_filtrados,
+    #     Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2])
+    #   # Convertendo o resultado para data frame
+    #   data.frame(dados_filtrados)
+    # })
+    
     output$mapa_calor <- renderPlotly({
-      dados_filtrados <- dados_coordenadas_filtrados()
+      dados_filtrados <- dados_gerais_filtrados()
       plot_ly(
         data = dados_filtrados,
         type = 'scattergeo',
@@ -296,7 +425,6 @@ shinyApp(
                showlegend = FALSE
                )
     })
-    
     
     observeEvent(input$sidebarCollapsed, {
       if (input$sidebarCollapsed) {
@@ -325,24 +453,24 @@ shinyApp(
     
     
     
-    dados_capturas <- read.table("dados_brutos/tabela_dados_ficticios.csv",
-                                 header = TRUE, sep = ";", dec = ",")
-    
-    dados_capturas_filtrados <- reactive({
-      dados_capturas <- subset(dados_capturas, Especie %in% input$species)
-      if (input$sexo_escolhido == "Macho") {
-        dados_capturas <- subset(dados_capturas, Sexo == "M")
-      } else if (input$sexo_escolhido == "Fêmea") {
-        dados_capturas <- subset(dados_capturas, Sexo == "F")
-      } else if (input$sexo_escolhido == "Todos"){
-        
-      }
-      subset(dados_capturas,
-             Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2])
-    })
+    # dados_capturas <- read.table("dados_brutos/tabela_dados_ficticios.csv",
+    #                              header = TRUE, sep = ";", dec = ",")
+    # 
+    # dados_capturas_filtrados <- reactive({
+    #   dados_capturas <- subset(dados_capturas, Especie %in% input$species)
+    #   if (input$sexo_escolhido == "Macho") {
+    #     dados_capturas <- subset(dados_capturas, Sexo == "M")
+    #   } else if (input$sexo_escolhido == "Fêmea") {
+    #     dados_capturas <- subset(dados_capturas, Sexo == "F")
+    #   } else if (input$sexo_escolhido == "Todos"){
+    #     
+    #   }
+    #   subset(dados_capturas,
+    #          Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2])
+    # })
     
     CapturasPorMesDesembarque <- reactive({
-      dados_capturas_filtrados() %>%
+      dados_gerais_filtrados() %>%
         group_by(Especie, Ano, Mes) %>% 
         summarise(Media_Toneladas = mean(Toneladas)) %>%
         mutate(Media_Toneladas = round(Media_Toneladas, 2)) %>%
@@ -365,7 +493,7 @@ shinyApp(
     })
     
     CapturasMediasPorMes <- reactive({
-      dados_capturas_filtrados() %>%
+      dados_gerais_filtrados() %>%
         group_by(Especie, Ano, Mes) %>%
         summarise(Media_Toneladas = mean(Toneladas)) %>%
         group_by(Especie, Mes) %>%
@@ -443,7 +571,7 @@ shinyApp(
     })
     
     output$graficoEspecies <- renderPlotly({
-      tiposEspecies <- dados_capturas_filtrados() %>%
+      tiposEspecies <- dados_gerais_filtrados() %>%
         group_by(Especie) %>%
         summarise(n = n(),
                   toneladas_totais = sum(Toneladas)) %>%
@@ -496,10 +624,6 @@ shinyApp(
       )
     })
     
-    # Leitura dos arquivos PDF
-    pdf_content1 <- readtext("dados_brutos/testepdf.pdf")
-    pdf_content2 <- readtext("dados_brutos/leiame.pdf")
-    
     # Geração dinâmica dos painéis de abas
     output$tabset_ui <- renderUI({
       tabsetPanel(
@@ -515,19 +639,23 @@ shinyApp(
            alt = "Créditos")
     }, deleteFile = FALSE)
     
-    dados_tubaroes <- read.table("dados_brutos/dados_tubaroes_criados.csv",header = TRUE, sep = ";", dec = ",")
+    # dados_tubaroes <- read.table("dados_brutos/dados_tubaroes_criados.csv",
+    #                              header = TRUE, sep = ";", dec = ",")
     
-    dadostub_filtrados <- reactive({
-      # dados <- dados_tubaroes
-      if (input$sexo_escolhido == "Macho") {
-        dados_tubaroes <- subset(dados_tubaroes, Sexo == "M")
-      } else if (input$sexo_escolhido == "Fêmea") {
-        dados_tubaroes <- subset(dados_tubaroes, Sexo == "F")
-      } else if (input$sexo_escolhido == "Todos"){
-        
-      }
-      subset(dados_tubaroes, Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2])
-    })
+    # dadostub_filtrados <- reactive({
+    #   # dados <- dados_tubaroes
+    #   if (input$sexo_escolhido == "Macho") {
+    #     dados_tubaroes <- subset(dados_tubaroes, Sexo == "M")
+    #   } else if (input$sexo_escolhido == "Fêmea") {
+    #     dados_tubaroes <- subset(dados_tubaroes, Sexo == "F")
+    #   } else if (input$sexo_escolhido == "Todos"){
+    #     
+    #   }
+    #   subset(
+    #     dados_tubaroes,
+    #     Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2]
+    #     )
+    # })
     
     observeEvent(input$entrar, {
       if (input$senha == senha_admin) {
@@ -539,7 +667,7 @@ shinyApp(
         output$tabela_tub <- renderDataTable({
           if (!is.null(input$entrar) && input$entrar > 0) {
             if (input$senha == senha_admin) {
-              dadostub_filtrados()
+              dados_gerais_filtrados()
             }
           }
         },options = list( paging = T, searching = FALSE))
@@ -567,8 +695,27 @@ shinyApp(
       conteudo_tabela_adm()
     })
     
+    dadostub_filtrados <- reactive({
+      dados_auxiliar <- subset(dados_gerais, Especie == "Tubarao Azul")
+      if (input$sexo_escolhido == "Macho") {
+        dados_auxiliar <- subset(dados_gerais, Sexo == "M")
+      } else if (input$sexo_escolhido == "Fêmea") {
+        dados_auxiliar <- subset(dados_gerais, Sexo == "F")
+      } else if (input$sexo_escolhido == "Todos"){
+
+      }
+      subset(
+        dados_auxiliar,
+        Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2]
+        )
+    })
+    
     dadostub_filtrados_Sexo <- reactive({
-      subset(dados_tubaroes, Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2])
+      subset(
+        dados_gerais,
+        Especie == "Tubarao Azul" & 
+        Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2]
+        )
     })
     
     # Renderização do gráfico de barras
@@ -639,16 +786,6 @@ shinyApp(
         ),
         marker = list(colors = cores_sexo)
       )
-    })
-    
-    # Renderização do texto da aba 1
-    output$textOut1 <- renderUI({
-      HTML(paste0("<pre>", pdf_content1$text, "</pre>"))
-    })
-    
-    # Renderização do texto da aba 2
-    output$textOut2 <- renderUI({
-      HTML(paste0("<pre>", pdf_content2$text, "</pre>"))
     })
   }
 )
