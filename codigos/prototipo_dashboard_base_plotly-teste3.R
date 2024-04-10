@@ -14,7 +14,6 @@ shinyApp(
     header = dashboardHeader(
       title = tags$a(href = "https://lrpdc.shinyapps.io/proj_tubarao_azul/",
                      "Projeto Tubarão Azul", class = "logo"),
-      # title = "Projeto Tubarão Azul",
       controlbarIcon = icon("sliders"),
       dropdownMenu(
         type = "notifications",
@@ -34,29 +33,6 @@ shinyApp(
       width = 250,
       minified = T,
       collapsed = FALSE,
-      tags$head(
-        tags$style(HTML('
-        /* Ajuste o tamanho dos títulos das abas dentro do sidebarPanel */
-        .custom-sidebar .nav-tabs > li > a {
-          width: 240px; /* Largura fixa para os títulos das abas */
-          text-align: center; /* Centraliza o texto */
-        }
-        .texto-accordion {
-          display: inline-block;
-          # margin: auto auto;
-          padding: 10px;
-          # width: 1450px;
-        }
-        .texto-accordion .accordion-title {
-          text-align: center; /* Centraliza o texto apenas nos títulos */
-          width: 680px;
-        }
-        .graficos-accordion {
-          margin: 0 auto;
-          width: 100%;
-        }
-      '))
-      ),
       sidebarMenu(
         id = "sidebarMenu",
         menuItem(
@@ -92,20 +68,11 @@ shinyApp(
           "Admin",
           tabName = "tab5header",
           icon = icon("user-tie")
-          # icon = icon("user-shield")
         ),
         imageOutput("creditos_img")
       )
     ),
     body = dashboardBody(
-      tags$head(
-        tags$style(HTML('
-        /* Mantém a cor padrão do título */
-        .logo {
-          color: #555;
-        }
-      '))
-      ),
       tabItems(
         tabItem(
           tabName = "tab1body",
@@ -241,7 +208,6 @@ shinyApp(
         ),
         tabItem(
           "tab2header",
-          div(class = "graficos-accordion",
               box(
                 solidHeader = T,
                 title = "Histograma",
@@ -254,44 +220,65 @@ shinyApp(
                 status = "primary",
                 plotlyOutput("graficoRosca")
               )
-          )
         ),
         tabItem(
           "tab3header",
-          class = "box-desembarque",
-          fluidRow(
-            column(
-              width = 12,
-              box(
-                solidHeader = T,
-                title = "Captura Média por Viagem",
-                status = "primary",
-                plotlyOutput("graficoCaptura")
-              ),
-              box(
-                solidHeader = T,
-                title = "Desembarque Total (ton)",
-                status = "primary",
-                plotlyOutput("graficoDesembarque")
-              )
+          fluidPage(
+            fluidRow(
+             column(
+               width = 6,
+               box(
+                 width = 12,
+                 solidHeader = T,
+                 title = "Gráfico de Linhas",
+                 # title = "Captura Média por Viagem",
+                 status = "primary",
+                 plotlyOutput("graficoCaptura")
+               )
+             ),
+             column(
+               width = 6,
+               box(
+                 width = 12,
+                 solidHeader = T,
+                 title = "Gráfico de Rosca",
+                 # title = "Composição de espécies",
+                 status = "primary",
+                 plotlyOutput("graficoEspecies")
+               )
+             ) ,
+             fluidRow(
+               column(
+                 width = 12,
+                 box(
+                   width = 12,
+                   solidHeader = T,
+                   title = "Gráfico de Linhas",
+                   # title = "Desembarque Total (ton)",
+                   status = "primary",
+                   plotlyOutput("graficoDesembarque")
+                 )
+               )
+             )
             )
           ),
-          fluidRow(
-            column(
-              width = 12,
-              offset = 3,
-              box(
-                solidHeader = T,
-                title = "Composição de espécies",
-                status = "primary",
-                plotlyOutput("graficoEspecies")
-              )
-            )
-          )
         ),
         tabItem(
           "tab4header",
-          plotlyOutput("mapa_calor")
+          fluidPage(
+            fluidRow(
+              column(
+                width = 12,
+                box(
+                  width = 12,
+                  solidHeader = T,
+                  status = "primary",
+                  title = "Gráfico de Dispersão",
+                  plotlyOutput("mapa_calor")
+                )
+              )
+            )
+          )
           ),
         tabItem(
           "tab5header",
@@ -377,7 +364,6 @@ shinyApp(
       dados_filtrados <- subset(
         dados_filtrados,
         Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2])
-      # Convertendo o resultado para data frame
       data.frame(dados_filtrados)
     })
     
@@ -387,23 +373,6 @@ shinyApp(
            contentType = "image/png",
            alt = "Créditos")
     }, deleteFile = FALSE)
-    
-    # dados_coordenadas<-read.table("dados_brutos/dados_captura_coordenadas.csv",
-    #                                 header = TRUE, sep = ",", dec = ".")
-    
-    # dados_coordenadas_filtrados <- reactive({
-    #   dados_filtrados <- subset(dados_coordenadas, Especie %in% input$species)
-    #   if (input$sexo_escolhido == "Macho") {
-    #     dados_filtrados <- subset(dados_filtrados, Sexo == "M")
-    #   } else if (input$sexo_escolhido == "Fêmea") {
-    #     dados_filtrados <- subset(dados_filtrados, Sexo == "F")
-    #   }
-    #   dados_filtrados <- subset(
-    #     dados_filtrados,
-    #     Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2])
-    #   # Convertendo o resultado para data frame
-    #   data.frame(dados_filtrados)
-    # })
     
     output$mapa_calor <- renderPlotly({
       dados_filtrados <- dados_gerais_filtrados()
@@ -416,10 +385,12 @@ shinyApp(
         hoverinfo = "text",
         text = ~paste(
           "Espécie: ", Especie, "<br>",
-          "Coordenada: ", round(latitude,3), "º, ", round(longitude,3), "º<br>"
+          "Coordenada: ", round(Latitude,3), "º, ", round(Longitude,3), "ºa<br>"
         ),
-        lat = ~latitude,
-        lon = ~longitude) %>%
+        lat = ~Latitude,
+        lon = ~Longitude,
+        sizes = "0.1px"
+        ) %>%
         layout(title = "Coordenadas da captura das espécies marinhas",
                geo = list(projection = list(type = 'robinson')),
                showlegend = FALSE
@@ -450,24 +421,6 @@ shinyApp(
     cores <- c("Albacora bandolim" = "purple","Albacora branca" = "red",
                "Albacora laje" = "green", "Meca" = "yellow",
                "Outros" = "orange", "Tubarao Azul" = "blue")
-    
-    
-    
-    # dados_capturas <- read.table("dados_brutos/tabela_dados_ficticios.csv",
-    #                              header = TRUE, sep = ";", dec = ",")
-    # 
-    # dados_capturas_filtrados <- reactive({
-    #   dados_capturas <- subset(dados_capturas, Especie %in% input$species)
-    #   if (input$sexo_escolhido == "Macho") {
-    #     dados_capturas <- subset(dados_capturas, Sexo == "M")
-    #   } else if (input$sexo_escolhido == "Fêmea") {
-    #     dados_capturas <- subset(dados_capturas, Sexo == "F")
-    #   } else if (input$sexo_escolhido == "Todos"){
-    #     
-    #   }
-    #   subset(dados_capturas,
-    #          Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2])
-    # })
     
     CapturasPorMesDesembarque <- reactive({
       dados_gerais_filtrados() %>%
@@ -535,7 +488,7 @@ shinyApp(
         )
       ) %>%
         layout(
-          title = "Captura Média por Viagem por Mês",
+          title = "Captura Média por Viagem",
           xaxis = list(title = "Mês"),
           yaxis = list(
             title = "Captura Média (ton) por Viagem"
@@ -562,7 +515,8 @@ shinyApp(
         )
       ) %>% 
         layout(
-          title = "Captura Média por Viagem por Mês em cada Ano",
+          # title = "Captura Média por Viagem por Mês em cada Ano",
+          title = "Desembarque Total (ton)",
           xaxis = list(title = "Mês"),
           yaxis = list(
             title = "Captura Média (ton) por Viagem"
@@ -591,26 +545,10 @@ shinyApp(
         ),
         marker = list(colors = cores)
       ) %>% 
-        layout(showlegend = FALSE)
-    })
-    
-    conteudo_senha_adm({
-      output$senhaOutput <- renderUI({
-        passwordInput(
-          inputId = "senha",
-          label = "Senha",
-          value = ""
-        )
-      })
-    }) 
-    
-    conteudo_entrar_adm({
-      output$entrarOutput <- renderUI({
-        actionButton(
-          inputId = "entrar",
-          label = "Entrar"
-        )
-      })
+        layout(
+          title = "Composição de espécies",
+          showlegend = FALSE
+          )
     })
     
     observeEvent(input$reset, {
@@ -624,7 +562,6 @@ shinyApp(
       )
     })
     
-    # Geração dinâmica dos painéis de abas
     output$tabset_ui <- renderUI({
       tabsetPanel(
         id = "bodyTab",
@@ -639,31 +576,37 @@ shinyApp(
            alt = "Créditos")
     }, deleteFile = FALSE)
     
-    # dados_tubaroes <- read.table("dados_brutos/dados_tubaroes_criados.csv",
-    #                              header = TRUE, sep = ";", dec = ",")
     
-    # dadostub_filtrados <- reactive({
-    #   # dados <- dados_tubaroes
-    #   if (input$sexo_escolhido == "Macho") {
-    #     dados_tubaroes <- subset(dados_tubaroes, Sexo == "M")
-    #   } else if (input$sexo_escolhido == "Fêmea") {
-    #     dados_tubaroes <- subset(dados_tubaroes, Sexo == "F")
-    #   } else if (input$sexo_escolhido == "Todos"){
-    #     
-    #   }
-    #   subset(
-    #     dados_tubaroes,
-    #     Ano >= input$intervalo_anos[1] & Ano <= input$intervalo_anos[2]
-    #     )
-    # })
+    conteudo_senha_adm <- reactiveVal(NULL)
+    conteudo_entrar_adm <- reactiveVal(NULL)
+    conteudo_tabela_adm <- reactiveVal(NULL)
+    
+    conteudo_senha_adm({
+      output$senhaOutput <- renderUI({
+        passwordInput(
+          inputId = "senha",
+          label = "Senha",
+          value = ""
+        )
+      })
+    })
+    
+    conteudo_entrar_adm({
+      output$entrarOutput <- renderUI({
+        actionButton(
+          inputId = "entrar",
+          label = "Entrar"
+        )
+      })
+    })
     
     observeEvent(input$entrar, {
       if (input$senha == senha_admin) {
         conteudo_tabela_adm({
           dataTableOutput("tabela_tub")
         })
-        conteudo_senha_adm(NULL)
-        conteudo_entrar_adm(NULL)
+        conteudo_senha_adm <- NULL
+        conteudo_entrar_adm <- NULL
         output$tabela_tub <- renderDataTable({
           if (!is.null(input$entrar) && input$entrar > 0) {
             if (input$senha == senha_admin) {
@@ -677,11 +620,9 @@ shinyApp(
           "Senha incorreta. Tente novamente.",
           easyClose = TRUE,
         ))
-        conteudo_tabela_adm(NULL)
+        conteudo_tabela_adm <- NULL
       }
     })
-    
-    conteudo_tabela_adm <- reactiveVal(NULL)
     
     output$senhaAdm <- renderUI({
       conteudo_senha_adm()
@@ -754,10 +695,11 @@ shinyApp(
         )
       ) %>% 
         layout(
+          title = "Frequência Relativa do Comprimento de Tubarões Azul",
           yaxis = list(
             title = "Frequência Relativa (%)",
-            tickwidth = 2,  # Espessura da linha
-            showgrid = TRUE  # Exibir linhas de grade
+            tickwidth = 2,
+            showgrid = TRUE
           ),
           xaxis = list(
             title = "Comprimento total (cm)"
@@ -789,4 +731,3 @@ shinyApp(
     })
   }
 )
-
