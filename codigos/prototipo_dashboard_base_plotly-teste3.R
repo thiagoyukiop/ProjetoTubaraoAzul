@@ -695,14 +695,17 @@ shinyApp(
         )
       ) %>% 
         layout(
-          title = "Frequência Relativa do Comprimento de Tubarões Azul",
+          title = "Frequência Relativa do Comprimento de Tubarões Azul", 
+          # font = list(size = 20),
           yaxis = list(
             title = "Frequência Relativa (%)",
             tickwidth = 2,
-            showgrid = TRUE
+            showgrid = TRUE,
+            titlefont = list(size = 18)
           ),
           xaxis = list(
-            title = "Comprimento total (cm)"
+            title = "Comprimento total (cm)",
+            titlefont = list(size = 18)
           )
         )
     })
