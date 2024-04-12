@@ -3,7 +3,7 @@ if (!require("pacman")) {
 }
 pacman::p_load(
   shiny, shinydashboard, shinydashboardPlus, htmltools,
-  readtext, dplyr, ggplot2, ggrepel, scales, plotly, zoo
+  dplyr, ggplot2, ggrepel, scales, plotly, zoo
 )
 
 senha_admin <- "senha123"
@@ -231,7 +231,6 @@ shinyApp(
                  width = 12,
                  solidHeader = T,
                  title = "Gráfico de Linhas",
-                 # title = "Captura Média por Viagem",
                  status = "primary",
                  plotlyOutput("graficoCaptura")
                )
@@ -242,7 +241,6 @@ shinyApp(
                  width = 12,
                  solidHeader = T,
                  title = "Gráfico de Rosca",
-                 # title = "Composição de espécies",
                  status = "primary",
                  plotlyOutput("graficoEspecies")
                )
@@ -254,14 +252,13 @@ shinyApp(
                    width = 12,
                    solidHeader = T,
                    title = "Gráfico de Linhas",
-                   # title = "Desembarque Total (ton)",
                    status = "primary",
                    plotlyOutput("graficoDesembarque")
                  )
                )
              )
             )
-          ),
+          )
         ),
         tabItem(
           "tab4header",
@@ -489,7 +486,9 @@ shinyApp(
       ) %>%
         layout(
           title = "Captura Média por Viagem",
-          xaxis = list(title = "Mês"),
+          xaxis = list(
+            title = "Mês"
+            ),
           yaxis = list(
             title = "Captura Média (ton) por Viagem"
           ), showlegend = FALSE
@@ -515,7 +514,6 @@ shinyApp(
         )
       ) %>% 
         layout(
-          # title = "Captura Média por Viagem por Mês em cada Ano",
           title = "Desembarque Total (ton)",
           xaxis = list(title = "Mês"),
           yaxis = list(
@@ -524,13 +522,17 @@ shinyApp(
         )
     })
     
+    cores <- c("Albacora bandolim" = "purple","Albacora branca" = "red",
+               "Albacora laje" = "green", "Meca" = "yellow",
+               "Outros" = "orange", "Tubarao Azul" = "blue")
+    
     output$graficoEspecies <- renderPlotly({
       tiposEspecies <- dados_gerais_filtrados() %>%
         group_by(Especie) %>%
         summarise(n = n(),
                   toneladas_totais = sum(Toneladas)) %>%
         mutate(porc = n/sum(n))
-      
+
       plot_ly(
         data = tiposEspecies,
         labels = ~Especie,
@@ -544,7 +546,7 @@ shinyApp(
           "Porcentagem: ", percent(porc, accuracy = 0.1), "<br>"
         ),
         marker = list(colors = cores)
-      ) %>% 
+      ) %>%
         layout(
           title = "Composição de espécies",
           showlegend = FALSE
@@ -575,7 +577,6 @@ shinyApp(
            contentType = "image/png",
            alt = "Créditos")
     }, deleteFile = FALSE)
-    
     
     conteudo_senha_adm <- reactiveVal(NULL)
     conteudo_entrar_adm <- reactiveVal(NULL)
@@ -613,7 +614,7 @@ shinyApp(
               dados_gerais_filtrados()
             }
           }
-        },options = list( paging = T, searching = FALSE))
+        },options = list(paging = T, searching = FALSE))
       } else{
         showModal(modalDialog(
           title = "Erro de login",
@@ -659,7 +660,6 @@ shinyApp(
         )
     })
     
-    # Renderização do gráfico de barras
     output$graficoBarra <- renderPlotly({
       plot_ly(
         data = dadostub_filtrados(),
@@ -688,15 +688,14 @@ shinyApp(
                                                   max(Tamanho) + 5, by = 5),
                                      include.lowest = TRUE,
                                      right = FALSE)
-          )
-          ) * 100,
-          2),
+                                 )
+                           ) * 100,
+                2),
           "%"
         )
       ) %>% 
         layout(
-          title = "Frequência Relativa do Comprimento de Tubarões Azul", 
-          # font = list(size = 20),
+          title = "Frequência Relativa do Comprimento de Tubarões Azul",
           yaxis = list(
             title = "Frequência Relativa (%)",
             tickwidth = 2,
@@ -710,7 +709,6 @@ shinyApp(
         )
     })
     
-    # Renderização do gráfico de rosca
     output$graficoRosca <- renderPlotly({
       gender <- dadostub_filtrados_Sexo() %>%
         count(Sexo)
@@ -729,8 +727,12 @@ shinyApp(
           "Sexo: ", Sexo, "<br>",
           "Quantidade: ", n, "<br>"
         ),
-        marker = list(colors = cores_sexo)
-      )
+        marker = list(colors = cores_sexo) 
+      )%>% 
+        layout(
+          title = "Quantidade de Tubarões Azul por Sexo",
+          showlegend = FALSE
+        )
     })
   }
 )
