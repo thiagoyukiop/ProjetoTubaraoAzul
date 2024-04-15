@@ -65,7 +65,7 @@ shinyApp(
           icon = icon("earth-americas")
         ),
         menuItem(
-          "Admin",
+          "Administrador",
           tabName = "tab5header",
           icon = icon("user-tie")
         ),
@@ -606,8 +606,8 @@ shinyApp(
         conteudo_tabela_adm({
           dataTableOutput("tabela_tub")
         })
-        conteudo_senha_adm <- NULL
-        conteudo_entrar_adm <- NULL
+        conteudo_senha_adm(NULL)
+        conteudo_entrar_adm(NULL)
         output$tabela_tub <- renderDataTable({
           if (!is.null(input$entrar) && input$entrar > 0) {
             if (input$senha == senha_admin) {
@@ -621,7 +621,7 @@ shinyApp(
           "Senha incorreta. Tente novamente.",
           easyClose = TRUE,
         ))
-        conteudo_tabela_adm <- NULL
+        conteudo_tabela_adm(NULL)
       }
     })
     
