@@ -25,6 +25,7 @@ shinyApp(
         ),
         notificationItem(
           text = "Nova embarcação ocorrerá dia 17/04.",
+          href = NULL,
           icon = icon("ferry"),
         )
       )
@@ -288,15 +289,6 @@ shinyApp(
               uiOutput("entrarAdm")
             )
           ),
-          tags$head(
-            tags$style(HTML("
-            .dataTables_wrapper {
-            height: 100vh !important;
-            width: 80vw !important;
-            padding: 10px;
-            }
-                            "))
-          ),
           fluidRow(
             column(
               width = 12,
@@ -347,7 +339,6 @@ shinyApp(
     )
   ),
   server <- function(input, output, session) {
-    
     dados_gerais <- read.table("dados_brutos/dados_PTA.csv",
                                header = TRUE, sep = ",", dec = ".")
     
@@ -713,8 +704,6 @@ shinyApp(
       gender <- dadostub_filtrados_Sexo() %>%
         count(Sexo)
       
-      cores_sexo = c("F" = "red", "M" = "blue")
-      
       plot_ly(
         data = gender, 
         labels = ~Sexo,
@@ -727,7 +716,7 @@ shinyApp(
           "Sexo: ", Sexo, "<br>",
           "Quantidade: ", n, "<br>"
         ),
-        marker = list(colors = cores_sexo) 
+        marker = list(colors = c("F" = "red", "M" = "blue")) 
       )%>% 
         layout(
           title = "Quantidade de Tubarões Azul por Sexo",
