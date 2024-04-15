@@ -1,11 +1,10 @@
-# INCOMPLETO, fazer com que as coordenadas sejam somente pontos no mar
-
 library(dplyr)
 library(rnaturalearth)
 library(plotly)
 library(sf)
 library(maps)
 library(oce)
+library(sp)
 
 verificar_coordenada_mar <- function(latitude, longitude) {
   world_map <- map("world", fill = TRUE, plot = FALSE)
@@ -57,26 +56,26 @@ dados <- data.frame(
 
 df_completo <- cbind(dados, coordenadas_mar)
 
-# Salve os dados em um arquivo CSV
-write.csv(df_completo, "dados_brutos/dados_PTA.csv", row.names = FALSE)
+# # Salve os dados em um arquivo CSV
+# write.csv(df_completo, "dados_brutos/dados_PTA.csv", row.names = FALSE)
 
 
 # Carregue os dados
 # dados <- read.csv("dados_brutos/dados_captura_coordenadas.csv")
 
-# # Crie o gráfico de mapa de calor
-# plot_ly(
-#   data = dados,
-#   type = 'densitymapbox',
-#   lat = ~Latitude,
-#   lon = ~Longitude,
-#   z = ~Toneladas,
-#   radius = 10
-# ) %>%
-#   layout(
-#     title = "Mapa de Calor das Capturas",
-#     mapbox = list(
-#       style = "open-street-map",  # Escolha um estilo de mapa adequado
-#       zoom = 1
-#     )
-#   )
+# Crie o gráfico de mapa de calor
+plot_ly(
+  data = dados_gerais,
+  type = 'densitymapbox',
+  lat = ~Latitude,
+  lon = ~Longitude,
+  z = ~Toneladas,
+  radius = 1000
+) %>%
+  layout(
+    title = "Mapa de Calor das Capturas",
+    mapbox = list(
+      style = "open-street-map",  # Escolha um estilo de mapa adequado
+      zoom = 1
+    )
+  )
