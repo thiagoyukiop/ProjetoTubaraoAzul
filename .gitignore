@@ -49,4 +49,4 @@ po/*~
 rsconnect/
 
 # Arquivos CSV a serem ignorados
-*.csv
+dados_brutos/*.csv
