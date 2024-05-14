@@ -1,7 +1,7 @@
 # Bibliotecas -------------------------------------------------------------
 
 pacman::p_load(
-  shiny, shinydashboard, shinydashboardPlus, htmltools, DT,apexcharter,
+  shiny, shinydashboard, shinydashboardPlus, htmltools, DT,apexcharter, leaflet,
   dplyr, ggplot2, ggrepel, scales, plotly, zoo, rsconnect, vctrs, tidyverse
 )
 
@@ -43,15 +43,6 @@ ui = dashboardPage(
   
   # Definindo o Sidebar do Painel
   sidebar = dashboardSidebar(
-    # tags$head(tags$style(HTML(' 
-    # .skin-blue .main-sidebar .sidebar .sidebar-menu a:hover{
-    #   background-color: gray;
-    #   color:white;
-    #   width: 200%;
-    #   z-index: 1111;
-    # }')
-    # )
-    # ),
     width = 250,   # Definição da Largura em pixels
     minified = T,  # Se a aba lateral ao ser fechada deverá mostrar os ícones
     collapsed = F, # Se a aba lateral deve ser iniciada fechada
@@ -66,7 +57,7 @@ ui = dashboardPage(
         menuSubItem(
           text = "Projeto", 
           tabName = "tab1body", # Definição do nome do tab
-          icon = icon("r-project"),
+          icon = icon("r-project")
         ),
         # Definindo o item do Sub-Menu do Leia-me
         menuSubItem(
@@ -119,6 +110,15 @@ ui = dashboardPage(
     position: relative;
     z-index: 100;
     }
+    
+    .graficos {
+    display: flex;
+    width: 100%;
+    height: calc(50vh - 120px);
+    visibility: inherit;
+    position: relative;
+    z-index: 100;
+    }
                               ')
                          )
     ),
@@ -129,64 +129,130 @@ ui = dashboardPage(
         fluidPage(
           fluidRow(
             column(
-              width = 6, # Definindo a largura da coluna
-              infoBox(
-                title = "Tubarões Medidos",
-                fill = T,                  # Se a infoBox deve ser preenchida
-                width = 10,                # Definindo a largura da infoBox
-                color = "light-blue",      # Definindo cor da infoBox
-                # Definindo Configurações do conteúdo da infoBox
-                value = tags$div(
-                  style = "display: block; text-align: center;", 
-                  h1(strong("28954"))
+              offset = 2,
+              width = 9,
+              carousel(
+                width = 12,
+                id = "mycarousel",
+                indicators = F,
+                carouselItem(
+                  infoBox(
+                    title = "Tubarões Medidos",
+                    fill = T,               # Se a infoBox deve ser preenchida
+                    width = 10,             # Definindo a largura da infoBox
+                    color = "light-blue",   # Definindo cor da infoBox
+                    # Definindo Configurações do conteúdo da infoBox
+                    value = tags$div(
+                      style = "display: block; text-align: center;", 
+                      h1(strong("28954"))
+                    ),
+                    icon = icon("fish"),
+                    br()
+                  )
                 ),
-                icon = icon("fish")
-              )
-            ),
-            column(
-              width = 6,
-              infoBox(
-                title = "Entrevista de desembarque",
-                fill = T,
-                width = 10,
-                color = "light-blue", 
-                value = tags$div(
-                  style = "display: block; text-align: center;", 
-                  h1(strong("731"))
+                carouselItem(
+                  infoBox(
+                    title = "Entrevista de desembarque",
+                    fill = T,
+                    width = 10,
+                    color = "light-blue", 
+                    value = tags$div(
+                      style = "display: block; text-align: center;", 
+                      h1(strong("731"))
+                    ),
+                    icon = icon("paste"),
+                    br()
+                  )
                 ),
-                icon = icon("paste")
+                carouselItem(
+                  infoBox(
+                    title = "Cadernos de bordo",
+                    fill = T,
+                    width = 10,
+                    color = "light-blue",
+                    value = tags$div(
+                      style = "display: block; text-align: center;", 
+                      h1(strong("465"))
+                    ),
+                    icon = icon("book-open"),
+                    br()
+                  )
+                ),
+                carouselItem(
+                  infoBox(
+                    title = "Embarcações Monitoradas",
+                    fill = T,
+                    width = 10,
+                    color = "light-blue",
+                    value = tags$div(
+                      style = "display: block; text-align: center;",
+                      h1(strong("92"))
+                    ),
+                    icon = icon("ship"),
+                    br()
+                  )
+                )
               )
             )
-          ),
-          fluidRow(
-            column(
-              width = 6,
-              infoBox(
-                title = "Cadernos de bordo",
-                fill = T,
-                width = 10,
-                color = "light-blue",
-                value = tags$div(
-                  style = "display: block; text-align: center;", 
-                  h1(strong("465"))
-                ),
-                icon = icon("book-open")
-              )
-            ),
-            column(
-              width = 6,
-              infoBox(
-                title = "Embarcações Monitoradas",
-                fill = T,
-                width = 10,
-                color = "light-blue",
-                value = tags$div(
-                  style = "display: block; text-align: center;",
-                  h1(strong("92"))
-                ),
-                icon = icon("ship")
-              )
-            )
+          #   column(
+          #     width = 6, # Definindo a largura da coluna
+          #     infoBox(
+          #       title = "Tubarões Medidos",
+          #       fill = T,                  # Se a infoBox deve ser preenchida
+          #       width = 10,                # Definindo a largura da infoBox
+          #       color = "light-blue",      # Definindo cor da infoBox
+          #       # Definindo Configurações do conteúdo da infoBox
+          #       value = tags$div(
+          #         style = "display: block; text-align: center;", 
+          #         h1(strong("28954"))
+          #       ),
+          #       icon = icon("fish")
+          #     )
+          #   ),
+          #   column(
+          #     width = 6,
+          #     infoBox(
+          #       title = "Entrevista de desembarque",
+          #       fill = T,
+          #       width = 10,
+          #       color = "light-blue", 
+          #       value = tags$div(
+          #         style = "display: block; text-align: center;", 
+          #         h1(strong("731"))
+          #       ),
+          #       icon = icon("paste")
+          #     )
+          #   )
+          # ),
+          # fluidRow(
+          #   column(
+          #     width = 6,
+          #     infoBox(
+          #       title = "Cadernos de bordo",
+          #       fill = T,
+          #       width = 10,
+          #       color = "light-blue",
+          #       value = tags$div(
+          #         style = "display: block; text-align: center;", 
+          #         h1(strong("465"))
+          #       ),
+          #       icon = icon("book-open")
+          #     )
+          #   ),
+          #   column(
+          #     width = 6,
+          #     infoBox(
+          #       title = "Embarcações Monitoradas",
+          #       fill = T,
+          #       width = 10,
+          #       color = "light-blue",
+          #       value = tags$div(
+          #         style = "display: block; text-align: center;",
+          #         h1(strong("92"))
+          #       ),
+          #       icon = icon("ship")
+          #     )
+          #   )
           ),
           fluidRow(
             column(
@@ -281,7 +347,7 @@ ui = dashboardPage(
               p("Para a construção dos gráficos apresentados nesta plataforma
                   são utilizados dados atualizados anualmente."),
               p("Para maiores informações, por favor, entre em contato através
-                  do e-mail ",strong("proj.tubaraoazul.furg@gmail.com."))
+                  do e-mail ",strong("proj.tubaraoazul.furg@gmail.com.")),
             )
           )
         )
@@ -300,9 +366,10 @@ ui = dashboardPage(
                 width = 12,
                 solidHeader = T, # Se a Header é sólida
                 status = "primary",
-                # Saída do Gráfico Histograma Plotly do Comprimento de Tubarões Azul
-                # plotlyOutput("graficoBarra")
-                plotlyOutput("TubMesAno")
+                div(
+                  class = "graficos",
+                  plotlyOutput("TubMesAno", height = "100%")
+                )
               )
             )
           ),
@@ -315,9 +382,10 @@ ui = dashboardPage(
                 width = 12,
                 solidHeader = T,
                 status = "primary",
-                # Saída do Gráfico Rosca Plotly do Comprimento de Tubarões Azul
-                # plotlyOutput("graficoRosca")
-                plotlyOutput("RoscaTubOutros")
+                div(
+                  class = "graficos",
+                  plotlyOutput("RoscaTubOutros", height = "100%")
+                )
               )
             ),
             column(
@@ -328,7 +396,10 @@ ui = dashboardPage(
                 width = 12,
                 solidHeader = T,
                 status = "primary",
-                plotlyOutput("TubMes")
+                div(
+                  class = "graficos",
+                  plotlyOutput("TubMes", height = "100%")
+                )
               )
             )
           ),
@@ -341,28 +412,14 @@ ui = dashboardPage(
                 width = 12,
                 solidHeader = T,
                 status = "primary",
-                plotlyOutput("historamaPeso")
+                div(
+                  class = "graficos",
+                  plotlyOutput("historamaPeso", height = "100%")
+                )
               )
             )
           )
         )
-        # # Definindo Caixa com conteúdo da Distribuição de Comprimentos
-        # box(
-        #   title = "Histograma",
-        #   solidHeader = T, # Se a Header é sólida
-        #   status = "primary",
-        #   # Saída do Gráfico Histograma Plotly do Comprimento de Tubarões Azul
-        #   # plotlyOutput("graficoBarra")
-        #   plotlyOutput("TubMes")
-        # ),
-        # box(
-        #   title = "Gráfico de Rosca",
-        #   solidHeader = T,
-        #   status = "primary",
-        #   # Saída do Gráfico Rosca Plotly do Comprimento de Tubarões Azul
-        #   # plotlyOutput("graficoRosca")
-        #   plotlyOutput("RoscaTubOutros")
-        # )
       ),
       # Definindo o conteúdo de Desembarques
       tabItem(
@@ -376,8 +433,11 @@ ui = dashboardPage(
                 width = 12,
                 solidHeader = T, 
                 status = "primary",
-                # Saída do Gráfico Plotly de Captura 
-                plotlyOutput("graficoCaptura")
+                div(
+                  class = "graficos",
+                  # Saída do Gráfico Plotly de Captura 
+                  plotlyOutput("graficoCaptura",height = "100%")
+                )
               )
             ),
             column(
@@ -387,8 +447,11 @@ ui = dashboardPage(
                 width = 12,
                 solidHeader = T,
                 status = "primary",
-                # Saída do Gráfico Plotly das Espécies
-                plotlyOutput("graficoEspecies")
+                div(
+                  class = "graficos",
+                  # Saída do Gráfico Plotly das Espécies
+                  plotlyOutput("graficoEspecies",height = "100%")
+                )
               )
             ) 
           ),
@@ -400,9 +463,12 @@ ui = dashboardPage(
                 width = 12,
                 solidHeader = T,
                 status = "primary",
-                # Saída do Gráfico Plotly do Desembarque
-                apexchartOutput("graficoDesembarque")
-                # plotlyOutput("graficoDesembarque")
+                div(
+                  class = "graficos",
+                  # Saída do Gráfico Plotly do Desembarque
+                  apexchartOutput("graficoDesembarque",height = "100%")
+                  # plotlyOutput("graficoDesembarque")
+                )
               )
             )
           )
@@ -426,14 +492,6 @@ ui = dashboardPage(
                   leafletOutput("MapaLeaflet",height = "100%")
                 )
               )
-              # box(
-              #   title = "Gráfico de Dispersão",
-              #   width = 12,
-              #   solidHeader = T,
-              #   status = "primary",
-              #   # Saída do Gráfico Plotly do Mapa de Calor
-              #   plotlyOutput("mapa_calor", height = 800)
-              # )
             )
           )
         )
@@ -495,13 +553,6 @@ ui = dashboardPage(
             pauseButton = icon("pause")
           )
         ),
-        # # Botões de rádio
-        # radioButtons(
-        #   inputId = "sexo_escolhido", 
-        #   label = "Escolha o Sexo:",
-        #   choices = c("Todos", "Macho", "Fêmea"), # Opções dos botões de rádio
-        #   selected = "Todos"                      # Opção inicial selecionada
-        # ),
         # # Entrada de grupo de caixas de seleção
         # checkboxGroupInput(
         #   inputId = "species",
@@ -553,11 +604,6 @@ server <- function(input, output, session) {
                    "Julho", "Agosto", "Setembro", "Outubro", "Novembro",
                    "Dezembro")
   
-  
-  # # Carregando os Dados de um Arquivo csv
-  # dados_gerais <- read.table("dados_brutos/dados_2000_2024.csv",
-  #                            header = TRUE, sep = ";", dec = ".")
-  
   # # Definindo as Cores de cada Espécie
   # cores <- c("Albacora bandolim" = "purple","Albacora branca" = "red",
   #            "Albacora laje" = "green", "Meca" = "yellow",
@@ -576,12 +622,6 @@ server <- function(input, output, session) {
   dados_gerais_filtrados <- reactive({
     # Filtrando as Espécies 
     dados_filtrados <- subset(dados_gerais, CATEGORIA %in% input$species)
-    # # Filtrando o Sexo
-    # if (input$sexo_escolhido == "Macho") {
-    #   dados_filtrados <- subset(dados_filtrados, Sexo == "M")
-    # } else if (input$sexo_escolhido == "Fêmea") {
-    #   dados_filtrados <- subset(dados_filtrados, Sexo == "F")
-    # }
     # Filtrando o Intervalo de Anos
     dados_filtrados <- subset(
       dados_filtrados,
@@ -592,12 +632,6 @@ server <- function(input, output, session) {
   dados_aux_filtrados <- reactive({
     # Filtrando as Espécies 
     dados_filtrados <- subset(dados_aux, CATEGORIA %in% input$species)
-    # # Filtrando o Sexo
-    # if (input$sexo_escolhido == "Macho") {
-    #   dados_filtrados <- subset(dados_filtrados, Sexo == "M")
-    # } else if (input$sexo_escolhido == "Fêmea") {
-    #   dados_filtrados <- subset(dados_filtrados, Sexo == "F")
-    # }
     # Filtrando o Intervalo de Anos
     dados_filtrados <- subset(
       dados_filtrados,
@@ -615,27 +649,12 @@ server <- function(input, output, session) {
       # Arredondando a Média de Toneladas para Duas Casas Decimais
       mutate(Media_KG = round(Media_KG, 2)) %>%
       # Criação de Nome do Mês para Legenda
-      mutate(Mes_Nome = case_when(
-        MES == 1 ~ "Janeiro",
-        MES == 2 ~ "Fevereiro",
-        MES == 3 ~ "Março",
-        MES == 4 ~ "Abril",
-        MES == 5 ~ "Maio",
-        MES == 6 ~ "Junho",
-        MES == 7 ~ "Julho",
-        MES == 8 ~ "Agosto",
-        MES == 9 ~ "Setembro",
-        MES == 10 ~ "Outubro",
-        MES == 11 ~ "Novembro",
-        MES == 12 ~ "Dezembro",
-        TRUE ~ as.character(MES) 
-      )) %>%
+      mutate(mes_nome = nomes_meses[MES]) %>%
       #  Cria uma Variável Formato mes_ano
       mutate(mes_ano = as.yearmon(paste0(ANO, "-", sprintf("%02d", MES)))) %>%
       # Formata a coluna mes_ano para exibir apenas o mês e o ano
       mutate(mes_ano_formatado = format(as.Date(
-        mes_ano, format = "%Y-%m"),
-        "%b %Y")) %>% 
+        mes_ano, format = "%Y-%m"),"%b %Y")) %>% 
       select(-mes_ano)
   })
   
@@ -650,31 +669,12 @@ server <- function(input, output, session) {
       summarise(Media_KG_por_Mes = mean(Media_KG)) %>%
       mutate(MediaKGMes = round(Media_KG_por_Mes, 2)) %>%
       select(-Media_KG_por_Mes) %>%
-      mutate(Mes_Nome = case_when(
-        MES == 1 ~ "Janeiro",
-        MES == 2 ~ "Fevereiro",
-        MES == 3 ~ "Março",
-        MES == 4 ~ "Abril",
-        MES == 5 ~ "Maio",
-        MES == 6 ~ "Junho",
-        MES == 7 ~ "Julho",
-        MES == 8 ~ "Agosto",
-        MES == 9 ~ "Setembro",
-        MES == 10 ~ "Outubro",
-        MES == 11 ~ "Novembro",
-        MES == 12 ~ "Dezembro",
-        TRUE ~ as.character(MES) 
-      )) 
+      mutate(mes_nome = nomes_meses[MES])
   })
   
   # Filtrando os Dados para o Histograma de Comprimento dos Tubarões Azul
   dadostub_filtrados <- reactive({
     dados_auxiliar <- subset(dados_gerais, CATEGORIA == "Cacao-azul")
-    # if (input$sexo_escolhido == "Macho") {
-    #   dados_auxiliar <- subset(dados_gerais, Sexo == "M")
-    # } else if (input$sexo_escolhido == "Fêmea") {
-    #   dados_auxiliar <- subset(dados_gerais, Sexo == "F")
-    # }
     subset(
       dados_auxiliar,
       ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2]
@@ -683,25 +683,11 @@ server <- function(input, output, session) {
   
   dadostub_aux_filtrados <- reactive({
     dados_auxiliar <- subset(dados_aux, CATEGORIA == "Cacao-azul")
-    # if (input$sexo_escolhido == "Macho") {
-    #   dados_auxiliar <- subset(dados_gerais, Sexo == "M")
-    # } else if (input$sexo_escolhido == "Fêmea") {
-    #   dados_auxiliar <- subset(dados_gerais, Sexo == "F")
-    # }
     subset(
       dados_auxiliar,
       ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2]
     )
   })
-
-  # # Filtrando os Dados para o Gráfico de Distribuição do Sexo dos Tubarões Azul
-  # dadostub_filtrados_Sexo <- reactive({
-  #   subset(
-  #     dados_gerais,
-  #     CATEGORIA == "Tubarao Azul" &
-  #       ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2]
-  #   )
-  # })
   
   # Filtrando dados Para o Mapa
   db_filtrado <- reactive({
@@ -767,69 +753,18 @@ server <- function(input, output, session) {
       summarise(Quantidade = n()) %>%
       mutate(mes_ano = as.yearmon(paste0(ANO, "-", sprintf("%02d", MES)))) %>%
       mutate(mes_ano_formatado = format(as.Date(
-        mes_ano, format = "%Y-%m"),
-        "%b %Y")) %>% 
+        mes_ano, format = "%Y-%m"),"%b %Y")) %>% 
       select(-mes_ano)
     
     # Converter mes_ano_formatado em fator ordenado
-    tubAzulMes$mes_ano_formatado <- factor(tubAzulMes$mes_ano_formatado, 
-                                           levels = unique(tubAzulMes$mes_ano_formatado),
-                                           ordered = TRUE)
-    
-    # # Criar o gráfico de barras
-    # plot_ly(
-    #   data = tubAzulMes,
-    #   x = ~mes_ano_formatado,
-    #   y = ~Quantidade,
-    #   type =  "bar"
-    # ) %>% 
-    #   layout(
-    #     title = "Captura de Cação Azul por mês",
-    #     xaxis = list(
-    #       title = " "
-    #     ), showlegend = FALSE
-    #   )
-    # 
-    # tubAzulMes <- dadostub_filtrados() %>% 
-    #   group_by(ANO,MES) %>% 
-    #   summarise(Quantidade = n()) %>%
-    #   mutate(mes_ano = as.yearmon(paste0(ANO, "-", sprintf("%02d", MES)))) %>%
-    #   mutate(mes_ano_formatado = format(as.Date(
-    #     mes_ano, format = "%Y-%m"),
-    #     "%b %Y")) %>% 
-    #   select(-mes_ano)
-    # 
-    # # tubAzulMes$mes_ano_formatado <- factor(tubAzulMes$mes_ano_formatado)
-    # 
-    # # plot_ly(
-    # #   data = tubAzulMes,
-    # #   labels = ~mes_ano_formatado,
-    # #   values = ~Quantidade,
-    # #   type = "pie",
-    # #   hole = 0.6
-    # # )
-    # plot_ly(
-    #   data = tubAzulMes,
-    #   x = ~mes_ano_formatado,
-    #   y = ~Quantidade,
-    #   type =  "bar"
-    #   # orientation = "h"
-    # )
-    
-    # tubAzulMesTESTE <- dados_aux %>% 
-    #   group_by(CATEGORIA, ANO, MES) %>% 
-    #   mutate(mes_ano = as.yearmon(paste0(ANO, "-", sprintf("%02d", MES)))) %>%
-    #   mutate(mes_ano_formatado = format(as.Date(
-    #     mes_ano, format = "%Y-%m"),
-    #     "%b %Y")) %>% 
-    #   select(-mes_ano) %>% 
-    #   reframe(mes_ano_formatado ,Quantidade = n()) 
-    
-
+    tubAzulMes$mes_ano_formatado <- factor(
+      tubAzulMes$mes_ano_formatado, 
+      levels = unique(tubAzulMes$mes_ano_formatado),
+      ordered = TRUE)
       
     dadostub_filtrados
     tubAzulMesAnoCompleto <- dados_aux_filtrados() %>%
-      mutate(CATEGORIA = if_else(CATEGORIA != "Cacao-azul", "Outros", CATEGORIA)) %>%
+      mutate(CATEGORIA=if_else(CATEGORIA!="Cacao-azul","Outros",CATEGORIA)) %>%
       group_by(CATEGORIA, ANO, MES) %>%
       summarise(Quantidade = n()) %>%
       ungroup() %>%
@@ -847,9 +782,11 @@ server <- function(input, output, session) {
       color = ~CATEGORIA,
       type = "bar",
       hoverinfo = "text",
-      text = ~paste("Data: ",mes_ano,"<br>",
-                    "Categoria: ", CATEGORIA, "<br>",
-                    "Quantidade: ", Quantidade)
+      text = ~paste(
+        "Data: ",mes_ano,"<br>",
+        "Categoria: ", CATEGORIA, "<br>",
+        "Quantidade: ", Quantidade
+        )
     ) %>%
       layout(
         title = "Dados registrados por mês, ano e categoria",
@@ -867,7 +804,11 @@ server <- function(input, output, session) {
   
   output$RoscaTubOutros <- renderPlotly({
     tubazul <- dados_aux_filtrados() %>%
-      mutate(CATEGORIA = ifelse(CATEGORIA == "Cacao-azul", "Cacao-azul", "Outros")) %>%
+      mutate(
+        CATEGORIA = ifelse(
+          CATEGORIA == "Cacao-azul","Cacao-azul","Outros"
+          )
+        ) %>%
       count(CATEGORIA)
     
     plot_ly(
@@ -878,14 +819,13 @@ server <- function(input, output, session) {
       hole = 0.6,
       textinfo = "label",
       hoverinfo = "text+percent",
-      text = ~paste(
-                    "Quantidade: ", n, "<br>"),
+      text = ~paste("Quantidade: ", n, "<br>"),
       marker = list(colors = c("Cacao-azul" = "#1f77b4", "Outros" = "#ff7f0e"))
     ) %>%
-      layout(
-        title = "Comparação de dados da Cação Azul para o resto",
-        showlegend = FALSE
-      )
+    layout(
+      title = "Comparação de dados da Cação Azul para o resto",
+      showlegend = FALSE
+    )
   })
 
   output$TubMes <- renderPlotly({
@@ -900,21 +840,20 @@ server <- function(input, output, session) {
     plot_ly(
       data = tubAzulMesCompleto,
       labels = ~mes_nome,
+      parents = ~CATEGORIA,
       values = ~Quantidade,
-      type = "pie",
-      hole = 0.6,
-      textinfo = "label",
-      hoverinfo = "percent+text",
-      text = ~paste("Categoria: ", CATEGORIA, "<br>",
-                    "Quantidade: ", Quantidade)
+      type = "sunburst",
+      branchvalues = "total", 
+      hoverinfo = "percent entry+value",
+      textinfo = "label"
     ) %>%
       layout(
         title = "Dados registrados de Cação Azul por mês",
-        showlegend = F
+        showlegend = FALSE
       )
   })
   
-  # Hisrograma da Distribuição de Peso em Kg da Cação Azul
+  # Histograma da Distribuição de Peso em Kg da Cação Azul
   output$historamaPeso <- renderPlotly({
     start_value <- floor(min(dadostub_aux_filtrados()$KG) / 25) * 25
     
@@ -946,66 +885,6 @@ server <- function(input, output, session) {
         )
       ) 
     })
-  
-  # #Renderizando Histograma Plotly da Distribuição do Comprimento dos Tubarões Azul
-  # output$graficoBarra <- renderPlotly({
-  #   # Definindo o Valor Inicial do Histograma no Eixo X
-  #   start_value <- floor(min(dadostub_filtrados()$Tamanho) / 5) * 5
-  #   
-  #   plot_ly(
-  #     data = dadostub_filtrados(),
-  #     x = ~Tamanho,
-  #     type = "histogram",
-  #     histnorm = "percent",
-  #     xbins = list(start = start_value ,size = 5),
-  #     marker = list(
-  #       color = "#3C8DBC",
-  #       line = list(
-  #         color = "black",
-  #         width = 1
-  #       )
-  #     ),
-  #     hoverinfo = "x"
-  #   ) %>% 
-  #     layout(
-  #       title = "Frequência Relativa do Comprimento de Tubarões Azul",
-  #       yaxis = list(
-  #         title = "Frequência Relativa (%)",
-  #         tickwidth = 2,
-  #         showgrid = TRUE,
-  #         titlefont = list(size = 18)
-  #       ),
-  #       xaxis = list(
-  #         title = "Comprimento total (cm)",
-  #         titlefont = list(size = 18)
-  #       )
-  #     )
-  # })
-  
-  # # Renderizando Gráfico de Rosca Plotly da Distribuição de Sexo dos Tubarões Azul
-  # output$graficoRosca <- renderPlotly({
-  #   gender <- dadostub_filtrados_Sexo() %>%
-  #     count(Sexo)
-  #   
-  #   plot_ly(
-  #     data = gender, 
-  #     labels = ~Sexo,
-  #     values = ~n,
-  #     type = "pie",
-  #     hole = 0.6,
-  #     textinfo = 'percent',
-  #     hoverinfo = "text",
-  #     text = ~paste(
-  #       "Sexo: ", Sexo, "<br>",
-  #       "Quantidade: ", n, "<br>"
-  #     ),
-  #     marker = list(colors = c("F" = "red", "M" = "blue")) 
-  #   )%>% 
-  #     layout(
-  #       title = "Quantidade de Tubarões Azul por Sexo",
-  #       showlegend = FALSE
-  #     )
-  # })
   
   # Desembarques ------------------------------------------------------------
   
@@ -1051,8 +930,7 @@ server <- function(input, output, session) {
       # ax_colors_manual(coresAux)
   })
   
-  
-  # # Renderização do Gráfico Plotly da Média Mensal de Capturas de Todo Período
+  ##Renderização do Gráfico Plotly da Média Mensal de Capturas de Todo Período
   # # (mes_ano)
   # output$graficoDesembarque <- renderPlotly({
   #   plot_ly(
@@ -1132,87 +1010,70 @@ server <- function(input, output, session) {
     dados_filtrados <- db_filtrado()$dados
     tab01 <- db_filtrado()$tab01
     
-    ######@> Color palette...
+    
+    # Definir manualmente uma paleta de cores
+    yellow_to_red_palette <- c("#FFFF00AA", "#FFCC00AA", "#FF9900AA",
+                               "#FF6600AA", "#FF3300AA", "#FF0000AA")
+    
+    
+    range_values <- range(tab01$prod)
+    
+    # Calcular os intervalos
+    intervals <- seq(range_values[1], range_values[2],length.out = 11)
+    
+    # Criar a paleta de cores com base nos intervalos
     pal <- colorQuantile(
-      palette = "viridis",
+      palette = yellow_to_red_palette,
       domain = tab01$prod,
-      probs = seq(0, 1, 0.1))
+      probs = seq(0, 1, 0.1)
+    )
+    
+    
+    # ######@> Color palette...
+    # pal <- colorQuantile(
+    #   palette = "viridis",
+    #   domain = tab01$prod,
+    #   probs = seq(0, 1, 0.1))
     
     leaflet() %>%
       addProviderTiles(
         providers$CartoDB.Positron,
-        group = "Light Map") %>%
+        group = "Light Map"
+        ) %>%
       addProviderTiles(
         providers$CartoDB.DarkMatter,
-        group = "Dark Map") %>%
-      setView(lng = -40, lat = -29, zoom = 4) %>%
+        group = "Dark Map"
+        ) %>%
+      setView(
+        lng = -40, lat = -29, zoom = 4
+        ) %>%
       addCircleMarkers(
         group = tab01$prod,
-        # radius = sqrt(tab01$N) * 0.5,
-        # radius = sqrt(tab01$prod)/50,
         radius = 10,
         lng = tab01$LON,
         lat = tab01$LAT,
         stroke = FALSE,
         color = pal(tab01$prod),
         fillOpacity = 0.7,
-        label = paste0("Captura: ", round(tab01$prod, 0), " kg")) %>%
-      addLegend(pal = pal, values = tab01$prod, group = tab01$prod,
-                position = "bottomright", title = "Percentual da Captura") %>%
+        label = paste0("Captura: ", round(tab01$prod, 0), " kg")
+        ) %>%
+      addLegend(
+        pal = pal, values = tab01$prod, group = tab01$prod,
+        position = "bottomright", title = "Percentual da Captura"
+        ) %>%
       addLayersControl(
         position = "topleft",
         baseGroups = c("Dark Map", "Light Map"),
         options =
-          layersControlOptions(collapsed = FALSE)) %>%
-      addMiniMap(position = "bottomleft") %>%
-      addMeasure(position = "bottomleft")
+          layersControlOptions(collapsed = FALSE)
+        ) %>%
+      addMiniMap(
+        position = "bottomleft"
+        ) %>%
+      addMeasure(
+        position = "bottomleft"
+        )
   })
-  
-  # lat_min <- min(dados_aux$LAT)
-  # lat_max <- max(dados_aux$LAT)
-  # lon_min <- min(dados_aux$LON)
-  # lon_max <- max(dados_aux$LON)
-  # 
-  # # Adicionando margem aos limites
-  # margem_lat <- 0.1 * (lat_max - lat_min)
-  # margem_lon <- 0.1 * (lon_max - lon_min)
-  # 
-  # lat_min <- lat_min - margem_lat
-  # lat_max <- lat_max + margem_lat
-  # lon_min <- lon_min - margem_lon
-  # lon_max <- lon_max + margem_lon
-  # 
-  # # Renderizando o Gráfico Plotly do Mapa de Calor
-  # output$mapa_calor <- renderPlotly({
-  #   dados_filtrados <- dados_aux_filtrados()
-  #   # Criando um gráfico Plotly
-  #   
-  #   plot_ly(
-  #     data = dados_filtrados,
-  #     type = 'scattergeo',  # Define o tipo de Gráfico como Dispersão Geográfica
-  #     mode = 'markers',     # Define o modo nos Pontos Específicados
-  #     # color = ~CATEGORIA, 
-  #     # colors = cores,
-  #     hoverinfo = "text",   # Define as Informações do Hover como Texto
-  #     text = ~paste(
-  #       "Espécie: ", CATEGORIA, "<br>",
-  #       "Coordenada: ", round(LAT,3), "º, ", round(LON,3), "º<br>"
-  #     ),
-  #     lat = ~LAT,      # Define Latitude
-  #     lon = ~LON,     # Define Longitude
-  #     sizes = "0.001px"       # Define o Tamanho dos Marcadores
-  #   ) %>%
-  #     layout(
-  #       title = "Coordenadas da captura das espécies marinhas",
-  #       geo=list(
-  #         projection=list(type='robinson'),
-  #         # Definindo os limites iniciais para a latitude e longitude
-  #         lataxis = list(range = c(lat_min, lat_max)),
-  #         lonaxis = list(range = c(lon_min, lon_max))
-  #       ),
-  #       showlegend = FALSE
-  #     )
-  # })
   
   # Administrador -----------------------------------------------------------
   
@@ -1258,11 +1119,13 @@ server <- function(input, output, session) {
       },options = list(paging = T, searching = FALSE))
     } else{
       # Mensagem no Caso de Senha Incorreta
-      showModal(modalDialog(
-        title = "Erro de login",
-        "Senha incorreta. Tente novamente.", 
-        easyClose = TRUE
-      ))
+      showModal(
+        modalDialog(
+          title = "Erro de login",
+          "Senha incorreta. Tente novamente.",
+          easyClose = TRUE
+          )
+        )
       # Valor Reativo Recebe Valor Nulo
       conteudo_tabela_adm(NULL)
     }
@@ -1291,12 +1154,7 @@ server <- function(input, output, session) {
       inputId = "intervalo_anos",
       value = c(min(dados_aux$ANO), max(dados_aux$ANO))
     )
-    # # Atualização nos Botões de Rádio
-    # updateRadioButtons(
-    #   session, 
-    #   inputId = "sexo_escolhido",
-    #   selected = "Todos"
-    # )
+
     # Atualização no Grupo de Caixas de Seleção
     updateCheckboxGroupInput(
       session, 
@@ -1304,7 +1162,6 @@ server <- function(input, output, session) {
       selected = unique(dados_aux$CATEGORIA)
     )
   })
-  
 }
 
 shinyApp(ui,server)
