@@ -83,7 +83,8 @@ ui = dashboardPage(
       ),
       # Definindo o item do Menu de Distribuição de Comprimentos
       menuItem(
-        text = "Distribuição de comprimentos",
+        # text = "Distribuição de comprimentos",
+        text = "Distribuição de captura",
         tabName = "tab2header",
         icon = icon("chart-simple")
       ),
@@ -547,7 +548,8 @@ ui = dashboardPage(
                 div(
                   class = "graficos",
                   # Saída do Gráfico Plotly das Espécies
-                  plotlyOutput("graficoEspecies",height = "100%")
+                  # plotlyOutput("graficoEspecies",height = "100%")
+                  plotlyOutput("pesoMes",height = "100%")
                 ),
                 sidebar = boxSidebar(
                   id = "boxsidebar7",
@@ -1154,6 +1156,32 @@ server <- function(input, output, session) {
       )
   })
   
+  output$pesoMes <- renderPlotly({
+    
+    PesoMesCompleto <- dados_aux_filtrados() %>%
+      mutate(CATEGORIA = "Especies") %>%
+      group_by(MES,CATEGORIA) %>%
+      summarise(KG_Total = sum(KG)) %>%
+      ungroup() %>%
+      complete(CATEGORIA, MES = 1:12, fill = list(KG_Total = 0)) %>% 
+      mutate(mes_nome = nomes_meses[MES])
+    
+    plot_ly(
+      data = PesoMesCompleto,
+      labels = ~mes_nome,
+      parents = ~CATEGORIA,
+      values = ~KG_Total,
+      type = "sunburst",
+      branchvalues = "total", 
+      hoverinfo = "percent entry+value",
+      textinfo = "label"
+    ) %>%
+      layout(
+        title = "Peso Total (KG) por Mês",
+        showlegend = FALSE
+      )
+  })
+  
   # Distribuição Espacial das Capturas --------------------------------------
   
   output$MapaLeaflet <- renderLeaflet({
@@ -1193,7 +1221,7 @@ server <- function(input, output, session) {
       ) %>%
       addCircleMarkers(
         group = tab01$prod,
-        radius = 10,
+        radius = 12,
         lng = tab01$LON,
         lat = tab01$LAT,
         stroke = FALSE,
