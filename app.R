@@ -478,33 +478,33 @@ ui = dashboardPage(
                 )
               )
             )
-          ),
-          fluidRow(
-            column(
-              width = 12,
-              box(
-                # background = "aqua",
-                title = "Histograma",
-                collapsible = T,
-                width = 12,
-                solidHeader = T,
-                status = "primary",
-                div(
-                  class = "graficos",
-                  plotlyOutput("historamaPeso", height = "100%")
-                ),
-                sidebar = boxSidebar(
-                  id = "boxsidebar5",
-                  icon = icon("circle-info"),
-                  background = "#A6ACAFEF",
-                  width = 30,
-                  p("Este histograma mostra a frequência relativa do peso de 
-                    Cação Azul, destacando a distribuição dos dados de pesca em 
-                    relação ao peso dessa espécie específica.")
-                )
-              )
-            )
-          )
+          )#,
+          # fluidRow(
+          #   column(
+          #     width = 12,
+          #     box(
+          #       # background = "aqua",
+          #       title = "Histograma",
+          #       collapsible = T,
+          #       width = 12,
+          #       solidHeader = T,
+          #       status = "primary",
+          #       div(
+          #         class = "graficos",
+          #         plotlyOutput("historamaPeso", height = "100%")
+          #       ),
+          #       sidebar = boxSidebar(
+          #         id = "boxsidebar5",
+          #         icon = icon("circle-info"),
+          #         background = "#A6ACAFEF",
+          #         width = 30,
+          #         p("Este histograma mostra a frequência relativa do peso de 
+          #           Cação Azul, destacando a distribuição dos dados de pesca em 
+          #           relação ao peso dessa espécie específica.")
+          #       )
+          #     )
+          #   )
+          # )
         )
       ),
       # Definindo o conteúdo de Desembarques
@@ -564,6 +564,37 @@ ui = dashboardPage(
               )
             ) 
           ),
+          # fluidRow(
+          #   column(
+          #     width = 12,
+          #     box(
+          #       # background = "navy",
+          #       title = "Gráfico de Área",
+          #       width = 12,
+          #       solidHeader = T,
+          #       status = "primary",
+          #       div(
+          #         class = "graficos",
+          #         # Saída do Gráfico Plotly do Desembarque
+          #         apexchartOutput("graficoDesembarque",height = "100%")
+          #         # apexchartOutput("graficoAreaDesembarque",height = "100%")
+          #         # plotlyOutput("graficoDesembarque")
+          #       ),
+          #       sidebar = boxSidebar(
+          #         id = "boxsidebar8",
+          #         icon = icon("circle-info"),
+          #         width = 30,
+          #         background = "#A6ACAFEF",
+          #         p("Este gráfico de área apresenta a captura média em quilos
+          #           por viagem, categorizada por tipo de peixe, para cada
+          #           mês/ano no período analisado. As diferentes cores
+          #           representam distintas categorias de pesca, permitindo uma
+          #           comparação clara e imediata entre os meses e anos, bem como
+          #           entre as categorias de peixe.")
+          #       )
+          #     )
+          #   )
+          # ),
           fluidRow(
             column(
               width = 12,
@@ -576,11 +607,12 @@ ui = dashboardPage(
                 div(
                   class = "graficos",
                   # Saída do Gráfico Plotly do Desembarque
-                  apexchartOutput("graficoDesembarque",height = "100%")
+                  # apexchartOutput("graficoDesembarque",height = "100%")
+                  apexchartOutput("graficoAreaDesembarque",height = "100%")
                   # plotlyOutput("graficoDesembarque")
                 ),
                 sidebar = boxSidebar(
-                  id = "boxsidebar8",
+                  id = "boxsidebar82",
                   icon = icon("circle-info"),
                   width = 30,
                   background = "#A6ACAFEF",
@@ -738,7 +770,8 @@ server <- function(input, output, session) {
   
   
   dados_completos <- dados_aux %>%
-    complete(CATEGORIA, ANO, MES = 1:12, fill = list(VALOR = NA))
+    complete(CATEGORIA, ANO, MES = 1:12, fill = list(VALOR = NA))%>% 
+    filter(!(ANO == 2024 & MES >= 5))
   
   dados_gerais <- dados_completos %>%
     mutate(KG = replace_na(KG, 0))
@@ -786,15 +819,36 @@ server <- function(input, output, session) {
     data.frame(dados_filtrados)
   })
   
-  # Filtrando Dados Para o Gráfico de Desembarque
-  CapturasPorMesDesembarque <- reactive({
+  # # Filtrando Dados Para o Gráfico de Desembarque
+  # CapturasPorMesDesembarque <- reactive({
+  #   dados_gerais_filtrados() %>%
+  #     # Agrupa os Dados por Colunas Selecionadas
+  #     group_by(CATEGORIA, ANO, MES) %>% 
+  #     # Média das Toneladas de Captura de Cada Grupo
+  #     summarise(Media_KG = mean(KG)) %>%
+  #     # Arredondando a Média de Toneladas para Duas Casas Decimais
+  #     mutate(Media_KG = round(Media_KG, 2)) %>%
+  #     # Criação de Nome do Mês para Legenda
+  #     mutate(mes_nome = nomes_meses[MES]) %>%
+  #     #  Cria uma Variável Formato mes_ano
+  #     mutate(mes_ano = as.yearmon(paste0(ANO, "-", sprintf("%02d", MES)))) %>%
+  #     # Formata a coluna mes_ano para exibir apenas o mês e o ano
+  #     mutate(mes_ano_formatado = format(as.Date(
+  #       mes_ano, format = "%Y-%m"),"%b %Y")) %>% 
+  #     select(-mes_ano)
+  # })
+  
+  CapturasPorMesDesembarquePorViagem <- reactive({
     dados_gerais_filtrados() %>%
+      mutate(KG_por_Viagem = (KG/DESCARGA)) %>% 
       # Agrupa os Dados por Colunas Selecionadas
       group_by(CATEGORIA, ANO, MES) %>% 
       # Média das Toneladas de Captura de Cada Grupo
-      summarise(Media_KG = mean(KG)) %>%
+      summarise(Media_KG_por_Viagem = mean(KG_por_Viagem)) %>%
+      # Substituindo NAs por Zero
+      mutate(Media_KG_por_Viagem = replace_na(Media_KG_por_Viagem, 0)) %>% 
       # Arredondando a Média de Toneladas para Duas Casas Decimais
-      mutate(Media_KG = round(Media_KG, 2)) %>%
+      mutate(Media_KG_por_Viagem = round(Media_KG_por_Viagem, 2)) %>%
       # Criação de Nome do Mês para Legenda
       mutate(mes_nome = nomes_meses[MES]) %>%
       #  Cria uma Variável Formato mes_ano
@@ -802,20 +856,23 @@ server <- function(input, output, session) {
       # Formata a coluna mes_ano para exibir apenas o mês e o ano
       mutate(mes_ano_formatado = format(as.Date(
         mes_ano, format = "%Y-%m"),"%b %Y")) %>% 
+      # complete(MES, fill = list(Media_KG_por_Viagem = 0)) %>%
       select(-mes_ano)
   })
   
   # Filtrando Dados para o Gráfico de Captura
   CapturasMediasPorMes <- reactive({
     dados_gerais_filtrados() %>%
+      mutate(KG_por_Viagem = (KG/DESCARGA)) %>% 
       group_by(CATEGORIA, ANO, MES) %>%
-      summarise(Media_KG = mean(KG)) %>%
-      # Agrupando as Colunas Selecionadas
+      summarise(Media_KG_por_Viagem = mean(KG_por_Viagem)) %>% 
+      # Substituindo NAs por Zero
+      mutate(Media_KG_por_Viagem = replace_na(Media_KG_por_Viagem, 0)) %>% 
       group_by(CATEGORIA, MES) %>% 
       # Média das Toneladas de Captura, de cada Mês, com Anos Agrupados
-      summarise(Media_KG_por_Mes = mean(Media_KG)) %>%
-      mutate(MediaKGMes = round(Media_KG_por_Mes, 2)) %>%
-      select(-Media_KG_por_Mes) %>%
+      summarise(MediaKG_Mes_Viagem = mean(Media_KG_por_Viagem)) %>%
+      mutate(MediaKGMesViagem = round(MediaKG_Mes_Viagem, 2)) %>%
+      select(-MediaKG_Mes_Viagem) %>%
       mutate(mes_nome = nomes_meses[MES])
   })
   
@@ -916,6 +973,7 @@ server <- function(input, output, session) {
       summarise(Quantidade = n()) %>%
       ungroup() %>%
       complete(CATEGORIA, ANO, MES = 1:12, fill = list(Quantidade = 0)) %>%
+      filter(!(ANO == 2024 & MES >= 5)) %>% 
       mutate(mes_ano_formatado = make_date(ANO, MES)) %>%
       mutate(mes_ano = as.yearmon(paste0(ANO, "-", sprintf("%02d", MES))))
     
@@ -1000,38 +1058,38 @@ server <- function(input, output, session) {
       )
   })
   
-  # Histograma da Distribuição de Peso em Kg da Cação Azul
-  output$historamaPeso <- renderPlotly({
-    start_value <- floor(min(dadostub_aux_filtrados()$KG) / 25) * 25
-    
-    plot_ly(
-      data = dadostub_aux_filtrados(),
-      x = ~KG,
-      histnorm = "percent",
-      xbins = list(start = start_value ,size = 25, end = 5000),
-      marker = list(
-        color = "#3C8DBC",
-        line = list(
-          color = "black",
-          width = 1
-        )
-      ),
-      hoverinfo = "x+y"
-    ) %>% 
-      layout(
-        title = "Frequência Relativa do Peso de Cações Azul",
-        yaxis = list(
-          title = "Frequência Relativa (%)",
-          tickwidth = 2,
-          showgrid = T,
-          titlefont = list(size = 18)
-        ),
-        xaxis = list(
-          title = "Peso Total (Kg)",
-          titlefont = list(size = 18)
-        )
-      ) 
-  })
+  # # Histograma da Distribuição de Peso em Kg da Cação Azul
+  # output$historamaPeso <- renderPlotly({
+  #   start_value <- floor(min(dadostub_aux_filtrados()$KG) / 25) * 25
+  #   
+  #   plot_ly(
+  #     data = dadostub_aux_filtrados(),
+  #     x = ~KG,
+  #     histnorm = "percent",
+  #     xbins = list(start = start_value ,size = 25, end = 5000),
+  #     marker = list(
+  #       color = "#3C8DBC",
+  #       line = list(
+  #         color = "black",
+  #         width = 1
+  #       )
+  #     ),
+  #     hoverinfo = "x+y"
+  #   ) %>% 
+  #     layout(
+  #       title = "Frequência Relativa do Peso de Cações Azul",
+  #       yaxis = list(
+  #         title = "Frequência Relativa (%)",
+  #         tickwidth = 2,
+  #         showgrid = T,
+  #         titlefont = list(size = 18)
+  #       ),
+  #       xaxis = list(
+  #         title = "Peso Total (Kg)",
+  #         titlefont = list(size = 18)
+  #       )
+  #     ) 
+  # })
   
   # Desembarques ------------------------------------------------------------
   
@@ -1040,7 +1098,7 @@ server <- function(input, output, session) {
     plot_ly(
       data = CapturasMediasPorMes(),
       x = ~MES,
-      y = ~MediaKGMes,
+      y = ~MediaKGMesViagem,
       type = 'scatter',
       mode = 'lines+markers',
       # color = ~CATEGORIA,
@@ -1050,7 +1108,7 @@ server <- function(input, output, session) {
       text = ~paste(
         "Espécie: ", CATEGORIA, "<br>",
         "Mês: ", mes_nome, "<br>",
-        "Média de KG: ", MediaKGMes, "<br>"
+        "Média de KG: ", MediaKGMesViagem, "<br>"
       )
     ) %>%
       layout(
@@ -1064,13 +1122,31 @@ server <- function(input, output, session) {
       )
   })
   
-  output$graficoDesembarque <- renderApexchart({
+  # output$graficoDesembarque <- renderApexchart({
+  #   apex(
+  #     data = CapturasPorMesDesembarque(),
+  #     type = "area",
+  #     mapping = aes(
+  #       x = mes_ano_formatado,
+  #       y = Media_KG,
+  #       fill = CATEGORIA
+  #     ),
+  #     showlegend = F
+  #   ) %>% 
+  #     ax_yaxis(
+  #       title = list(
+  #         text = "Captura Média (KG) por Viagem"
+  #       )
+  #     )
+  # })
+  
+  output$graficoAreaDesembarque <- renderApexchart({
     apex(
-      data = CapturasPorMesDesembarque(),
+      data = CapturasPorMesDesembarquePorViagem(),
       type = "area",
       mapping = aes(
         x = mes_ano_formatado,
-        y = Media_KG,
+        y = Media_KG_por_Viagem,
         fill = CATEGORIA
       ),
       showlegend = F
@@ -1199,7 +1275,6 @@ server <- function(input, output, session) {
       domain = tab01$prod,
       probs = seq(0, 1, 0.1)
     )
-    
     
     # ######@> Color palette...
     # pal <- colorQuantile(
