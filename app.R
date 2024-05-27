@@ -1,7 +1,7 @@
 # Bibliotecas -------------------------------------------------------------
 
 pacman::p_load(
-  shiny, shinydashboard, shinydashboardPlus, apexcharter, leaflet, dplyr, 
+  shiny, shinydashboard, shinydashboardPlus, leaflet, dplyr, 
   scales, plotly,zoo, tidyverse, digest, DT
 )
 
@@ -135,6 +135,7 @@ ui = dashboardPage(
     position: relative;
     z-index: 100;
     }
+    
     
       .direct-chat-contacts {
         z-index: 100 !important;
@@ -607,8 +608,7 @@ ui = dashboardPage(
                 div(
                   class = "graficos",
                   # Saída do Gráfico Plotly do Desembarque
-                  # apexchartOutput("graficoDesembarque",height = "100%")
-                  apexchartOutput("graficoAreaDesembarque",height = "100%")
+                  plotlyOutput("graficoAreaDesembarque",height = "100%")
                   # plotlyOutput("graficoDesembarque")
                 ),
                 sidebar = boxSidebar(
@@ -728,20 +728,12 @@ ui = dashboardPage(
             pauseButton = icon("pause")
           )
         ),
-        # # Entrada de grupo de caixas de seleção
-        # checkboxGroupInput(
-        #   inputId = "species",
-        #   label = "Seletor de Espécies:",
-        #   choices = c("Albacora bandolim","Albacora branca","Albacora laje",
-        #               "Meca", "Outros","Tubarao Azul"),
-        #   selected = c("Albacora bandolim","Albacora branca","Albacora laje",
-        #                "Meca","Outros", "Tubarao Azul")
-        # ),
         checkboxGroupInput(
           inputId = "species",
           label = "Seletor de Espécies:",
-          choices = names(sort(table(dados_aux$CATEGORIA), decreasing = TRUE)),
-          selected = "Cacao-azul"
+          choices = sort(names(table(dados_aux$CATEGORIA)), decreasing = FALSE),
+          # selected = "Cacao-azul"
+          selected = dados_aux$CATEGORIA,
         ),
         # Botão de ação
         actionButton(
@@ -784,12 +776,11 @@ server <- function(input, output, session) {
   yellow_to_red_palette <- c("#FFFF00AA", "#FFCC00AA", "#FF9900AA",
                              "#FF6600AA", "#FF3300AA", "#FF0000AA")
   
-  # # Definindo as Cores de cada Espécie
-  # cores <- c("Albacora bandolim" = "purple","Albacora branca" = "red",
-  #            "Albacora laje" = "green", "Meca" = "yellow",
-  #            "Outros" = "orange", "Tubarao Azul" = "blue")
-  
-  # coresAux <- as.list(cores)
+  # Definindo as Cores de cada Espécie
+  cores <- c("Albacora-bandolim" = "#9467bd","Albacora-branca" = "#d62728",
+             "Albacora-lage" = "#2ca02c", "Meca" = "#8c564b",
+             "Outros" = "#ff7f0e", "Cacao-azul" = "#1f77b4",
+             "Cacao-anequim" = "#7f7f7f", "Prego" = "#e377c2")
   
   # Criando um Valores Reativos que vão Iniciar Nulo
   conteudo_senha_adm <- reactiveVal(NULL)
@@ -819,15 +810,17 @@ server <- function(input, output, session) {
     data.frame(dados_filtrados)
   })
   
-  # # Filtrando Dados Para o Gráfico de Desembarque
-  # CapturasPorMesDesembarque <- reactive({
+  # CapturasPorMesDesembarquePorViagem <- reactive({
   #   dados_gerais_filtrados() %>%
+  #     mutate(KG_por_Viagem = (KG/DESCARGA)) %>% 
   #     # Agrupa os Dados por Colunas Selecionadas
   #     group_by(CATEGORIA, ANO, MES) %>% 
   #     # Média das Toneladas de Captura de Cada Grupo
-  #     summarise(Media_KG = mean(KG)) %>%
+  #     summarise(Media_KG_por_Viagem = mean(KG_por_Viagem)) %>%
+  #     # Substituindo NAs por Zero
+  #     mutate(Media_KG_por_Viagem = replace_na(Media_KG_por_Viagem, 0)) %>% 
   #     # Arredondando a Média de Toneladas para Duas Casas Decimais
-  #     mutate(Media_KG = round(Media_KG, 2)) %>%
+  #     mutate(Media_KG_por_Viagem = round(Media_KG_por_Viagem, 2)) %>%
   #     # Criação de Nome do Mês para Legenda
   #     mutate(mes_nome = nomes_meses[MES]) %>%
   #     #  Cria uma Variável Formato mes_ano
@@ -835,7 +828,8 @@ server <- function(input, output, session) {
   #     # Formata a coluna mes_ano para exibir apenas o mês e o ano
   #     mutate(mes_ano_formatado = format(as.Date(
   #       mes_ano, format = "%Y-%m"),"%b %Y")) %>% 
-  #     select(-mes_ano)
+  #     # complete(MES, fill = list(Media_KG_por_Viagem = 0)) %>%
+  #     select(-mes_ano) 
   # })
   
   CapturasPorMesDesembarquePorViagem <- reactive({
@@ -851,13 +845,8 @@ server <- function(input, output, session) {
       mutate(Media_KG_por_Viagem = round(Media_KG_por_Viagem, 2)) %>%
       # Criação de Nome do Mês para Legenda
       mutate(mes_nome = nomes_meses[MES]) %>%
-      #  Cria uma Variável Formato mes_ano
-      mutate(mes_ano = as.yearmon(paste0(ANO, "-", sprintf("%02d", MES)))) %>%
-      # Formata a coluna mes_ano para exibir apenas o mês e o ano
-      mutate(mes_ano_formatado = format(as.Date(
-        mes_ano, format = "%Y-%m"),"%b %Y")) %>% 
-      # complete(MES, fill = list(Media_KG_por_Viagem = 0)) %>%
-      select(-mes_ano)
+      # Formata a coluna mes_ano para o modelo aceitado pelo pacote Plotly
+      mutate(mes_ano = format(as.Date(paste0(ANO, "-", MES, "-01")), "%Y-%m"))
   })
   
   # Filtrando Dados para o Gráfico de Captura
@@ -904,6 +893,35 @@ server <- function(input, output, session) {
       summarise(prod = sum(KG)) %>%
       ungroup()
     list(dados = dados_filtrados, tab01 = tab01)
+  })
+  
+  PesoMesCompleto <- reactive({
+    dados_aux_filtrados() %>%
+      mutate(CATEGORIA = "Especies") %>%
+      group_by(MES,CATEGORIA) %>%
+      summarise(KG_Total = sum(KG)) %>%
+      ungroup() %>%
+      complete(CATEGORIA, MES = 1:12, fill = list(KG_Total = 0)) %>% 
+      mutate(mes_nome = nomes_meses[MES])
+  }) 
+  
+  tubAzulMesCompleto <- reactive({
+    dadostub_aux_filtrados() %>%
+      group_by(CATEGORIA, MES) %>%
+      summarise(Quantidade = n()) %>%
+      ungroup() %>%
+      complete(CATEGORIA, MES = 1:12, fill = list(Quantidade = 0)) %>% 
+      mutate(mes_nome = nomes_meses[MES])
+  }) 
+  
+  tubazul <- reactive({
+    dados_aux_filtrados() %>%
+      mutate(
+        CATEGORIA = ifelse(
+          CATEGORIA == "Cacao-azul","Cacao-azul","Outros"
+        )
+      ) %>%
+      count(CATEGORIA)
   })
   
   # Sidebar -----------------------------------------------------------------
@@ -985,6 +1003,7 @@ server <- function(input, output, session) {
       x = ~mes_ano_formatado,
       y = ~Quantidade,
       color = ~CATEGORIA,
+      colors = cores,
       type = "bar",
       hoverinfo = "text",
       text = ~paste(
@@ -1008,16 +1027,8 @@ server <- function(input, output, session) {
   })
   
   output$RoscaTubOutros <- renderPlotly({
-    tubazul <- dados_aux_filtrados() %>%
-      mutate(
-        CATEGORIA = ifelse(
-          CATEGORIA == "Cacao-azul","Cacao-azul","Outros"
-        )
-      ) %>%
-      count(CATEGORIA)
-    
     plot_ly(
-      data = tubazul,
+      data = tubazul(),
       labels = ~CATEGORIA,
       values = ~n,
       type = "pie",
@@ -1034,16 +1045,8 @@ server <- function(input, output, session) {
   })
   
   output$TubMes <- renderPlotly({
-    
-    tubAzulMesCompleto <- dadostub_aux_filtrados() %>%
-      group_by(CATEGORIA, MES) %>%
-      summarise(Quantidade = n()) %>%
-      ungroup() %>%
-      complete(CATEGORIA, MES = 1:12, fill = list(Quantidade = 0)) %>% 
-      mutate(mes_nome = nomes_meses[MES])
-    
     plot_ly(
-      data = tubAzulMesCompleto,
+      data = tubAzulMesCompleto(),
       labels = ~mes_nome,
       parents = ~CATEGORIA,
       values = ~Quantidade,
@@ -1058,39 +1061,6 @@ server <- function(input, output, session) {
       )
   })
   
-  # # Histograma da Distribuição de Peso em Kg da Cação Azul
-  # output$historamaPeso <- renderPlotly({
-  #   start_value <- floor(min(dadostub_aux_filtrados()$KG) / 25) * 25
-  #   
-  #   plot_ly(
-  #     data = dadostub_aux_filtrados(),
-  #     x = ~KG,
-  #     histnorm = "percent",
-  #     xbins = list(start = start_value ,size = 25, end = 5000),
-  #     marker = list(
-  #       color = "#3C8DBC",
-  #       line = list(
-  #         color = "black",
-  #         width = 1
-  #       )
-  #     ),
-  #     hoverinfo = "x+y"
-  #   ) %>% 
-  #     layout(
-  #       title = "Frequência Relativa do Peso de Cações Azul",
-  #       yaxis = list(
-  #         title = "Frequência Relativa (%)",
-  #         tickwidth = 2,
-  #         showgrid = T,
-  #         titlefont = list(size = 18)
-  #       ),
-  #       xaxis = list(
-  #         title = "Peso Total (Kg)",
-  #         titlefont = list(size = 18)
-  #       )
-  #     ) 
-  # })
-  
   # Desembarques ------------------------------------------------------------
   
   # Renderização do Gráfico Plotly da Média Mensal de Capturas (mes)
@@ -1101,8 +1071,8 @@ server <- function(input, output, session) {
       y = ~MediaKGMesViagem,
       type = 'scatter',
       mode = 'lines+markers',
-      # color = ~CATEGORIA,
-      # colors = cores,
+      color = ~CATEGORIA,
+      colors = cores,
       marker = list(size = 10), # Tamanho do Marcador
       hoverinfo = "text",
       text = ~paste(
@@ -1121,129 +1091,28 @@ server <- function(input, output, session) {
         ), showlegend = FALSE
       )
   })
-  
-  # output$graficoDesembarque <- renderApexchart({
-  #   apex(
-  #     data = CapturasPorMesDesembarque(),
-  #     type = "area",
-  #     mapping = aes(
-  #       x = mes_ano_formatado,
-  #       y = Media_KG,
-  #       fill = CATEGORIA
-  #     ),
-  #     showlegend = F
-  #   ) %>% 
-  #     ax_yaxis(
-  #       title = list(
-  #         text = "Captura Média (KG) por Viagem"
-  #       )
-  #     )
-  # })
-  
-  output$graficoAreaDesembarque <- renderApexchart({
-    apex(
-      data = CapturasPorMesDesembarquePorViagem(),
-      type = "area",
-      mapping = aes(
-        x = mes_ano_formatado,
-        y = Media_KG_por_Viagem,
-        fill = CATEGORIA
-      ),
-      showlegend = F
-    ) %>% 
-      ax_yaxis(
-        title = list(
-          text = "Captura Média (KG) por Viagem"
-        )
-      )
-  })
-  
-  ##Renderização do Gráfico Plotly da Média Mensal de Capturas de Todo Período
-  # # (mes_ano)
-  # output$graficoDesembarque <- renderPlotly({
-  #   plot_ly(
-  #     data = CapturasPorMesDesembarque(),
-  #     x = ~mes_ano,
-  #     y = ~Media_Toneladas,
-  #     type = 'scatter',
-  #     mode = 'lines+markers',
-  #     color = ~CATEGORIA,
-  #     colors = cores,
-  #     marker = list(size = 5),
-  #     hoverinfo = "text",
-  #     text = ~paste(
-  #       "Espécie: ", CATEGORIA, "<br>",
-  #       "Mês: ", Mes_Nome, "<br>",
-  #       # "ANO: ", ANO, "<br>",
-  #       "Média de Toneladas: ", Media_Toneladas, "<br>"
-  #     )
-  #   ) %>% 
-  #     layout(
-  #       title = "Desembarque Total (ton)",
-  #       xaxis = list(
-  #         title = "Mês"
-  #       ),
-  #       yaxis = list(
-  #         title = "Captura Média (ton) por Viagem"
-  #       ), showlegend = FALSE
-  #     )
-  # })
-  
-  # Renderizando Gráfico de Rosca Plotly das Espécies Presentes nos Dados
-  output$graficoEspecies <- renderPlotly({
-    
-    # Criando dataframe para ser Utilizado no Gráfico
-    tiposEspecies <- dados_aux_filtrados() %>%
-      group_by(CATEGORIA) %>% # Agrupando os Dados por Espécie
-      summarise(
-        n = n(), # Quantidade de Capturas por Espécie
-        KG_Totais = sum(KG) # Somando as Toneladas para cada Grupo
-      ) %>%
-      mutate(porc = n/sum(n)#,
-             # # Para que cada Espécie Mantenha a Mesma Cor
-             # cores = case_when(
-             #   CATEGORIA == "Albacora bandolim" ~ "purple",
-             #   CATEGORIA == "Albacora branca" ~ "red",
-             #   CATEGORIA == "Albacora laje" ~ "green",
-             #   CATEGORIA == "Meca" ~ "yellow",
-             #   CATEGORIA == "Outros" ~ "orange",
-             #   CATEGORIA == "Tubarao Azul" ~ "blue",
-             #   TRUE ~ NA_character_  # Caso Não haja Correspondência
-             #   )
-      )
-    
+
+  output$graficoAreaDesembarque <- renderPlotly({
     plot_ly(
-      data = tiposEspecies,
-      labels = ~CATEGORIA,
-      values = ~n,
-      type = "pie",
-      hole = 0.6,
-      textinfo = 'label', # Cada Fatia terá o Nome de sua Espécie nela
-      hoverinfo = "text",
-      text = ~paste(
-        "Quantidade: ", n, "<br>",
-        "Porcentagem: ", percent(porc, accuracy = 0.1), "<br>"
-      )#,
-      # marker = list(colors = tiposEspecies$cores)
-    ) %>%
-      layout(
-        title = "Composição de Espécies",
-        showlegend = FALSE
+      data = CapturasPorMesDesembarquePorViagem(),
+      x = ~mes_ano,
+      y = ~Media_KG_por_Viagem,
+      color = ~CATEGORIA,
+      colors = cores,
+      type = "scatter",
+      mode = "lines",
+      fill = "tozeroy"
+    ) %>% 
+      layout(title = "Média de Captura por Viagem",
+             xaxis = list(title = ""),
+             yaxis = list(title = "Captura Média (KG) por Viagem"), 
+             showlegend = FALSE
       )
   })
   
   output$pesoMes <- renderPlotly({
-    
-    PesoMesCompleto <- dados_aux_filtrados() %>%
-      mutate(CATEGORIA = "Especies") %>%
-      group_by(MES,CATEGORIA) %>%
-      summarise(KG_Total = sum(KG)) %>%
-      ungroup() %>%
-      complete(CATEGORIA, MES = 1:12, fill = list(KG_Total = 0)) %>% 
-      mutate(mes_nome = nomes_meses[MES])
-    
     plot_ly(
-      data = PesoMesCompleto,
+      data = PesoMesCompleto(),
       labels = ~mes_nome,
       parents = ~CATEGORIA,
       values = ~KG_Total,
