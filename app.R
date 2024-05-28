@@ -1,8 +1,9 @@
 # Bibliotecas -------------------------------------------------------------
 
+# Carregando os Pacotes que serão utilizados no dashboard
 pacman::p_load(
-  shiny, shinydashboard, shinydashboardPlus, leaflet, dplyr, 
-  scales, plotly,zoo, tidyverse, digest, DT
+  shiny, shinydashboard, shinydashboardPlus, leaflet, dplyr, scales, plotly, 
+  zoo, tidyverse, digest, DT
 )
 
 # Carregando os Dados de um Arquivo csv
@@ -29,10 +30,17 @@ ui = dashboardPage(
   # Header ------------------------------------------------------------------
   # Definindo a Header do Painel
   header = dashboardHeader(
+    titleWidth = 250,
     # Definição do Título com Link da Header
     title = tags$a(
       href = "https://lrpdc.shinyapps.io/proj_tubarao_azul/", # Link URL
-      "Projeto Tubarão Azul", # Título da Header
+      # "Projeto Tubarão Azul", # Título da Header
+      tags$span(
+        style = "display: flex; align-items: center;",
+        icon("sailboat"),
+        tags$span(style = "width: 10px;"),
+        textOutput("textoHeader")
+      ),
       class = "logo"
     ),
     controlbarIcon = icon("sliders"), # Definição do ícone da aba de Controle
@@ -136,10 +144,9 @@ ui = dashboardPage(
     z-index: 100;
     }
     
-    
-      .direct-chat-contacts {
-        z-index: 100 !important;
-      }
+    .direct-chat-contacts {
+      z-index: 100 !important;
+    }
                               ')
     )
     ),
@@ -152,16 +159,17 @@ ui = dashboardPage(
             column(
               offset = 2,
               width = 9,
+              # Criando um carrossel de infoBox
               carousel(
                 width = 12,
                 id = "mycarousel",
-                indicators = F,
+                indicators = F,           # Se haverá setas para troca de item
                 carouselItem(
                   infoBox(
                     title = "Tubarões Medidos",
-                    fill = T,               # Se a infoBox deve ser preenchida
-                    width = 10,             # Definindo a largura da infoBox
-                    color = "light-blue",   # Definindo cor da infoBox
+                    fill = T,             # Se a infoBox deve ser preenchida
+                    width = 10,           # Definindo a largura da infoBox
+                    color = "light-blue", # Definindo cor da infoBox
                     # Definindo Configurações do conteúdo da infoBox
                     value = tags$div(
                       style = "display: block; text-align: center;", 
@@ -404,7 +412,6 @@ ui = dashboardPage(
               box(
                 # background = "light-blue",
                 title = "Gráfico de Barras Empilhadas",
-                collapsible = T,
                 width = 12,
                 solidHeader = T, # Se a Header é sólida
                 status = "primary",
@@ -434,7 +441,6 @@ ui = dashboardPage(
               box(
                 # background = "red",
                 title = "Gráfico de Rosca",
-                collapsible = T,
                 width = 12,
                 solidHeader = T,
                 status = "primary",
@@ -459,7 +465,6 @@ ui = dashboardPage(
               box(
                 # background = "green",
                 title = "Gráfico de Rosca",
-                collapsible = T,
                 width = 12,
                 solidHeader = T,
                 status = "primary",
@@ -756,32 +761,42 @@ server <- function(input, output, session) {
   # FALAR COM SANTANA, POIS SENHA FUNCIONA NO LOCAL, MAS NO SITE NÃO
   # Definindo Senha da Tabela do Administrador
   # senha_admin <- Sys.getenv("SENHA_ADMIN")
-  
-  # senha_admin <- Sys.getenv("SENHA_ACESSO")
-  
-  
-  
+
+  # Completando dados que não estão presentes em algumas datas com NA
   dados_completos <- dados_aux %>%
     complete(CATEGORIA, ANO, MES = 1:12, fill = list(VALOR = NA))%>% 
     filter(!(ANO == 2024 & MES >= 5))
   
+  # Trocando dados com NA para 0, em KG, que é o peso Capturado
   dados_gerais <- dados_completos %>%
     mutate(KG = replace_na(KG, 0))
   
-  nomes_meses <- c("Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-                   "Julho", "Agosto", "Setembro", "Outubro", "Novembro",
-                   "Dezembro")
+  # Definindo nome dos meses
+  nomes_meses <- c(
+    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho","Julho",
+    "Agosto", "Setembro", "Outubro", "Novembro","Dezembro"
+    )
   
-  # Definir manualmente uma paleta de cores
-  yellow_to_red_palette <- c("#FFFF00AA", "#FFCC00AA", "#FF9900AA",
-                             "#FF6600AA", "#FF3300AA", "#FF0000AA")
+  # Definido manualmente a paleta de cores do Mapa de Calor
+  yellow_to_red_palette <- c(
+    "#FFFF00AA", "#FFCC00AA", "#FF9900AA","#FF6600AA", "#FF3300AA", "#FF0000AA"
+    )
   
   # Definindo as Cores de cada Espécie
-  cores <- c("Albacora-bandolim" = "#9467bd","Albacora-branca" = "#d62728",
-             "Albacora-lage" = "#2ca02c", "Meca" = "#8c564b",
-             "Outros" = "#ff7f0e", "Cacao-azul" = "#1f77b4",
-             "Cacao-anequim" = "#7f7f7f", "Prego" = "#e377c2")
+  cores <- c(
+    "Albacora-bandolim" = "#9467bd","Albacora-branca" = "#d62728",
+    "Albacora-lage" = "#2ca02c", "Meca" = "#8c564b","Outros" = "#ff7f0e", 
+    "Cacao-azul" = "#1f77b4","Cacao-anequim" = "#7f7f7f", "Prego" = "#e377c2"
+    )
   
+  # Definindo as Cores de cada Mês
+  cores_mes <- c(
+    "Janeiro"="#00CCFF","Fevereiro"="#FF4500","Março"="#32CD32",
+    "Abril"="#FFD700","Maio"="#FF69B4","Junho"="#8B4513",
+    "Julho"="#4169E1","Agosto"="#CA70D6","Setembro"="#00FF7F",
+    "Outubro"="#DCDCDC","Novembro"="#8A2BE2","Dezembro"="#FF0000"
+    )
+
   # Criando um Valores Reativos que vão Iniciar Nulo
   conteudo_senha_adm <- reactiveVal(NULL)
   conteudo_entrar_adm <- reactiveVal(NULL)
@@ -789,7 +804,7 @@ server <- function(input, output, session) {
   
   # Filtro de Dados ---------------------------------------------------------
   
-  # Filtrando os Dados Gerais Reativamente
+  # Filtrando os Dados Gerais Completos Reativamente
   dados_gerais_filtrados <- reactive({
     # Filtrando as Espécies 
     dados_filtrados <- subset(dados_gerais, CATEGORIA %in% input$species)
@@ -800,6 +815,7 @@ server <- function(input, output, session) {
     data.frame(dados_filtrados)
   })
   
+  # Filtrando os Dados da Tabela Inicial
   dados_aux_filtrados <- reactive({
     # Filtrando as Espécies 
     dados_filtrados <- subset(dados_aux, CATEGORIA %in% input$species)
@@ -810,28 +826,7 @@ server <- function(input, output, session) {
     data.frame(dados_filtrados)
   })
   
-  # CapturasPorMesDesembarquePorViagem <- reactive({
-  #   dados_gerais_filtrados() %>%
-  #     mutate(KG_por_Viagem = (KG/DESCARGA)) %>% 
-  #     # Agrupa os Dados por Colunas Selecionadas
-  #     group_by(CATEGORIA, ANO, MES) %>% 
-  #     # Média das Toneladas de Captura de Cada Grupo
-  #     summarise(Media_KG_por_Viagem = mean(KG_por_Viagem)) %>%
-  #     # Substituindo NAs por Zero
-  #     mutate(Media_KG_por_Viagem = replace_na(Media_KG_por_Viagem, 0)) %>% 
-  #     # Arredondando a Média de Toneladas para Duas Casas Decimais
-  #     mutate(Media_KG_por_Viagem = round(Media_KG_por_Viagem, 2)) %>%
-  #     # Criação de Nome do Mês para Legenda
-  #     mutate(mes_nome = nomes_meses[MES]) %>%
-  #     #  Cria uma Variável Formato mes_ano
-  #     mutate(mes_ano = as.yearmon(paste0(ANO, "-", sprintf("%02d", MES)))) %>%
-  #     # Formata a coluna mes_ano para exibir apenas o mês e o ano
-  #     mutate(mes_ano_formatado = format(as.Date(
-  #       mes_ano, format = "%Y-%m"),"%b %Y")) %>% 
-  #     # complete(MES, fill = list(Media_KG_por_Viagem = 0)) %>%
-  #     select(-mes_ano) 
-  # })
-  
+  # Fazendo o cálculo da Média de Captura por Kg, por Viagem, por Mês/Ano
   CapturasPorMesDesembarquePorViagem <- reactive({
     dados_gerais_filtrados() %>%
       mutate(KG_por_Viagem = (KG/DESCARGA)) %>% 
@@ -874,6 +869,7 @@ server <- function(input, output, session) {
     )
   })
   
+  # Filtrando os Dados da Tabela Inicial com somente a CATEGORIA Cacao-azul
   dadostub_aux_filtrados <- reactive({
     dados_auxiliar <- subset(dados_aux, CATEGORIA == "Cacao-azul")
     subset(
@@ -895,6 +891,7 @@ server <- function(input, output, session) {
     list(dados = dados_filtrados, tab01 = tab01)
   })
   
+  # Fazendo o cálculo do Peso Total de Capturas por Mês
   PesoMesCompleto <- reactive({
     dados_aux_filtrados() %>%
       mutate(CATEGORIA = "Especies") %>%
@@ -905,6 +902,7 @@ server <- function(input, output, session) {
       mutate(mes_nome = nomes_meses[MES])
   }) 
   
+  # Fazendo o cálculo de Dados Totais Registrados por Mes de Cacao-azul
   tubAzulMesCompleto <- reactive({
     dadostub_aux_filtrados() %>%
       group_by(CATEGORIA, MES) %>%
@@ -914,15 +912,29 @@ server <- function(input, output, session) {
       mutate(mes_nome = nomes_meses[MES])
   }) 
   
+# Fazendo um contador de dados Registrados de Cacao-azul em Comparação ao Resto
   tubazul <- reactive({
     dados_aux_filtrados() %>%
       mutate(
-        CATEGORIA = ifelse(
-          CATEGORIA == "Cacao-azul","Cacao-azul","Outros"
-        )
+        CATEGORIA = ifelse(CATEGORIA == "Cacao-azul","Cacao-azul","Outros")
       ) %>%
       count(CATEGORIA)
   })
+  
+  # Dividindo os dados Registrados de Cacao-azul em Comparação ao Resto e 
+  # Completando os Mês/Ano sem registros, completando com Zero
+  tubAzulMesAnoCompleto <- reactive({
+    dados_aux_filtrados() %>%
+      mutate(CATEGORIA=if_else(CATEGORIA!="Cacao-azul","Outros",CATEGORIA)) %>%
+      group_by(CATEGORIA, ANO, MES) %>%
+      summarise(Quantidade = n()) %>%
+      ungroup() %>%
+      complete(CATEGORIA, ANO, MES = 1:12, fill = list(Quantidade = 0)) %>%
+      filter(!(ANO == 2024 & MES >= 5)) %>%
+      mutate(mes_ano_formatado = make_date(ANO, MES)) %>%
+      mutate(mes_ano = as.yearmon(paste0(ANO, "-", sprintf("%02d", MES)))) %>%
+      mutate(mes_ano_formatado = format(mes_ano_formatado, "%Y-%m"))
+  }) 
   
   # Sidebar -----------------------------------------------------------------
   
@@ -939,6 +951,10 @@ server <- function(input, output, session) {
           alt = "Créditos"
         )
       }, deleteFile = FALSE)
+      output$textoHeader <- renderText({
+        texto <- "."
+        return(texto)
+      })
     } else {
       # Renderizando a Imagem Maximizada dos Créditos
       output$creditos_img <- renderImage({
@@ -950,6 +966,10 @@ server <- function(input, output, session) {
           alt = "Créditos"
         )
       }, deleteFile = FALSE)
+      output$textoHeader <- renderText({
+        texto <- "Projeto Tubarão Azul"
+        return(texto)
+      })
     }
   })
   
@@ -969,37 +989,8 @@ server <- function(input, output, session) {
   
   # Tentativa de gráfico de porcentagem de captura de Cacao-azul por Mes
   output$TubMesAno <- renderPlotly({
-    
-    tubAzulMes <- dadostub_filtrados() %>% 
-      group_by(ANO, MES,CATEGORIA) %>% 
-      summarise(Quantidade = n()) %>%
-      mutate(mes_ano = as.yearmon(paste0(ANO, "-", sprintf("%02d", MES)))) %>%
-      mutate(mes_ano_formatado = format(as.Date(
-        mes_ano, format = "%Y-%m"),"%b %Y")) %>% 
-      select(-mes_ano)
-    
-    # Converter mes_ano_formatado em fator ordenado
-    tubAzulMes$mes_ano_formatado <- factor(
-      tubAzulMes$mes_ano_formatado, 
-      levels = unique(tubAzulMes$mes_ano_formatado),
-      ordered = TRUE)
-    
-    dadostub_filtrados
-    tubAzulMesAnoCompleto <- dados_aux_filtrados() %>%
-      mutate(CATEGORIA=if_else(CATEGORIA!="Cacao-azul","Outros",CATEGORIA)) %>%
-      group_by(CATEGORIA, ANO, MES) %>%
-      summarise(Quantidade = n()) %>%
-      ungroup() %>%
-      complete(CATEGORIA, ANO, MES = 1:12, fill = list(Quantidade = 0)) %>%
-      filter(!(ANO == 2024 & MES >= 5)) %>% 
-      mutate(mes_ano_formatado = make_date(ANO, MES)) %>%
-      mutate(mes_ano = as.yearmon(paste0(ANO, "-", sprintf("%02d", MES))))
-    
-    tubAzulMesAnoCompleto$mes_ano_formatado <- format(
-      tubAzulMesAnoCompleto$mes_ano_formatado, "%Y-%m")
-    
     plot_ly(
-      data = tubAzulMesAnoCompleto,
+      data = tubAzulMesAnoCompleto(),
       x = ~mes_ano_formatado,
       y = ~Quantidade,
       color = ~CATEGORIA,
@@ -1026,6 +1017,7 @@ server <- function(input, output, session) {
       config(displayModeBar = FALSE)
   })
   
+  # Renderização do Gráfico da Comparação de Dados da Cação Azul para o Restante
   output$RoscaTubOutros <- renderPlotly({
     plot_ly(
       data = tubazul(),
@@ -1044,6 +1036,7 @@ server <- function(input, output, session) {
       )
   })
   
+  # Renderização do Gráfico da Comparação de Dados da Cação Azul por Mês
   output$TubMes <- renderPlotly({
     plot_ly(
       data = tubAzulMesCompleto(),
@@ -1053,7 +1046,10 @@ server <- function(input, output, session) {
       type = "sunburst",
       branchvalues = "total", 
       hoverinfo = "percent entry+value",
-      textinfo = "label"
+      textinfo = "label",
+      marker = list(
+        colors = cores_mes[as.character(tubAzulMesCompleto()$mes_nome)]
+      )
     ) %>%
       layout(
         title = "Dados Registrados de Cação Azul por Mês",
@@ -1092,6 +1088,7 @@ server <- function(input, output, session) {
       )
   })
 
+  # Renderização do Gráfico de Área da Média Mensal de Capturas (mês/ano) 
   output$graficoAreaDesembarque <- renderPlotly({
     plot_ly(
       data = CapturasPorMesDesembarquePorViagem(),
@@ -1110,6 +1107,7 @@ server <- function(input, output, session) {
       )
   })
   
+  # Renderização do Gráfico do Peso Total de Capturas por Mês
   output$pesoMes <- renderPlotly({
     plot_ly(
       data = PesoMesCompleto(),
@@ -1119,7 +1117,10 @@ server <- function(input, output, session) {
       type = "sunburst",
       branchvalues = "total", 
       hoverinfo = "percent entry+value",
-      textinfo = "label"
+      textinfo = "label",
+      marker = list(
+        colors = cores_mes[as.character(PesoMesCompleto()$mes_nome)]
+        )
     ) %>%
       layout(
         title = "Peso Total (KG) por Mês",
@@ -1129,14 +1130,9 @@ server <- function(input, output, session) {
   
   # Distribuição Espacial das Capturas --------------------------------------
   
+  # Renderização do Mapa de Calor das Capturas de Todas as Categorias
   output$MapaLeaflet <- renderLeaflet({
-    dados_filtrados <- db_filtrado()$dados
     tab01 <- db_filtrado()$tab01
-    
-    range_values <- range(tab01$prod)
-    
-    # Calcular os intervalos
-    intervals <- seq(range_values[1], range_values[2],length.out = 11)
     
     # Criar a paleta de cores com base nos intervalos
     pal <- colorQuantile(
@@ -1145,47 +1141,51 @@ server <- function(input, output, session) {
       probs = seq(0, 1, 0.1)
     )
     
-    # ######@> Color palette...
-    # pal <- colorQuantile(
-    #   palette = "viridis",
-    #   domain = tab01$prod,
-    #   probs = seq(0, 1, 0.1))
-    
     leaflet() %>%
+      # Definindo a primeira opção do estilo do Mapa (Claro)
       addProviderTiles(
         providers$CartoDB.Positron,
         group = "Light Map"
       ) %>%
+      # Definindo a segunda opção do estilo do Mapa (Escuro)
       addProviderTiles(
         providers$CartoDB.DarkMatter,
         group = "Dark Map"
       ) %>%
+      # Definindo a Posição Inicial da visão sobre o Mapa
       setView(
         lng = -40, lat = -29, zoom = 4
       ) %>%
+      # Definindo a adição dos Marcadores no Mapa
       addCircleMarkers(
-        group = tab01$prod,
-        radius = 12,
-        lng = tab01$LON,
-        lat = tab01$LAT,
-        stroke = FALSE,
-        color = pal(tab01$prod),
-        fillOpacity = 0.7,
-        label = paste0("Captura: ", round(tab01$prod, 0), " kg")
+        group = tab01$prod,      # Define os marcadores com base na soma dos KG
+        radius = 12,             # Define o raio dos marcadores como 12 pixels
+        lng = tab01$LON,         # Define tab01$LON como longitude
+        lat = tab01$LAT,         # Define tab01$LAT como latitude
+        stroke = FALSE,          # Define que não haverá borda dos marcadores
+        color = pal(tab01$prod), # Define a paleta de cores dos marcadores
+        fillOpacity = 0.7,       # Define a opacidade dos marcadores como 70%
+        label = paste0(
+          "Captura: ", round(tab01$prod, 0), " kg"
+          )
       ) %>%
+      # Definindo a legenda com a paleta de cores e suas Porcentagens
       addLegend(
         pal = pal, values = tab01$prod, group = tab01$prod,
         position = "bottomright", title = "Percentual da Captura"
       ) %>%
+      # Controle de Estilo de Mapa
       addLayersControl(
         position = "topleft",
         baseGroups = c("Dark Map", "Light Map"),
         options =
           layersControlOptions(collapsed = FALSE)
       ) %>%
+      # Adicionando Mini Mapa
       addMiniMap(
         position = "bottomleft"
       ) %>%
+      # Adicionando um Medidor 
       addMeasure(
         position = "bottomleft"
       )
@@ -1218,23 +1218,18 @@ server <- function(input, output, session) {
   observeEvent(input$entrar, {
     
     senha_correta <- check_password(input$senha, "senha_hash.txt")
-    # print("0")
     if (senha_correta) {
       conteudo_tabela_adm({
         # Saída da Data Table, que Possuí a Tabela com os Dados
         DTOutput("tabela_tub")
       })
-      # print("1")
       # Valores Reativos Recebem o Valor de Nulo
       conteudo_senha_adm(NULL)
       conteudo_entrar_adm(NULL)
       # Renderizando a DataTable com os Dados Filtrados
       output$tabela_tub <- renderDT({
-        # print("2")
         if (!is.null(input$entrar) && input$entrar > 0) {
-          # print("3")
           if (senha_correta) {
-            # print("4")
             dados_aux_filtrados()
           }
         }
@@ -1287,4 +1282,5 @@ server <- function(input, output, session) {
   })
 }
 
+# Inicialização da aplicação Shiny
 shinyApp(ui,server)
