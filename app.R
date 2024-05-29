@@ -36,10 +36,10 @@ ui = dashboardPage(
       href = "https://lrpdc.shinyapps.io/proj_tubarao_azul/", # Link URL
       # "Projeto Tubarão Azul", # Título da Header
       tags$span(
-        style = "display: flex; align-items: center;",
-        icon("sailboat"),
-        tags$span(style = "width: 10px;"),
-        textOutput("textoHeader")
+        style = "display: flex; align-items: center; padding: 0 7px;",
+        # icon("sailboat"),
+        # tags$span(style = "width: 10px;"),
+        uiOutput("textoHeader")
       ),
       class = "logo"
     ),
@@ -114,9 +114,9 @@ ui = dashboardPage(
         text = "Administrador",
         tabName = "tab5header",
         icon = icon("user-tie")
-      ),
+      )#,
       # Saída da Imagem, com os créditos dos financiadores do Projeto
-      imageOutput("creditos_img")
+      # imageOutput("creditos_img")
     )
   ),
   
@@ -147,6 +147,10 @@ ui = dashboardPage(
     .direct-chat-contacts {
       z-index: 100 !important;
     }
+    
+    .content-wrapper {
+               background-color: #FFFFFF; /* cor de fundo branca */
+            }
                               ')
     )
     ),
@@ -286,6 +290,16 @@ ui = dashboardPage(
           fluidRow(
             column(
               width = 8,
+              offset = 2,
+              div(
+                style = "text-align: center;",
+                imageOutput("LogoPTA")
+              )
+            )
+          ),
+          fluidRow(
+            column(
+              width = 8,
               offset = 2, # Definindo Deslocamento da Coluna
               # Definindo Texto do Projeto
               h2("Geração de subsídios e elaboração do Plano de gestão da
@@ -369,25 +383,25 @@ ui = dashboardPage(
                   equipe do projeto Tubarão Azul. Os dados são referentes à 
                   desembarques realizados pela frota no porto de Rio Grande,
                   RS."),
-                p("Na aba “Distribuição de comprimentos” você encontrará as 
-                  composições de comprimentos dos indivíduos amostrados em cada
-                  ano para machos, fêmeas e sexos agrupados. Está disponível 
-                  também a proporção de sexos dos indivíduos capturados."),
-                p("Na aba “Desembarques” você encontrará as capturas mensais
-                  médias por viagem para todas as espécies e também 
-                  discriminado por espécie."),
-                p("Na aba “Distribuição espacial das capturas” você encontrará 
-                  os lances de pesca realizados distribuídos espacialmente, 
-                  assim como as densidades especializadas de lances em que cada
-                  uma das espécies foi capturada."),
+                p("Na aba “Distribuição de captura”, você encontrará gráficos
+                  que mostram a quantidade de dados registrados de cação azul
+                  em comparação com outras espécies e a distribuição de dados
+                  de cação azul por mês."),
+                p("Na aba “Desembarques”, serão visualizadas as capturas
+                  mensais médias por viagem para todas as espécies,
+                  discriminadas também por espécie, e a distribuição do peso 
+                  total capturado por mês."),
+                p("Na aba “Distribuição espacial das capturas”, você encontrará 
+                  os lances de pesca realizados distribuídos espacialmente para 
+                  todas as espécies, discriminados também por espécie."),
+                p("Na aba “Administrador”, encontra-se uma tabela contendo os
+                  dados utilizados nas visualizações de dados. O acesso a essa
+                  tabela é restrito aos administradores, os quais devem fornecer
+                  uma senha para visualizar essas informações."),
                 p("Para a construção dos gráficos apresentados nesta plataforma
                   são utilizados dados atualizados anualmente."),
                 p("Para maiores informações, por favor, entre em contato através
                   do e-mail ",strong("proj.tubaraoazul.furg@gmail.com.")),
-                # div(
-                #   class = "boxsidebar",
-                #   
-                # )
                 sidebar = boxSidebar(
                   id = "boxsidebar1",
                   icon = icon("circle-info"),
@@ -699,6 +713,85 @@ ui = dashboardPage(
   #   left = "Por Thiago Pacheco",
   #   right = "Itajaí, 2024"
   # ),
+  # TENTAR MANTER NA MESMA LINHA O LEFT E O RIGHT MANTENDO DENTRO DA TELA
+  footer = dashboardFooter(
+    left = list(
+      # p("Instituições Executoras"),
+      # column(
+      #   width = 1,
+      #   imageOutput("Logo_FURG",height = "100%",width = "100%")
+      # ),
+      # column(
+      #   width = 1,
+      #   imageOutput("Logo_Inst",height = "100%",width = "100%")
+      # ),
+      # column(
+      #   width = 2,
+      #   imageOutput("Logo_Demersais",height = "100%",width = "100%")
+      # ),
+      # column(
+      #   width = 1,
+      #   imageOutput("Logo_Hidroacustica",height = "100%",width = "100%")
+      # ),
+      # column(
+      #   width = 1,
+      #   imageOutput("Logo_NEMA",height = "100%",width = "100%")
+      # )
+      fluidRow(
+        p("Instituições Executoras")
+      ),
+      fluidRow(
+        column(
+          width = 1,
+          imageOutput("Logo_FURG",height = "100%",width = "100%")
+        ),
+        column(
+          width = 1,
+          imageOutput("Logo_Inst",height = "100%",width = "100%")
+        ),
+        column(
+          width = 2,
+          imageOutput("Logo_Demersais",height = "100%",width = "100%")
+        ),
+        column(
+          width = 1,
+          imageOutput("Logo_Hidroacustica",height = "100%",width = "100%")
+        ),
+        column(
+          width = 1,
+          imageOutput("Logo_NEMA",height = "100%",width = "100%")
+        )
+      )
+    ),
+    # right = list(
+    #   p("Apoio"),
+    #   column(
+    #     width = 2,
+    #     imageOutput("Logo_SEMA",height = "100%",width = "100%")
+    #   ),
+    #   column(
+    #     width = 1,
+    #     imageOutput("Logo_gov_rs",height = "100%",width = "100%")
+    #   )
+    # )
+    # TENTAR DEPOIS UNIR AS IMAGENS
+    right = list(
+      fluidRow(
+        p("Apoio")
+      ),
+      fluidRow(
+        column(
+          offset = 4,
+          width = 1,
+          imageOutput("Logo_SEMA",height = "100%",width = "100%")
+        ),
+        column(
+          width = 1,
+          imageOutput("Logo_gov_rs",height = "100%",width = "100%")
+        )
+      )
+    )
+  ),
   
   # ControlBar --------------------------------------------------------------
   
@@ -951,9 +1044,9 @@ server <- function(input, output, session) {
           alt = "Créditos"
         )
       }, deleteFile = FALSE)
-      output$textoHeader <- renderText({
-        texto <- "."
-        return(texto)
+      output$textoHeader <- renderUI({
+        icon("sailboat")
+        # tags$img(src = "icone.jpg", height = "30px")
       })
     } else {
       # Renderizando a Imagem Maximizada dos Créditos
@@ -966,14 +1059,22 @@ server <- function(input, output, session) {
           alt = "Créditos"
         )
       }, deleteFile = FALSE)
-      output$textoHeader <- renderText({
-        texto <- "Projeto Tubarão Azul"
-        return(texto)
+      output$textoHeader <- renderUI({
+        tags$span("Projeto Tubarão Azul")
       })
     }
   })
   
   # Projeto -----------------------------------------------------------------
+  
+  output$LogoPTA <- renderImage({
+    list(
+      src = "dados_brutos/Logo.jpg", # Local do arquivo da Imagem
+      # height = "100%",                     # Altura da Imagem
+      # width = "100%",                      # Largura da Imagem
+      contentType = "image/png"            # Tipo do Conteúdo da Imagem
+    )
+  }, deleteFile = FALSE) 
   
   # Renderizando a Imagem do Fluxograma
   output$FluxogramaTubAzul <- renderImage({
@@ -985,6 +1086,69 @@ server <- function(input, output, session) {
     )
   }, deleteFile = FALSE)                   # Não Deleta o Arquivo após o Uso
   
+  output$Logo_FURG <- renderImage({
+    list(
+      src = "dados_brutos/FURG_fundo.png",
+      height = "40px",
+      width = "30px",
+      contentType = "image/png"
+    )
+  }, deleteFile = FALSE) 
+  
+  output$Logo_Inst <- renderImage({
+    list(
+      src = "dados_brutos/logo_inst_oceanografia_furg.png",
+      height = "40px",
+      width = "30px",
+      contentType = "image/png"
+    )
+  }, deleteFile = FALSE) 
+  
+  output$Logo_Demersais <- renderImage({
+    list(
+      src = "dados_brutos/logo_lab_rec_pesca.jpg",
+      height = "40px",
+      width = "80px",
+      contentType = "image/jpg"
+    )
+  }, deleteFile = FALSE) 
+  
+  output$Logo_Hidroacustica <- renderImage({
+    list(
+      src = "dados_brutos/logo_lab_hidroacustica.png",
+      height = "40px",
+      width = "40px",
+      contentType = "image/png"
+    )
+  }, deleteFile = FALSE) 
+  
+  output$Logo_NEMA <- renderImage({
+    list(
+      src = "dados_brutos/logo_nema.jpg",
+      height = "40px",
+      width = "50px",
+      contentType = "image/jpg"
+    )
+  }, deleteFile = FALSE) 
+  
+  output$Logo_SEMA <- renderImage({
+    list(
+      src = "dados_brutos/logo_sema.png",
+      height = "40px",
+      width = "50px",
+      contentType = "image/png"
+    )
+  }, deleteFile = FALSE) 
+  
+  output$Logo_gov_rs <- renderImage({
+    list(
+      src = "dados_brutos/logo_gov_rs.png",
+      height = "40px",
+      width = "50px",
+      contentType = "image/png"
+    )
+  }, deleteFile = FALSE) 
+
   # Distribuição de Comprimentos --------------------------------------------
   
   # Tentativa de gráfico de porcentagem de captura de Cacao-azul por Mes
