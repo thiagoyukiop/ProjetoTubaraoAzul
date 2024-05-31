@@ -3,7 +3,7 @@
 # Carregando os Pacotes que serão utilizados no dashboard
 pacman::p_load(
   shiny, shinydashboard, shinydashboardPlus, leaflet, dplyr, scales, plotly, 
-  zoo, tidyverse, digest, DT
+  zoo, tidyverse, digest, DT, shinyjs
 )
 
 # Carregando os Dados de um Arquivo csv
@@ -25,6 +25,13 @@ check_password <- function(input_password, filename) {
 
 # Define a interface do usuário 
 ui = dashboardPage(
+  tags$head(tags$style(HTML(' 
+    .main-header .logo {
+    padding: 0 3px;
+    }
+                              ')
+  )
+  ),
   skin = "blue", # Definindo a cor do tema do Painel
   scrollToTop = T,
   # Header ------------------------------------------------------------------
@@ -34,11 +41,8 @@ ui = dashboardPage(
     # Definição do Título com Link da Header
     title = tags$a(
       href = "https://lrpdc.shinyapps.io/proj_tubarao_azul/", # Link URL
-      # "Projeto Tubarão Azul", # Título da Header
+      # Saída de Icon ou Título depende da situação do sidebar
       tags$span(
-        style = "display: flex; align-items: center; padding: 0 7px;",
-        # icon("sailboat"),
-        # tags$span(style = "width: 10px;"),
         uiOutput("textoHeader")
       ),
       class = "logo"
@@ -66,6 +70,29 @@ ui = dashboardPage(
   
   # Definindo o Sidebar do Painel
   sidebar = dashboardSidebar(
+    useShinyjs(),  # Necessário para usar shinyjs
+    tags$script(HTML("
+      Shiny.addCustomMessageHandler('sidebarState', function(collapsed) {
+        if (collapsed) {
+          $('.treeview-menu').css('width', '126px');
+        } else {
+          $('.treeview-menu').css('width', 'auto');
+        }
+      });
+    ")),
+    tags$head(tags$style(HTML(' 
+    .sidebar-mini:not(.sidebar-mini-expand-feature).sidebar-collapse 
+    .sidebar-menu>li:hover>a>span:not(.pull-right) {
+      width: auto !important; 
+      padding-right: 2rem;
+      padding-left: 2rem;
+    }
+    # .treeview-menu {
+    # width: 126px !important;
+    # }
+                              ')
+    )
+    ),
     width = 250,   # Definição da Largura em pixels
     minified = T,  # Se a aba lateral ao ser fechada deverá mostrar os ícones
     collapsed = F, # Se a aba lateral deve ser iniciada fechada
@@ -129,7 +156,7 @@ ui = dashboardPage(
     .mapa {
     display: flex;
     width: 100%;
-    height: calc(100vh - 145px);
+    height: calc(86vh - 155px);
     visibility: inherit;
     position: relative;
     z-index: 100;
@@ -138,7 +165,7 @@ ui = dashboardPage(
     .graficos {
     display: flex;
     width: 100%;
-    height: calc(50vh - 120px);
+    height: calc(43vh - 119px);
     visibility: inherit;
     position: relative;
     z-index: 100;
@@ -150,6 +177,7 @@ ui = dashboardPage(
     
     .content-wrapper {
                background-color: #FFFFFF; /* cor de fundo branca */
+               # margin-bottom: -20px;
             }
                               ')
     )
@@ -227,65 +255,6 @@ ui = dashboardPage(
                 )
               )
             )
-            #   column(
-            #     width = 6, # Definindo a largura da coluna
-            #     infoBox(
-            #       title = "Tubarões Medidos",
-            #       fill = T,                  # Se a infoBox deve ser preenchida
-            #       width = 10,                # Definindo a largura da infoBox
-            #       color = "light-blue",      # Definindo cor da infoBox
-            #       # Definindo Configurações do conteúdo da infoBox
-            #       value = tags$div(
-            #         style = "display: block; text-align: center;", 
-            #         h1(strong("28954"))
-            #       ),
-            #       icon = icon("fish")
-            #     )
-            #   ),
-            #   column(
-            #     width = 6,
-            #     infoBox(
-            #       title = "Entrevista de desembarque",
-            #       fill = T,
-            #       width = 10,
-            #       color = "light-blue", 
-            #       value = tags$div(
-            #         style = "display: block; text-align: center;", 
-            #         h1(strong("731"))
-            #       ),
-            #       icon = icon("paste")
-            #     )
-            #   )
-            # ),
-            # fluidRow(
-            #   column(
-            #     width = 6,
-            #     infoBox(
-            #       title = "Cadernos de bordo",
-            #       fill = T,
-            #       width = 10,
-            #       color = "light-blue",
-            #       value = tags$div(
-            #         style = "display: block; text-align: center;", 
-            #         h1(strong("465"))
-            #       ),
-            #       icon = icon("book-open")
-            #     )
-            #   ),
-            #   column(
-            #     width = 6,
-            #     infoBox(
-            #       title = "Embarcações Monitoradas",
-            #       fill = T,
-            #       width = 10,
-            #       color = "light-blue",
-            #       value = tags$div(
-            #         style = "display: block; text-align: center;",
-            #         h1(strong("92"))
-            #       ),
-            #       icon = icon("ship")
-            #     )
-            #   )
           ),
           fluidRow(
             column(
@@ -372,9 +341,7 @@ ui = dashboardPage(
                 title = "Texto Leia-me",
                 width = 12,
                 headerBorder = F,
-                # background = "gray",
-                # POSTERIORMENTE É NECESSÁRIO ADAPTAR O TEXTO,
-                # POIS HÁ ALGUNS GRÁFICOS QUE MUDARAM
+                background = "gray",
                 # Definindo o texto do Leia-me
                 p("Prezado Usuário,"),
                 p("Esta plataforma foi desenvolvida para disponibilizar 
@@ -498,33 +465,7 @@ ui = dashboardPage(
                 )
               )
             )
-          )#,
-          # fluidRow(
-          #   column(
-          #     width = 12,
-          #     box(
-          #       # background = "aqua",
-          #       title = "Histograma",
-          #       collapsible = T,
-          #       width = 12,
-          #       solidHeader = T,
-          #       status = "primary",
-          #       div(
-          #         class = "graficos",
-          #         plotlyOutput("historamaPeso", height = "100%")
-          #       ),
-          #       sidebar = boxSidebar(
-          #         id = "boxsidebar5",
-          #         icon = icon("circle-info"),
-          #         background = "#A6ACAFEF",
-          #         width = 30,
-          #         p("Este histograma mostra a frequência relativa do peso de 
-          #           Cação Azul, destacando a distribuição dos dados de pesca em 
-          #           relação ao peso dessa espécie específica.")
-          #       )
-          #     )
-          #   )
-          # )
+          )
         )
       ),
       # Definindo o conteúdo de Desembarques
@@ -584,37 +525,6 @@ ui = dashboardPage(
               )
             ) 
           ),
-          # fluidRow(
-          #   column(
-          #     width = 12,
-          #     box(
-          #       # background = "navy",
-          #       title = "Gráfico de Área",
-          #       width = 12,
-          #       solidHeader = T,
-          #       status = "primary",
-          #       div(
-          #         class = "graficos",
-          #         # Saída do Gráfico Plotly do Desembarque
-          #         apexchartOutput("graficoDesembarque",height = "100%")
-          #         # apexchartOutput("graficoAreaDesembarque",height = "100%")
-          #         # plotlyOutput("graficoDesembarque")
-          #       ),
-          #       sidebar = boxSidebar(
-          #         id = "boxsidebar8",
-          #         icon = icon("circle-info"),
-          #         width = 30,
-          #         background = "#A6ACAFEF",
-          #         p("Este gráfico de área apresenta a captura média em quilos
-          #           por viagem, categorizada por tipo de peixe, para cada
-          #           mês/ano no período analisado. As diferentes cores
-          #           representam distintas categorias de pesca, permitindo uma
-          #           comparação clara e imediata entre os meses e anos, bem como
-          #           entre as categorias de peixe.")
-          #       )
-          #     )
-          #   )
-          # ),
           fluidRow(
             column(
               width = 12,
@@ -628,7 +538,6 @@ ui = dashboardPage(
                   class = "graficos",
                   # Saída do Gráfico Plotly do Desembarque
                   plotlyOutput("graficoAreaDesembarque",height = "100%")
-                  # plotlyOutput("graficoDesembarque")
                 ),
                 sidebar = boxSidebar(
                   id = "boxsidebar82",
@@ -713,81 +622,36 @@ ui = dashboardPage(
   #   left = "Por Thiago Pacheco",
   #   right = "Itajaí, 2024"
   # ),
-  # TENTAR MANTER NA MESMA LINHA O LEFT E O RIGHT MANTENDO DENTRO DA TELA
   footer = dashboardFooter(
     left = list(
-      # p("Instituições Executoras"),
-      # column(
-      #   width = 1,
-      #   imageOutput("Logo_FURG",height = "100%",width = "100%")
-      # ),
-      # column(
-      #   width = 1,
-      #   imageOutput("Logo_Inst",height = "100%",width = "100%")
-      # ),
-      # column(
-      #   width = 2,
-      #   imageOutput("Logo_Demersais",height = "100%",width = "100%")
-      # ),
-      # column(
-      #   width = 1,
-      #   imageOutput("Logo_Hidroacustica",height = "100%",width = "100%")
-      # ),
-      # column(
-      #   width = 1,
-      #   imageOutput("Logo_NEMA",height = "100%",width = "100%")
-      # )
       fluidRow(
-        p("Instituições Executoras")
-      ),
-      fluidRow(
+        tags$div(
+          style = "margin-left: 20px; margin-top: -15px; margin-bottom: -10px;", 
+          h3(strong("Instituições Executoras"))
+          ),
+        column(
+          width = 3,
+          imageOutput("Logo_UNIVALI_LEMA",height = "100%",width = "100%")
+        ),
         column(
           width = 1,
           imageOutput("Logo_FURG",height = "100%",width = "100%")
-        ),
-        column(
-          width = 1,
-          imageOutput("Logo_Inst",height = "100%",width = "100%")
-        ),
-        column(
-          width = 2,
-          imageOutput("Logo_Demersais",height = "100%",width = "100%")
-        ),
-        column(
-          width = 1,
-          imageOutput("Logo_Hidroacustica",height = "100%",width = "100%")
-        ),
-        column(
-          width = 1,
-          imageOutput("Logo_NEMA",height = "100%",width = "100%")
         )
       )
     ),
-    # right = list(
-    #   p("Apoio"),
-    #   column(
-    #     width = 2,
-    #     imageOutput("Logo_SEMA",height = "100%",width = "100%")
-    #   ),
-    #   column(
-    #     width = 1,
-    #     imageOutput("Logo_gov_rs",height = "100%",width = "100%")
-    #   )
-    # )
-    # TENTAR DEPOIS UNIR AS IMAGENS
     right = list(
       fluidRow(
-        p("Apoio")
-      ),
-      fluidRow(
+        tags$div(
+          style = "margin-left: 50px; margin-top: -15px; margin-bottom: -10px;",
+          h3(strong("Apoio"))
+          ),
         column(
-          offset = 4,
-          width = 1,
-          imageOutput("Logo_SEMA",height = "100%",width = "100%")
-        ),
-        column(
-          width = 1,
-          imageOutput("Logo_gov_rs",height = "100%",width = "100%")
+          offset = 1,
+          width = 2,
+          tags$div(
+            style = "margin-right: 20px;",
+            imageOutput("Logo_MAPA",height = "100%",width = "100%")
+            )
         )
       )
     )
@@ -1033,32 +897,35 @@ server <- function(input, output, session) {
   
   # Verificação de se a Sidebar está Recolhida
   observeEvent(input$sidebarCollapsed, {
+    
+    session$sendCustomMessage('sidebarState', input$sidebarCollapsed)
+    
     if (input$sidebarCollapsed) {
-      # Renderizando a Imagem Minimizada dos Créditos
-      output$creditos_img <- renderImage({
-        list(
-          src = "dados_brutos/ImagemTeste.png",
-          contentType = "image/png",
-          width = "0%",
-          height = "0%",
-          alt = "Créditos"
-        )
-      }, deleteFile = FALSE)
+      # # Renderizando a Imagem Minimizada dos Créditos
+      # output$creditos_img <- renderImage({
+      #   list(
+      #     src = "dados_brutos/ImagemTeste.png",
+      #     contentType = "image/png",
+      #     width = "0%",
+      #     height = "0%",
+      #     alt = "Créditos"
+      #   )
+      # }, deleteFile = FALSE)
       output$textoHeader <- renderUI({
         icon("sailboat")
         # tags$img(src = "icone.jpg", height = "30px")
       })
     } else {
-      # Renderizando a Imagem Maximizada dos Créditos
-      output$creditos_img <- renderImage({
-        list(
-          src = "dados_brutos/ImagemTeste.png",
-          contentType = "image/png",
-          width = "100%",
-          height = "100%",
-          alt = "Créditos"
-        )
-      }, deleteFile = FALSE)
+      # # Renderizando a Imagem Maximizada dos Créditos
+      # output$creditos_img <- renderImage({
+      #   list(
+      #     src = "dados_brutos/ImagemTeste.png",
+      #     contentType = "image/png",
+      #     width = "100%",
+      #     height = "100%",
+      #     alt = "Créditos"
+      #   )
+      # }, deleteFile = FALSE)
       output$textoHeader <- renderUI({
         tags$span("Projeto Tubarão Azul")
       })
@@ -1089,62 +956,26 @@ server <- function(input, output, session) {
   output$Logo_FURG <- renderImage({
     list(
       src = "dados_brutos/FURG_fundo.png",
-      height = "40px",
-      width = "30px",
+      height = "50px",
+      width = "45px",
       contentType = "image/png"
     )
   }, deleteFile = FALSE) 
   
-  output$Logo_Inst <- renderImage({
+  output$Logo_UNIVALI_LEMA <- renderImage({
     list(
-      src = "dados_brutos/logo_inst_oceanografia_furg.png",
-      height = "40px",
-      width = "30px",
+      src = "dados_brutos/logo_UNIVALI_LEMA.png",
+      height = "50px",
+      width = "200px",
       contentType = "image/png"
     )
   }, deleteFile = FALSE) 
-  
-  output$Logo_Demersais <- renderImage({
+
+  output$Logo_MAPA <- renderImage({
     list(
-      src = "dados_brutos/logo_lab_rec_pesca.jpg",
-      height = "40px",
-      width = "80px",
-      contentType = "image/jpg"
-    )
-  }, deleteFile = FALSE) 
-  
-  output$Logo_Hidroacustica <- renderImage({
-    list(
-      src = "dados_brutos/logo_lab_hidroacustica.png",
-      height = "40px",
-      width = "40px",
-      contentType = "image/png"
-    )
-  }, deleteFile = FALSE) 
-  
-  output$Logo_NEMA <- renderImage({
-    list(
-      src = "dados_brutos/logo_nema.jpg",
-      height = "40px",
-      width = "50px",
-      contentType = "image/jpg"
-    )
-  }, deleteFile = FALSE) 
-  
-  output$Logo_SEMA <- renderImage({
-    list(
-      src = "dados_brutos/logo_sema.png",
-      height = "40px",
-      width = "50px",
-      contentType = "image/png"
-    )
-  }, deleteFile = FALSE) 
-  
-  output$Logo_gov_rs <- renderImage({
-    list(
-      src = "dados_brutos/logo_gov_rs.png",
-      height = "40px",
-      width = "50px",
+      src = "dados_brutos/logo_MAPA.png",
+      height = "60px",
+      width = "150px",
       contentType = "image/png"
     )
   }, deleteFile = FALSE) 
