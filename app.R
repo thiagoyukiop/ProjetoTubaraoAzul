@@ -4,7 +4,7 @@
 pacman::p_load(
   shiny, shinydashboard, shinydashboardPlus, leaflet, dplyr, scales, plotly, 
   zoo, tidyverse, digest, DT, shinyjs
-)
+  )
 
 # Carregando os Dados de um Arquivo csv
 dados_aux <- read.table("dados_brutos/dados_17_24_Outros.csv",
@@ -30,8 +30,8 @@ ui = dashboardPage(
     padding: 0 3px;
     }
                               ')
-  )
-  ),
+                       )
+            ),
   skin = "blue", # Definindo a cor do tema do Painel
   scrollToTop = T,
   # Header ------------------------------------------------------------------
@@ -44,26 +44,26 @@ ui = dashboardPage(
       # Saída de Icon ou Título depende da situação do sidebar
       tags$span(
         uiOutput("textoHeader")
-      ),
+        ),
       class = "logo"
     ),
-    controlbarIcon = icon("sliders"), # Definição do ícone da aba de Controle
-    # Definição do Menu Suspenso
-    dropdownMenu(
-      type = "notifications", # Tipo de Menu Suspenso
-      icon = icon("bell"),
-      # Criação da Notificação
-      notificationItem(
-        text = "Nova embarcação ocorrerá dia 20/03.", 
-        href = "https://lrpdc.shinyapps.io/proj_tubarao_azul/",
-        icon = icon("ship")
-      ),
-      notificationItem(
-        text = "Nova embarcação ocorrerá dia 17/04.",
-        href = NULL,
-        icon = icon("ferry")
-      )
-    )
+    controlbarIcon = icon("sliders")#, # Definição do ícone da aba de Controle
+    # # Definição do Menu Suspenso
+    # dropdownMenu(
+    #   type = "notifications", # Tipo de Menu Suspenso
+    #   icon = icon("bell"),
+    #   # Criação da Notificação
+    #   notificationItem(
+    #     text = "Nova embarcação ocorrerá dia 20/03.", 
+    #     href = "https://lrpdc.shinyapps.io/proj_tubarao_azul/",
+    #     icon = icon("ship")
+    #   ),
+    #   notificationItem(
+    #     text = "Nova embarcação ocorrerá dia 17/04.",
+    #     href = NULL,
+    #     icon = icon("ferry")
+    #   )
+    # )
   ),
   
   # Sidebar -----------------------------------------------------------------
@@ -79,7 +79,8 @@ ui = dashboardPage(
           $('.treeview-menu').css('width', 'auto');
         }
       });
-    ")),
+                     ")
+                ),
     tags$head(tags$style(HTML(' 
     .sidebar-mini:not(.sidebar-mini-expand-feature).sidebar-collapse 
     .sidebar-menu>li:hover>a>span:not(.pull-right) {
@@ -91,8 +92,8 @@ ui = dashboardPage(
     # width: 126px !important;
     # }
                               ')
-    )
-    ),
+                         )
+              ),
     width = 250,   # Definição da Largura em pixels
     minified = T,  # Se a aba lateral ao ser fechada deverá mostrar os ícones
     collapsed = F, # Se a aba lateral deve ser iniciada fechada
@@ -141,9 +142,8 @@ ui = dashboardPage(
         text = "Administrador",
         tabName = "tab5header",
         icon = icon("user-tie")
-      )#,
+      )
       # Saída da Imagem, com os créditos dos financiadores do Projeto
-      # imageOutput("creditos_img")
     )
   ),
   
@@ -156,7 +156,8 @@ ui = dashboardPage(
     .mapa {
     display: flex;
     width: 100%;
-    height: calc(86vh - 155px);
+    # height: calc(86vh - 155px);
+    height: calc(100vh - 145px);
     visibility: inherit;
     position: relative;
     z-index: 100;
@@ -165,7 +166,8 @@ ui = dashboardPage(
     .graficos {
     display: flex;
     width: 100%;
-    height: calc(43vh - 119px);
+    # height: calc(43vh - 119px);
+    height: calc(50vh - 120px);
     visibility: inherit;
     position: relative;
     z-index: 100;
@@ -177,7 +179,6 @@ ui = dashboardPage(
     
     .content-wrapper {
                background-color: #FFFFFF; /* cor de fundo branca */
-               # margin-bottom: -20px;
             }
                               ')
     )
@@ -335,8 +336,8 @@ ui = dashboardPage(
         fluidPage(
           fluidRow(
             column(
-              width = 8,
-              offset = 2,
+              width = 10,
+              offset = 1,
               box(
                 title = "Texto Leia-me",
                 width = 12,
@@ -375,7 +376,7 @@ ui = dashboardPage(
                   width = 40,
                   background = "#A6ACAFEF",
                   p("Contém informações detalhadas sobre as abas presentes no
-                    dashboard."),
+                    dashboard e contato para mais informações."),
                 )
               )
             )
@@ -391,7 +392,6 @@ ui = dashboardPage(
               width = 12,
               # Definindo Caixa com conteúdo da Distribuição de Comprimentos
               box(
-                # background = "light-blue",
                 title = "Gráfico de Barras Empilhadas",
                 width = 12,
                 solidHeader = T, # Se a Header é sólida
@@ -405,9 +405,9 @@ ui = dashboardPage(
                   icon = icon("circle-info"),
                   background = "#A6ACAFEF",
                   width = 30,
-                  p("Este gráfico de barras empilhadas apresenta a quantidade de
-                    dados registrados por mês/ano, divididos por categoria de
-                    pesca. Cada barra representa um mês/ano, com segmentos 
+                  p("Este gráfico de barras empilhadas apresenta a quantidade 
+                    de dados registrados por mês/ano, divididos por categoria 
+                    de pesca. Cada barra representa um mês/ano, com segmentos 
                     empilhados que correspondem às diferentes categorias de 
                     pesca. Isso permite uma comparação direta entre as 
                     categorias ao longo do tempo, destacando as variações 
@@ -420,7 +420,6 @@ ui = dashboardPage(
             column(
               width = 6,
               box(
-                # background = "red",
                 title = "Gráfico de Rosca",
                 width = 12,
                 solidHeader = T,
@@ -444,7 +443,6 @@ ui = dashboardPage(
             column(
               width = 6,
               box(
-                # background = "green",
                 title = "Gráfico de Rosca",
                 width = 12,
                 solidHeader = T,
@@ -476,7 +474,6 @@ ui = dashboardPage(
             column(
               width = 6,
               box(
-                # background = "yellow",
                 title = "Gráfico de Linhas",
                 width = 12,
                 solidHeader = T, 
@@ -501,7 +498,6 @@ ui = dashboardPage(
             column(
               width = 6,
               box(
-                # background = "blue",
                 title = "Gráfico de Rosca",
                 width = 12,
                 solidHeader = T,
@@ -529,7 +525,6 @@ ui = dashboardPage(
             column(
               width = 12,
               box(
-                # background = "navy",
                 title = "Gráfico de Área",
                 width = 12,
                 solidHeader = T,
@@ -564,9 +559,7 @@ ui = dashboardPage(
             column(
               width = 12,
               box(
-                # background = "teal",
                 width = 12,
-                # height = "2rem",
                 title = "Mapa de Capturas",
                 solidHeader = T,
                 status = "primary",
@@ -579,7 +572,6 @@ ui = dashboardPage(
                   icon = icon("circle-info"),
                   width = 30,
                   background = "#A6ACAFEF",
-                  # h3("Descrição: "),
                   p("Este mapa de calor mostra a localização das capturas, onde
                     a cor dos círculos varia de amarelo a vermelho, indicando a
                     porcentagem de capturas em cada área. As áreas com uma 
@@ -676,8 +668,8 @@ ui = dashboardPage(
         sliderInput(
           inputId = "intervalo_anos",   # Identificador do controle deslizante
           label = "Intervalo de Anos:", # Rótulo do controle deslizante
-          min = min(dados_aux$ANO),  # Valor Mínimo do controle deslizante
-          max = max(dados_aux$ANO),  # Valor Máximo do controle deslizante
+          min = min(dados_aux$ANO),     # Valor Mínimo do controle deslizante
+          max = max(dados_aux$ANO),     # Valor Máximo do controle deslizante
           value = c(                    # Valor Inicial do controle deslizante
             min(dados_aux$ANO),
             max(dados_aux$ANO)
@@ -901,31 +893,10 @@ server <- function(input, output, session) {
     session$sendCustomMessage('sidebarState', input$sidebarCollapsed)
     
     if (input$sidebarCollapsed) {
-      # # Renderizando a Imagem Minimizada dos Créditos
-      # output$creditos_img <- renderImage({
-      #   list(
-      #     src = "dados_brutos/ImagemTeste.png",
-      #     contentType = "image/png",
-      #     width = "0%",
-      #     height = "0%",
-      #     alt = "Créditos"
-      #   )
-      # }, deleteFile = FALSE)
       output$textoHeader <- renderUI({
         icon("sailboat")
-        # tags$img(src = "icone.jpg", height = "30px")
       })
     } else {
-      # # Renderizando a Imagem Maximizada dos Créditos
-      # output$creditos_img <- renderImage({
-      #   list(
-      #     src = "dados_brutos/ImagemTeste.png",
-      #     contentType = "image/png",
-      #     width = "100%",
-      #     height = "100%",
-      #     alt = "Créditos"
-      #   )
-      # }, deleteFile = FALSE)
       output$textoHeader <- renderUI({
         tags$span("Projeto Tubarão Azul")
       })
@@ -1211,7 +1182,6 @@ server <- function(input, output, session) {
   
   # Verificação do Pressionamento do Botão Entrar
   observeEvent(input$entrar, {
-    
     senha_correta <- check_password(input$senha, "senha_hash.txt")
     if (senha_correta) {
       conteudo_tabela_adm({
