@@ -27,7 +27,7 @@ check_password <- function(input_password, filename) {
 ui = dashboardPage(
   tags$head(tags$style(HTML(' 
     .main-header .logo {
-    padding: 0 3px;
+    padding: 0 1px;
     }
                               ')
                        )
@@ -128,7 +128,8 @@ ui = dashboardPage(
       menuItem(
         text = "Desembarques",
         tabName = "tab3header",
-        icon = icon("chart-area")
+        # icon = icon("chart-area")
+        icon = icon("ship")
       ),
       # Definindo o item do Menu da Distribuição espacial das capturas
       menuItem(
@@ -250,7 +251,8 @@ ui = dashboardPage(
                       style = "display: block; text-align: center;",
                       h1(strong("92"))
                     ),
-                    icon = icon("ship"),
+                    # icon = icon("ship"),
+                    icon = icon("sailboat"),
                     br()
                   )
                 )
@@ -263,7 +265,13 @@ ui = dashboardPage(
               offset = 2,
               div(
                 style = "text-align: center;",
-                imageOutput("LogoPTA")
+                tags$a(
+                  href = "https://demersais.furg.br/projeto-tubarão-azul.html",
+                  target = "_blank",
+                  tags$img(
+                    imageOutput("LogoPTA")
+                  )
+                )
               )
             )
           ),
@@ -325,7 +333,10 @@ ui = dashboardPage(
               h3("Fluxograma do Plano de Gestão da pesca de Tubarão Azul 
                    no Rio Grande do Sul"),
               # Saída da Imagem do Fluxograma do Projeto
-              imageOutput("FluxogramaTubAzul")
+              div(
+                style = "text-align: center;",
+                imageOutput("FluxogramaTubAzul")
+              )
             )
           )
         )
@@ -373,7 +384,7 @@ ui = dashboardPage(
                 sidebar = boxSidebar(
                   id = "boxsidebar1",
                   icon = icon("circle-info"),
-                  width = 40,
+                  width = 30,
                   background = "#A6ACAFEF",
                   p("Contém informações detalhadas sobre as abas presentes no
                     dashboard e contato para mais informações."),
@@ -623,14 +634,24 @@ ui = dashboardPage(
           ),
         column(
           width = 3,
-          imageOutput("Logo_UNIVALI_LEMA",height = "100%",width = "100%")
-        ),
+          tags$a(
+            href = "http://www.univali.br", target = "_blank",
+            tags$img(
+              imageOutput("Logo_UNIVALI_LEMA",height = "100%",width = "100%")
+              )
+            )
+          ),
         column(
           width = 1,
-          imageOutput("Logo_FURG",height = "100%",width = "100%")
+          tags$a(
+            href = "http://www.furg.br", target = "_blank",
+            tags$img(
+              imageOutput("Logo_FURG",height = "100%",width = "100%")
+              )
+            )
+          )
         )
-      )
-    ),
+      ),
     right = list(
       fluidRow(
         tags$div(
@@ -642,12 +663,15 @@ ui = dashboardPage(
           width = 2,
           tags$div(
             style = "margin-right: 20px;",
-            imageOutput("Logo_MAPA",height = "100%",width = "100%")
+            tags$a(
+              href = "https://www.gov.br/mpa/pt-br", target = "_blank",
+              imageOutput("Logo_MAPA",height = "100%",width = "100%")
+              )
             )
+          )
         )
       )
-    )
-  ),
+    ),
   
   # ControlBar --------------------------------------------------------------
   
@@ -894,7 +918,13 @@ server <- function(input, output, session) {
     
     if (input$sidebarCollapsed) {
       output$textoHeader <- renderUI({
-        icon("sailboat")
+        # icon("sailboat")
+        tags$img(
+          # src = "icon_blueshark.png",
+          src = "icone_tubarao_preto.png",
+          height = "30px",
+          width = "30px"
+          )
       })
     } else {
       output$textoHeader <- renderUI({
@@ -917,9 +947,9 @@ server <- function(input, output, session) {
   # Renderizando a Imagem do Fluxograma
   output$FluxogramaTubAzul <- renderImage({
     list(
-      src = "dados_brutos/Fluxograma.png", # Local do arquivo da Imagem
+      src = "dados_brutos/Fluxograma_ajustado.png", # Local do arquivo da Imagem
       height = "100%",                     # Altura da Imagem
-      width = "100%",                      # Largura da Imagem
+      # width = "100%",                      # Largura da Imagem
       contentType = "image/png"            # Tipo do Conteúdo da Imagem
     )
   }, deleteFile = FALSE)                   # Não Deleta o Arquivo após o Uso
@@ -1044,7 +1074,7 @@ server <- function(input, output, session) {
       )
     ) %>%
       layout(
-        title = "Captura Média por Viagem",
+        title = "Média Mensal de Captura por Viagem",
         xaxis = list(
           title = "Mês"
         ),
@@ -1066,7 +1096,7 @@ server <- function(input, output, session) {
       mode = "lines",
       fill = "tozeroy"
     ) %>% 
-      layout(title = "Média de Captura por Viagem",
+      layout(title = "Média Mensal de Captura por Viagem ao longo do Período",
              xaxis = list(title = ""),
              yaxis = list(title = "Captura Média (KG) por Viagem"), 
              showlegend = FALSE
