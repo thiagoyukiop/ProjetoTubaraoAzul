@@ -3,7 +3,7 @@
 # Carregando os Pacotes que serão utilizados no dashboard
 pacman::p_load(
   shiny, shinydashboard, shinydashboardPlus, leaflet, dplyr, scales, plotly, 
-  zoo, tidyverse, digest, DT, shinyjs
+  zoo, tidyverse, digest, DT, shinyjs, raster
   )
 
 # Carregando os Dados de um Arquivo csv
@@ -25,13 +25,18 @@ check_password <- function(input_password, filename) {
 
 # Define a interface do usuário 
 ui = dashboardPage(
-  tags$head(tags$style(HTML(' 
-    .main-header .logo {
-    padding: 0 1px;
-    }
-                              ')
-                       )
-            ),
+  # Cria uma tag que contém metadados sobre HTML
+  tags$head(
+    # Cria uma tag que é usada para definir estilos CSS dentro da HTML
+    tags$style(
+      # Marca caracteres como HTML
+      HTML(' 
+      .main-header .logo {
+      padding: 0 1px;
+      }
+           ')
+      )
+    ),
   skin = "blue", # Definindo a cor do tema do Painel
   scrollToTop = T,
   # Header ------------------------------------------------------------------
@@ -39,22 +44,24 @@ ui = dashboardPage(
   header = dashboardHeader(
     titleWidth = 250,
     # Definição do Título com Link da Header
-    title = tags$a(
+    title = tags$a( # Cria uma tag que define um hyperlink
       href = "https://lrpdc.shinyapps.io/proj_tubarao_azul/", # Link URL
-      # Saída de Icon ou Título depende da situação do sidebar
+      target = "_blank", # Abre o link em uma nova aba
+      # Cria uma tag que é um contêiner em linha usado para aplicar estilos
       tags$span(
+        # Saída de Icon ou Título depende da situação do sidebar
         uiOutput("textoHeader")
         ),
       class = "logo"
     ),
     controlbarIcon = icon("sliders")#, # Definição do ícone da aba de Controle
-    # # Definição do Menu Suspenso
+    # Definição do Menu Suspenso
     # dropdownMenu(
     #   type = "notifications", # Tipo de Menu Suspenso
     #   icon = icon("bell"),
     #   # Criação da Notificação
     #   notificationItem(
-    #     text = "Nova embarcação ocorrerá dia 20/03.", 
+    #     text = "Nova embarcação ocorrerá dia 20/03.",
     #     href = "https://lrpdc.shinyapps.io/proj_tubarao_azul/",
     #     icon = icon("ship")
     #   ),
@@ -71,6 +78,7 @@ ui = dashboardPage(
   # Definindo o Sidebar do Painel
   sidebar = dashboardSidebar(
     useShinyjs(),  # Necessário para usar shinyjs
+    # Define um script JavaScript dentro da tag script
     tags$script(HTML("
       Shiny.addCustomMessageHandler('sidebarState', function(collapsed) {
         if (collapsed) {
@@ -88,9 +96,6 @@ ui = dashboardPage(
       padding-right: 2rem;
       padding-left: 2rem;
     }
-    # .treeview-menu {
-    # width: 126px !important;
-    # }
                               ')
                          )
               ),
@@ -182,23 +187,28 @@ ui = dashboardPage(
                background-color: #FFFFFF; /* cor de fundo branca */
             }
                               ')
-    )
-    ),
+                         )
+              ),
     tabItems(
       # Definindo o conteúdo do Projeto
       tabItem(
         tabName = "tab1body",
+        # Cria uma página com layout fluido
         fluidPage(
+          # Cria uma página com layout fixo
           fluidRow(
+            # Cria uma coluna dentro de uma definição da Interface do Usuário
             column(
-              offset = 2,
-              width = 9,
+              offset = 2, # Define o deslocamento de 2 colunas à esquerda
+              width = 9,  # Define a largura como 9 unidades de largura
               # Criando um carrossel de infoBox
               carousel(
                 width = 12,
                 id = "mycarousel",
                 indicators = F,           # Se haverá setas para troca de item
+                # Item do Carrossel
                 carouselItem(
+                  # Caixa de Informações
                   infoBox(
                     title = "Tubarões Medidos",
                     fill = T,             # Se a infoBox deve ser preenchida
@@ -207,9 +217,14 @@ ui = dashboardPage(
                     # Definindo Configurações do conteúdo da infoBox
                     value = tags$div(
                       style = "display: block; text-align: center;", 
-                      h1(strong("28954"))
+                      # Cria uma tag de cabeçalho HTML
+                      h1(
+                        # Cria uma tag que deixa o texto em negrito
+                        strong("28954")
+                        )
                     ),
                     icon = icon("fish"),
+                    # Cria uma tag que insere uma quebra de linha
                     br()
                   )
                 ),
@@ -268,7 +283,9 @@ ui = dashboardPage(
                 tags$a(
                   href = "https://demersais.furg.br/projeto-tubarão-azul.html",
                   target = "_blank",
+                  # Cria uma tag que incorpora uma imagem
                   tags$img(
+                    # Saída da Logo do Projeto 
                     imageOutput("LogoPTA")
                   )
                 )
@@ -285,7 +302,10 @@ ui = dashboardPage(
                    Estado do Rio Grande do Sul"),
               br(),
               h3("Como surgiu o Projeto Tubarão Azul?"),
-              p("O tubarão-azul ",tags$em("Prionace glauca", .noWS = "after"),
+              # Cria uma tag que define um parágrafo de texto 
+              p("O tubarão-azul ",
+                # Cria uma tag que enfatiza o texto
+                tags$em("Prionace glauca", .noWS = "after"),
                 " é um dos tubarões mais abundantes e de mais ampla 
                 distribuição nos oceanos do planeta, sendo a espécie mais
                 frequente nas capturas da frota de espinhel e superfície no
@@ -332,9 +352,9 @@ ui = dashboardPage(
               br(),
               h3("Fluxograma do Plano de Gestão da pesca de Tubarão Azul 
                    no Rio Grande do Sul"),
-              # Saída da Imagem do Fluxograma do Projeto
               div(
                 style = "text-align: center;",
+                # Saída da Imagem do Fluxograma do Projeto
                 imageOutput("FluxogramaTubAzul")
               )
             )
@@ -352,8 +372,8 @@ ui = dashboardPage(
               box(
                 title = "Texto Leia-me",
                 width = 12,
-                headerBorder = F,
-                background = "gray",
+                headerBorder = F, # Se deve exibir uma borda abaixo do cabeçalho
+                background = "gray", # Define a cor do fundo
                 # Definindo o texto do Leia-me
                 p("Prezado Usuário,"),
                 p("Esta plataforma foi desenvolvida para disponibilizar 
@@ -375,8 +395,8 @@ ui = dashboardPage(
                   todas as espécies, discriminados também por espécie."),
                 p("Na aba “Administrador”, encontra-se uma tabela contendo os
                   dados utilizados nas visualizações de dados. O acesso a essa
-                  tabela é restrito aos administradores, os quais devem fornecer
-                  uma senha para visualizar essas informações."),
+                  tabela é restrito aos administradores, os quais devem 
+                  fornecer uma senha para visualizar essas informações."),
                 p("Para a construção dos gráficos apresentados nesta plataforma
                   são utilizados dados atualizados anualmente."),
                 p("Para maiores informações, por favor, entre em contato através
@@ -409,6 +429,7 @@ ui = dashboardPage(
                 status = "primary",
                 div(
                   class = "graficos",
+                  # Saída do Gráfico de Barras Empilhadas de dados Registrados
                   plotlyOutput("TubMesAno", height = "100%")
                 ),
                 sidebar = boxSidebar(
@@ -437,6 +458,7 @@ ui = dashboardPage(
                 status = "primary",
                 div(
                   class = "graficos",
+                  # Saída do Gráfico de Rosca, sobre a Comparação de dados
                   plotlyOutput("RoscaTubOutros", height = "100%")
                 ),
                 sidebar = boxSidebar(
@@ -445,9 +467,9 @@ ui = dashboardPage(
                   background = "#A6ACAFEF",
                   p("Este gráfico de rosca compara a presença de Cação Azul com
                     a categoria 'Outros', que representa a junção dos dados de 
-                    todas as outras espécies de pesca. Ele mostra a proporção de 
-                    Cação Azul em relação ao total, permitindo visualizar sua
-                    participação comparada com as demais categorias.")
+                    todas as outras espécies de pesca. Ele mostra a proporção 
+                    de Cação Azul em relação ao total, permitindo visualizar
+                    sua participação comparada com as demais categorias.")
                 )
               )
             ),
@@ -460,6 +482,7 @@ ui = dashboardPage(
                 status = "primary",
                 div(
                   class = "graficos",
+                  # Saída do Gráfico de Rosca que compara os dados por mês
                   plotlyOutput("TubMes", height = "100%")
                 ),
                 sidebar = boxSidebar(
@@ -516,7 +539,6 @@ ui = dashboardPage(
                 div(
                   class = "graficos",
                   # Saída do Gráfico Plotly das Espécies
-                  # plotlyOutput("graficoEspecies",height = "100%")
                   plotlyOutput("pesoMes",height = "100%")
                 ),
                 sidebar = boxSidebar(
@@ -576,6 +598,7 @@ ui = dashboardPage(
                 status = "primary",
                 div(
                   class = "mapa",
+                  # Saída do Gráfico do Mapa de Calor
                   leafletOutput("MapaLeaflet",height = "100%")
                 ),
                 sidebar = boxSidebar(
@@ -586,8 +609,8 @@ ui = dashboardPage(
                   p("Este mapa de calor mostra a localização das capturas, onde
                     a cor dos círculos varia de amarelo a vermelho, indicando a
                     porcentagem de capturas em cada área. As áreas com uma 
-                    porcentagem menor de capturas são representadas em tons mais
-                    amarelos, enquanto áreas com uma porcentagem maior são 
+                    porcentagem menor de capturas são representadas em tons 
+                    mais amarelos, enquanto áreas com uma porcentagem maior são 
                     exibidas em tons mais vermelhos. Isso permite visualizar 
                     facilmente as áreas com maior e menor concentração de
                     capturas.")
@@ -637,6 +660,7 @@ ui = dashboardPage(
           tags$a(
             href = "http://www.univali.br", target = "_blank",
             tags$img(
+              # Saída do Logo da UNIVALI com a do LEMA
               imageOutput("Logo_UNIVALI_LEMA",height = "100%",width = "100%")
               )
             )
@@ -646,6 +670,7 @@ ui = dashboardPage(
           tags$a(
             href = "http://www.furg.br", target = "_blank",
             tags$img(
+              # Saída do Logo da FURG
               imageOutput("Logo_FURG",height = "100%",width = "100%")
               )
             )
@@ -665,6 +690,7 @@ ui = dashboardPage(
             style = "margin-right: 20px;",
             tags$a(
               href = "https://www.gov.br/mpa/pt-br", target = "_blank",
+              # Saída do Logo do MAPA
               imageOutput("Logo_MAPA",height = "100%",width = "100%")
               )
             )
@@ -829,7 +855,7 @@ server <- function(input, output, session) {
       # Média das Toneladas de Captura, de cada Mês, com Anos Agrupados
       summarise(MediaKG_Mes_Viagem = mean(Media_KG_por_Viagem)) %>%
       mutate(MediaKGMesViagem = round(MediaKG_Mes_Viagem, 2)) %>%
-      select(-MediaKG_Mes_Viagem) %>%
+      plotly::select(-MediaKG_Mes_Viagem) %>%
       mutate(mes_nome = nomes_meses[MES])
   })
   
@@ -1130,6 +1156,15 @@ server <- function(input, output, session) {
   output$MapaLeaflet <- renderLeaflet({
     tab01 <- db_filtrado()$tab01
     
+    # Cálculo dos quantis para categorizar os dados do mapa de calor
+    breaks <- quantile(tab01$prod, probs = seq(0, 1, 0.1), na.rm = TRUE)
+    
+    # Verificando se há breaks duplicados 
+    if (any(duplicated(breaks))) {
+      # Jitter é usado para variar um pouco o valor dos duplicados
+      tab01$prod <- jitter(tab01$prod, factor = 0.1)
+    }
+      
     # Criar a paleta de cores com base nos intervalos
     pal <- colorQuantile(
       palette = yellow_to_red_palette,
@@ -1150,7 +1185,7 @@ server <- function(input, output, session) {
       ) %>%
       # Definindo a Posição Inicial da visão sobre o Mapa
       setView(
-        lng = -40, lat = -29, zoom = 4
+        lng = -40, lat = -28, zoom = 5
       ) %>%
       # Definindo a adição dos Marcadores no Mapa
       addCircleMarkers(
