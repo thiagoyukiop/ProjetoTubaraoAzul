@@ -739,11 +739,21 @@ ui = dashboardPage(
           # selected = "Cacao-azul"
           selected = dados_aux$CATEGORIA,
         ),
-        # Botão de ação
+        # # Botão de ação
+        # actionButton(
+        #   inputId = "reset",
+        #   label = "Reiniciar Valores",
+        #   icon = icon("repeat")
+        # )
         actionButton(
-          inputId = "reset",
-          label = "Reiniciar Valores",
-          icon = icon("repeat")
+          inputId = "selectAll",
+          label = "Todos",
+          icon = icon("square-check")
+        ),
+        actionButton(
+          inputId = "deselectAll",
+          label = "Nenhum",
+          icon = icon("square")
         )
       )
     )
@@ -1049,7 +1059,7 @@ server <- function(input, output, session) {
       hole = 0.6,
       textinfo = "label",
       hoverinfo = "text+percent",
-      text = ~paste("Quantidade: ", n, "<br>"),
+      text = ~paste("Quantidade: ", n),
       marker = list(colors = c("Cacao-azul" = "#1f77b4", "Outros" = "#ff7f0e"))
     ) %>%
       layout(
@@ -1095,8 +1105,13 @@ server <- function(input, output, session) {
       hoverinfo = "text",
       text = ~paste(
         "Espécie: ", CATEGORIA, "<br>",
-        "Mês: ", mes_nome, "<br>",
+        # "Mês: ", mes_nome, "<br>",
         "Média de KG: ", MediaKGMesViagem, "<br>"
+      ),
+      hoverlabel = list(
+        font = list(
+          size = 11 # Tamanho da fonte do hover
+        )
       )
     ) %>%
       layout(
@@ -1120,9 +1135,20 @@ server <- function(input, output, session) {
       colors = cores,
       type = "scatter",
       mode = "lines",
-      fill = "tozeroy"
+      fill = "tozeroy",
+      hoverinfo = "text",
+      text = ~paste(
+        "Espécie: ", CATEGORIA, "<br>",
+        # "Mês: ", mes_nome, "<br>",
+        "Média de KG: ", Media_KG_por_Viagem, "<br>"
+      ),
+      hoverlabel = list(
+        font = list(
+          size = 11
+        )
+      )
     ) %>% 
-      layout(title = "Média Mensal de Captura por Viagem ao longo do Período",
+      layout(title = "Média Mensal de Captura por Viagem ao Longo do Período",
              xaxis = list(title = ""),
              yaxis = list(title = "Captura Média (KG) por Viagem"), 
              showlegend = FALSE
@@ -1295,19 +1321,35 @@ server <- function(input, output, session) {
   # ControlBar --------------------------------------------------------------
   
   # Verificação do Botão Reset, ao ser Pressionado Atualizará os Controles
-  observeEvent(input$reset, {
-    # Atualização no Controle Deslizante 
-    updateSliderInput(
-      session,
-      inputId = "intervalo_anos",
-      value = c(min(dados_aux$ANO), max(dados_aux$ANO))
-    )
-    
-    # Atualização no Grupo de Caixas de Seleção
+  # observeEvent(input$reset, {
+  #   # Atualização no Controle Deslizante 
+  #   updateSliderInput(
+  #     session,
+  #     inputId = "intervalo_anos",
+  #     value = c(min(dados_aux$ANO), max(dados_aux$ANO))
+  #   )
+  #   
+  #   # Atualização no Grupo de Caixas de Seleção
+  #   updateCheckboxGroupInput(
+  #     session, 
+  #     inputId = "species",
+  #     selected = unique(dados_aux$CATEGORIA)
+  #   )
+  # })
+  
+  observeEvent(input$selectAll, {
     updateCheckboxGroupInput(
       session, 
       inputId = "species",
       selected = unique(dados_aux$CATEGORIA)
+    )
+  })
+  
+  observeEvent(input$deselectAll, {
+    updateCheckboxGroupInput(
+      session, 
+      inputId = "species",
+      selected = character(0)
     )
   })
 }
