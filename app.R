@@ -185,7 +185,12 @@ ui = dashboardPage(
     
     .content-wrapper {
                background-color: #FFFFFF; /* cor de fundo branca */
-            }
+    }
+    
+    #LogoPTA img {
+        min-width: 200px;   /* Defina a largura mínima desejada */
+        max-width: 400px;   /* Defina a largura máxima desejada */
+      }
                               ')
                          )
               ),
@@ -283,15 +288,11 @@ ui = dashboardPage(
                 tags$a(
                   href = "https://demersais.furg.br/projeto-tubarão-azul.html",
                   target = "_blank",
-                  # Cria uma tag que incorpora uma imagem
-                  tags$img(
-                    # Saída da Logo do Projeto 
-                    imageOutput("LogoPTA")
+                  imageOutput("LogoPTA")
                   )
                 )
               )
-            )
-          ),
+            ),
           fluidRow(
             column(
               width = 8,
@@ -656,15 +657,27 @@ ui = dashboardPage(
           h3(strong("Instituições Executoras"))
           ),
         column(
-          width = 3,
+          # width = 3,
+          width = 4,
           tags$a(
             href = "http://www.univali.br", target = "_blank",
             tags$img(
               # Saída do Logo da UNIVALI com a do LEMA
-              imageOutput("Logo_UNIVALI_LEMA",height = "100%",width = "100%")
+              # imageOutput("Logo_UNIVALI_LEMA",height = "100%",width = "100%")
+              imageOutput("Logo_UNIVALI", height = "100%", width = "100%")
               )
             )
           ),
+        column(
+          width = 1,
+          tags$a(
+            href = "", target = "_blank",
+            tags$img(
+              # Saída do Logo da UNIVALI com a do LEMA
+              imageOutput("Logo_LEMA", height = "100%", width = "100%")
+            )
+          )
+        ),
         column(
           width = 1,
           tags$a(
@@ -973,10 +986,11 @@ server <- function(input, output, session) {
   
   output$LogoPTA <- renderImage({
     list(
-      src = "dados_brutos/Logo.jpg", # Local do arquivo da Imagem
-      # height = "100%",                     # Altura da Imagem
-      # width = "100%",                      # Largura da Imagem
-      contentType = "image/png"            # Tipo do Conteúdo da Imagem
+      src = "dados_brutos/logo_tuba_azul_2.png", # Local do arquivo da Imagem
+      height = "100%",                     # Altura da Imagem
+      width = "100%",                      # Largura da Imagem
+      contentType = "image/png",            # Tipo do Conteúdo da Imagem
+      id = "LogoPTA"
     )
   }, deleteFile = FALSE) 
   
@@ -993,46 +1007,72 @@ server <- function(input, output, session) {
   output$Logo_FURG <- renderImage({
     list(
       src = "dados_brutos/FURG_fundo.png",
-      height = "50px",
-      width = "45px",
+      height = "80px",
+      width = "72px",
       contentType = "image/png"
     )
   }, deleteFile = FALSE) 
   
-  output$Logo_UNIVALI_LEMA <- renderImage({
+  output$Logo_UNIVALI <- renderImage({
     list(
-      src = "dados_brutos/logo_UNIVALI_LEMA.png",
-      height = "50px",
-      width = "200px",
+      src = "dados_brutos/Logo_univali.jpg",
+      height = "80px",
+      width = "320px",
+      contentType = "image/jpg"
+    )
+  }, deleteFile = FALSE)
+  
+  output$Logo_LEMA <- renderImage({
+    list(
+      src = "dados_brutos/Logo_LEMA2.png",
+      height = "80px",
+      width = "75px",
       contentType = "image/png"
     )
-  }, deleteFile = FALSE) 
+  }, deleteFile = FALSE)
+  
+  # output$Logo_UNIVALI_LEMA <- renderImage({
+  #   list(
+  #     src = "dados_brutos/logo_UNIVALI_LEMA.png",
+  #     height = "50px",
+  #     width = "200px",
+  #     contentType = "image/png"
+  #   )
+  # }, deleteFile = FALSE) 
 
   output$Logo_MAPA <- renderImage({
     list(
-      src = "dados_brutos/logo_MAPA.png",
-      height = "60px",
-      width = "150px",
+      src = "dados_brutos/logo_MAPA2.png",
+      height = "80px",
+      width = "215px",
       contentType = "image/png"
     )
   }, deleteFile = FALSE) 
 
   # Distribuição de Comprimentos --------------------------------------------
   
-  # Tentativa de gráfico de porcentagem de captura de Cacao-azul por Mes
   output$TubMesAno <- renderPlotly({
+    # Calcula a soma total por mês/ano
+    data <- tubAzulMesAnoCompleto() %>%
+      group_by(mes_ano_formatado) %>%
+      mutate(total = sum(Quantidade)) %>%
+      ungroup() %>%
+      # Calcula a porcentagem para cada categoria
+      mutate(percentage = Quantidade / total*100)
+    
     plot_ly(
-      data = tubAzulMesAnoCompleto(),
+      data = data,
       x = ~mes_ano_formatado,
-      y = ~Quantidade,
+      y = ~percentage,
       color = ~CATEGORIA,
       colors = cores,
       type = "bar",
       hoverinfo = "text",
       text = ~paste(
-        "Data: ",mes_ano,"<br>",
+        "Data: ", mes_ano, "<br>",
         "Categoria: ", CATEGORIA, "<br>",
-        "Quantidade: ", Quantidade
+        "Quantidade: ", Quantidade, "<br>",
+        "Porcentagem: ", round(percentage, 2), "%"
       )
     ) %>%
       layout(
@@ -1041,13 +1081,44 @@ server <- function(input, output, session) {
           title = ""
         ),
         yaxis = list(
-          title = "Quantidade"
+          title = "Porcentagem (%)",
+          tickformat = ".0f"
         ),
         barmode = "stack",
         showlegend = F
       ) %>%
       config(displayModeBar = FALSE)
   })
+  
+  # # Tentativa de gráfico de porcentagem de captura de Cacao-azul por Mes
+  # output$TubMesAno <- renderPlotly({
+  #   plot_ly(
+  #     data = tubAzulMesAnoCompleto(),
+  #     x = ~mes_ano_formatado,
+  #     y = ~Quantidade,
+  #     color = ~CATEGORIA,
+  #     colors = cores,
+  #     type = "bar",
+  #     hoverinfo = "text",
+  #     text = ~paste(
+  #       "Data: ",mes_ano,"<br>",
+  #       "Categoria: ", CATEGORIA, "<br>",
+  #       "Quantidade: ", Quantidade
+  #     )
+  #   ) %>%
+  #     layout(
+  #       title = "Dados Registrados por Mês, Ano e Categoria",
+  #       xaxis = list(
+  #         title = ""
+  #       ),
+  #       yaxis = list(
+  #         title = "Quantidade"
+  #       ),
+  #       barmode = "stack",
+  #       showlegend = F
+  #     ) %>%
+  #     config(displayModeBar = FALSE)
+  # })
   
   # Renderização do Gráfico da Comparação de Dados da Cação Azul para o Restante
   output$RoscaTubOutros <- renderPlotly({
