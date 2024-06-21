@@ -2,13 +2,33 @@
 
 # Carregando os Pacotes que serão utilizados no dashboard
 pacman::p_load(
-  shiny, shinydashboard, shinydashboardPlus, leaflet, dplyr, scales, plotly, 
+  shiny, shinydashboard, shinydashboardPlus, leaflet, dplyr, scales, plotly,
   zoo, tidyverse, digest, DT, shinyjs, raster
-  )
+)
 
 # Carregando os Dados de um Arquivo csv
-dados_aux <- read.table("dados_brutos/dados_17_24_Outros.csv",
-                        header = TRUE, sep = ",", dec = ".")
+dados <- read.table(
+  "dados_brutos/dados_17_24_Outros.csv", header = TRUE, sep = ",", dec = "."
+)
+# Ajuste nos nomes das CATEGORIAS
+dados_ajustados <- dados %>% 
+  mutate(
+    CATEGORIA = case_when(
+      CATEGORIA == "Albacora-bandolim" ~ "Albacora_bandolim",
+      CATEGORIA == "Albacora-branca" ~ "Albacora_branca",
+      CATEGORIA == "Albacora-lage" ~ "Albacora_lage",
+      CATEGORIA == "Cacao-anequim" ~ "Cacao_anequim",
+      CATEGORIA == "Cacao-azul" ~ "Cacao_azul",
+      CATEGORIA == "Meca" ~ CATEGORIA,
+      CATEGORIA == "Outros" ~ CATEGORIA,
+      CATEGORIA == "Prego" ~ CATEGORIA, 
+      TRUE ~ CATEGORIA
+    )
+  )
+
+verifica_coluna <- function(df, coluna) {
+  return(any(names(df) == coluna))
+}
 
 check_password <- function(input_password, filename) {
   # Ler o hash da senha do arquivo
@@ -24,21 +44,21 @@ check_password <- function(input_password, filename) {
 # Interface do Usuário ----------------------------------------------------
 
 # Define a interface do usuário 
-ui = dashboardPage(
+ui <- dashboardPage(
   # Cria uma tag que contém metadados sobre HTML
   tags$head(
     # Cria uma tag que é usada para definir estilos CSS dentro da HTML
     tags$style(
       # Marca caracteres como HTML
-      HTML(' 
+      HTML('
       .main-header .logo {
       padding: 0 1px;
       }
            ')
-      )
-    ),
+    )
+  ),
   skin = "blue", # Definindo a cor do tema do Painel
-  scrollToTop = T,
+  scrollToTop = TRUE,
   # Header ------------------------------------------------------------------
   # Definindo a Header do Painel
   header = dashboardHeader(
@@ -51,7 +71,7 @@ ui = dashboardPage(
       tags$span(
         # Saída de Icon ou Título depende da situação do sidebar
         uiOutput("textoHeader")
-        ),
+      ),
       class = "logo"
     ),
     controlbarIcon = icon("sliders")#, # Definição do ícone da aba de Controle
@@ -88,7 +108,7 @@ ui = dashboardPage(
         }
       });
                      ")
-                ),
+    ),
     tags$head(tags$style(HTML(' 
     .sidebar-mini:not(.sidebar-mini-expand-feature).sidebar-collapse 
     .sidebar-menu>li:hover>a>span:not(.pull-right) {
@@ -97,11 +117,11 @@ ui = dashboardPage(
       padding-left: 2rem;
     }
                               ')
-                         )
-              ),
+    )
+    ),
     width = 250,   # Definição da Largura em pixels
-    minified = T,  # Se a aba lateral ao ser fechada deverá mostrar os ícones
-    collapsed = F, # Se a aba lateral deve ser iniciada fechada
+    minified = TRUE,  # Se a aba lateral ao ser fechada deverá mostrar os ícones
+    collapsed = FALSE, # Se a aba lateral deve ser iniciada fechada
     # Definindo do Menu Sidebar
     sidebarMenu(
       id = "sidebarMenu",
@@ -174,6 +194,18 @@ ui = dashboardPage(
     width: 100%;
     # height: calc(43vh - 119px);
     height: calc(50vh - 120px);
+    # height: calc(100vh - 120px);
+    visibility: inherit;
+    position: relative;
+    z-index: 100;
+    }
+    
+    .graficosMaiores {
+    display: flex;
+    width: 100%;
+    # height: calc(43vh - 119px);
+    # height: calc(50vh - 120px);
+    height: calc(90vh - 120px);
     visibility: inherit;
     position: relative;
     z-index: 100;
@@ -192,8 +224,8 @@ ui = dashboardPage(
         max-width: 400px;   /* Defina a largura máxima desejada */
       }
                               ')
-                         )
-              ),
+    )
+    ),
     tabItems(
       # Definindo o conteúdo do Projeto
       tabItem(
@@ -210,13 +242,13 @@ ui = dashboardPage(
               carousel(
                 width = 12,
                 id = "mycarousel",
-                indicators = F,           # Se haverá setas para troca de item
+                indicators = FALSE,       # Se haverá setas para troca de item
                 # Item do Carrossel
                 carouselItem(
                   # Caixa de Informações
                   infoBox(
                     title = "Tubarões Medidos",
-                    fill = T,             # Se a infoBox deve ser preenchida
+                    fill = TRUE,          # Se a infoBox deve ser preenchida
                     width = 10,           # Definindo a largura da infoBox
                     color = "light-blue", # Definindo cor da infoBox
                     # Definindo Configurações do conteúdo da infoBox
@@ -226,7 +258,7 @@ ui = dashboardPage(
                       h1(
                         # Cria uma tag que deixa o texto em negrito
                         strong("28954")
-                        )
+                      )
                     ),
                     icon = icon("fish"),
                     # Cria uma tag que insere uma quebra de linha
@@ -236,7 +268,7 @@ ui = dashboardPage(
                 carouselItem(
                   infoBox(
                     title = "Entrevista de Desembarque",
-                    fill = T,
+                    fill = TRUE,
                     width = 10,
                     color = "light-blue", 
                     value = tags$div(
@@ -250,7 +282,7 @@ ui = dashboardPage(
                 carouselItem(
                   infoBox(
                     title = "Cadernos de Bordo",
-                    fill = T,
+                    fill = TRUE,
                     width = 10,
                     color = "light-blue",
                     value = tags$div(
@@ -264,7 +296,7 @@ ui = dashboardPage(
                 carouselItem(
                   infoBox(
                     title = "Embarcações Monitoradas",
-                    fill = T,
+                    fill = TRUE,
                     width = 10,
                     color = "light-blue",
                     value = tags$div(
@@ -289,10 +321,10 @@ ui = dashboardPage(
                   href = "https://demersais.furg.br/projeto-tubarão-azul.html",
                   target = "_blank",
                   imageOutput("LogoPTA")
-                  )
                 )
               )
-            ),
+            )
+          ),
           fluidRow(
             column(
               width = 8,
@@ -307,7 +339,7 @@ ui = dashboardPage(
               p("O tubarão-azul ",
                 # Cria uma tag que enfatiza o texto
                 tags$em("Prionace glauca", .noWS = "after"),
-                " é um dos tubarões mais abundantes e de mais ampla 
+                " é um dos Tubarões mais abundantes e de mais ampla 
                 distribuição nos oceanos do planeta, sendo a espécie mais
                 frequente nas capturas da frota de espinhel e superfície no
                 Oceano Atlântico Sul."),
@@ -322,7 +354,7 @@ ui = dashboardPage(
                   tubarão-azul em águas gaúchas não seria uma medida adequada 
                   para a sua conservação, devido aos seguintes motivos:"),
               p(strong("1) Por ser fauna acompanhante de outras espécies
-                         comerciais, tubarões azuis continuariam sendo 
+                         comerciais, Tubarões azuis continuariam sendo 
                          capturados em quantidades expressivas.")),
               p(strong("2) O procedimento de liberação dos exemplares 
                          capturados poderia inviabilizar economicamente a 
@@ -333,7 +365,7 @@ ui = dashboardPage(
                          sistematicamente acompanhada como fonte de dados 
                          para o monitoramento do estoque.")),
               p("Como parte do processo, foi criado um Grupo Técnico para a
-                  elaboração de um Plano de Gestão da Pesca do tubarão-azul no
+                  elaboração de um Plano de Gestão da Pesca do Tubarão-azul no
                   Rio Grande do Sul, surgindo daí o Projeto Tubarão Azul."),
               br(),
               h3("Legal, mas o que é um Plano de Gestão da Pesca?"),
@@ -373,20 +405,23 @@ ui = dashboardPage(
               box(
                 title = "Texto Leia-me",
                 width = 12,
-                headerBorder = F, # Se deve exibir uma borda abaixo do cabeçalho
+                # Se deve exibir uma borda abaixo do cabeçalho
+                headerBorder = FALSE, 
                 background = "gray", # Define a cor do fundo
                 # Definindo o texto do Leia-me
                 p("Prezado Usuário,"),
                 p("Esta plataforma foi desenvolvida para disponibilizar 
-                  informações atualizadas sobre as capturas de tubarão azul e 
+                  informações atualizadas sobre as capturas de Tubarão azul e 
                   da frota de espinhel pelágico que vêm sendo coletadas pela 
                   equipe do projeto Tubarão Azul. Os dados são referentes à 
                   desembarques realizados pela frota no porto de Rio Grande,
                   RS."),
+                p("A espécie Tubarão azul, por ser o foco do dashboard, estará
+                  sempre selecionada."),
                 p("Na aba “Distribuição de captura”, você encontrará gráficos
-                  que mostram a quantidade de dados registrados de cação azul
+                  que mostram a quantidade de dados registrados de Tubarão azul
                   em comparação com outras espécies e a distribuição de dados
-                  de cação azul por mês."),
+                  de Tubarão azul por mês."),
                 p("Na aba “Desembarques”, serão visualizadas as capturas
                   mensais médias por viagem para todas as espécies,
                   discriminadas também por espécie, e a distribuição do peso 
@@ -424,9 +459,10 @@ ui = dashboardPage(
               width = 12,
               # Definindo Caixa com conteúdo da Distribuição de Comprimentos
               box(
-                title = "Gráfico de Barras Empilhadas",
+                # title = "Gráfico de Barras Empilhadas",
+                title = "Gráfico de Área Relativa",
                 width = 12,
-                solidHeader = T, # Se a Header é sólida
+                solidHeader = TRUE, # Se a Header é sólida
                 status = "primary",
                 div(
                   class = "graficos",
@@ -438,7 +474,7 @@ ui = dashboardPage(
                   icon = icon("circle-info"),
                   background = "#A6ACAFEF",
                   width = 30,
-                  p("Este gráfico de barras empilhadas apresenta a quantidade 
+                  p("Este gráfico de área relativa, apresenta a quantidade 
                     de dados registrados por mês/ano, divididos por categoria 
                     de pesca. Cada barra representa um mês/ano, com segmentos 
                     empilhados que correspondem às diferentes categorias de 
@@ -455,7 +491,7 @@ ui = dashboardPage(
               box(
                 title = "Gráfico de Rosca",
                 width = 12,
-                solidHeader = T,
+                solidHeader = TRUE,
                 status = "primary",
                 div(
                   class = "graficos",
@@ -466,10 +502,10 @@ ui = dashboardPage(
                   id = "boxsidebar3",
                   icon = icon("circle-info"),
                   background = "#A6ACAFEF",
-                  p("Este gráfico de rosca compara a presença de Cação Azul com
-                    a categoria 'Outros', que representa a junção dos dados de 
-                    todas as outras espécies de pesca. Ele mostra a proporção 
-                    de Cação Azul em relação ao total, permitindo visualizar
+                  p("Este gráfico de rosca compara a presença de Tubarão azul
+                    com a categoria 'Outros', que representa a junção dos dados
+                    de todas as outras espécies de pesca. Ele mostra a proporção 
+                    de Tubarão azul em relação ao total, permitindo visualizar
                     sua participação comparada com as demais categorias.")
                 )
               )
@@ -479,12 +515,12 @@ ui = dashboardPage(
               box(
                 title = "Gráfico de Rosca",
                 width = 12,
-                solidHeader = T,
+                solidHeader = TRUE,
                 status = "primary",
                 div(
                   class = "graficos",
                   # Saída do Gráfico de Rosca que compara os dados por mês
-                  plotlyOutput("TubMes", height = "100%")
+                  plotlyOutput("ComparaDadosTub", height = "100%")
                 ),
                 sidebar = boxSidebar(
                   id = "boxsidebar4",
@@ -511,12 +547,13 @@ ui = dashboardPage(
               box(
                 title = "Gráfico de Linhas",
                 width = 12,
-                solidHeader = T, 
+                solidHeader = TRUE, 
+                collapsible = TRUE,
                 status = "primary",
                 div(
                   class = "graficos",
                   # Saída do Gráfico Plotly de Captura 
-                  plotlyOutput("graficoCaptura",height = "100%")
+                  plotlyOutput("graficoCaptura", height = "100%")
                 ),
                 sidebar = boxSidebar(
                   id = "boxsidebar6",
@@ -535,12 +572,13 @@ ui = dashboardPage(
               box(
                 title = "Gráfico de Rosca",
                 width = 12,
-                solidHeader = T,
+                collapsible = TRUE,
+                solidHeader = TRUE,
                 status = "primary",
                 div(
                   class = "graficos",
                   # Saída do Gráfico Plotly das Espécies
-                  plotlyOutput("pesoMes",height = "100%")
+                  plotlyOutput("pesoMes", height = "100%")
                 ),
                 sidebar = boxSidebar(
                   id = "boxsidebar7",
@@ -559,23 +597,24 @@ ui = dashboardPage(
             column(
               width = 12,
               box(
-                title = "Gráfico de Área",
+                title = "Gráfico de Área Relativa",
                 width = 12,
-                solidHeader = T,
+                collapsible = TRUE,
+                solidHeader = TRUE,
                 status = "primary",
                 div(
-                  class = "graficos",
+                  class = "graficosMaiores",
                   # Saída do Gráfico Plotly do Desembarque
-                  plotlyOutput("graficoAreaDesembarque",height = "100%")
+                  plotlyOutput("graficoAreaDesembarque", height = "100%")
                 ),
                 sidebar = boxSidebar(
                   id = "boxsidebar82",
                   icon = icon("circle-info"),
                   width = 30,
                   background = "#A6ACAFEF",
-                  p("Este gráfico de área apresenta a captura média em quilos 
-                    por viagem, categorizada por tipo de peixe, para cada 
-                    mês/ano no período analisado. As diferentes cores
+                  p("Este gráfico de área relativa, apresenta a captura média 
+                    em quilos por viagem, categorizada por tipo de peixe, para
+                    cada mês/ano no período analisado. As diferentes cores
                     representam distintas categorias de pesca, permitindo uma 
                     comparação clara e imediata entre os meses e anos, bem como 
                     entre as categorias de peixe.")
@@ -595,7 +634,7 @@ ui = dashboardPage(
               box(
                 width = 12,
                 title = "Mapa de Capturas",
-                solidHeader = T,
+                solidHeader = TRUE,
                 status = "primary",
                 div(
                   class = "mapa",
@@ -608,13 +647,13 @@ ui = dashboardPage(
                   width = 30,
                   background = "#A6ACAFEF",
                   p("Este mapa de calor mostra a localização das capturas, onde
-                    a cor dos círculos varia de amarelo a vermelho, indicando a
+                    a cor dos círculos varia de verde a roxo, indicando a
                     porcentagem de capturas em cada área. As áreas com uma 
                     porcentagem menor de capturas são representadas em tons 
-                    mais amarelos, enquanto áreas com uma porcentagem maior são 
-                    exibidas em tons mais vermelhos. Isso permite visualizar 
-                    facilmente as áreas com maior e menor concentração de
-                    capturas.")
+                    mais claros de verde, enquanto áreas com uma porcentagem
+                    maior são exibidas em tons mais escuros de roxo Isso 
+                    permite visualizar facilmente as áreas com maior e menor 
+                    concentração de capturas.")
                 )
               )
             )
@@ -645,37 +684,31 @@ ui = dashboardPage(
       )
     )
   ),
-  # footer = dashboardFooter(
-  #   left = "Por Thiago Pacheco",
-  #   right = "Itajaí, 2024"
-  # ),
   footer = dashboardFooter(
     left = list(
       fluidRow(
         tags$div(
-          style = "margin-left: 20px; margin-top: -15px; margin-bottom: -10px;", 
+          style = "margin-left: 20px;
+          margin-top: -15px;
+          margin-bottom: -10px;", 
           h3(strong("Instituições Executoras"))
-          ),
+        ),
         column(
           # width = 3,
           width = 4,
           tags$a(
             href = "http://www.univali.br", target = "_blank",
             tags$img(
-              # Saída do Logo da UNIVALI com a do LEMA
-              # imageOutput("Logo_UNIVALI_LEMA",height = "100%",width = "100%")
+              # Saída do Logo da UNIVALI 
               imageOutput("Logo_UNIVALI", height = "100%", width = "100%")
-              )
             )
-          ),
+          )
+        ),
         column(
           width = 1,
-          tags$a(
-            href = "", target = "_blank",
-            tags$img(
-              # Saída do Logo da UNIVALI com a do LEMA
-              imageOutput("Logo_LEMA", height = "100%", width = "100%")
-            )
+          tags$img(
+            # Saída do Logo do LEMA
+            imageOutput("Logo_LEMA", height = "100%", width = "100%")
           )
         ),
         column(
@@ -685,39 +718,39 @@ ui = dashboardPage(
             tags$img(
               # Saída do Logo da FURG
               imageOutput("Logo_FURG",height = "100%",width = "100%")
-              )
             )
           )
         )
-      ),
+      )
+    ),
     right = list(
       fluidRow(
         tags$div(
           style = "margin-left: 50px; margin-top: -15px; margin-bottom: -10px;",
           h3(strong("Apoio"))
-          ),
+        ),
         column(
           offset = 1,
-          width = 2,
+          width = 3,
           tags$div(
             style = "margin-right: 20px;",
             tags$a(
               href = "https://www.gov.br/mpa/pt-br", target = "_blank",
               # Saída do Logo do MAPA
               imageOutput("Logo_MAPA",height = "100%",width = "100%")
-              )
             )
           )
         )
       )
-    ),
+    )
+  ),
   
   # ControlBar --------------------------------------------------------------
   
   # Definindo o Controlbar do Painel
   controlbar = dashboardControlbar(
-    overlay = F, # Se vai sobrepor o conteúdo
-    collapsed = F,
+    overlay = FALSE, # Se vai sobrepor o conteúdo
+    collapsed = FALSE,
     skin = "dark",
     id = "controlbar",
     # Definindo controlbar Menu
@@ -729,13 +762,13 @@ ui = dashboardPage(
         icon = icon("gear"),
         # Entrada do controle deslizante
         sliderInput(
-          inputId = "intervalo_anos",   # Identificador do controle deslizante
-          label = "Intervalo de Anos:", # Rótulo do controle deslizante
-          min = min(dados_aux$ANO),     # Valor Mínimo do controle deslizante
-          max = max(dados_aux$ANO),     # Valor Máximo do controle deslizante
-          value = c(                    # Valor Inicial do controle deslizante
-            min(dados_aux$ANO),
-            max(dados_aux$ANO)
+          inputId = "intervalo_anos",    # Identificador do controle deslizante
+          label = "Intervalo de Anos:",  # Rótulo do controle deslizante
+          min = min(dados_ajustados$ANO),# Valor Mínimo do controle deslizante
+          max = max(dados_ajustados$ANO),# Valor Máximo do controle deslizante
+          value = c(                     # Valor Inicial do controle deslizante
+            min(dados_ajustados$ANO),
+            max(dados_ajustados$ANO)
           ), 
           step = 1,        # Intervalo entre os valores do controle deslizante
           # Opções das animações
@@ -748,16 +781,14 @@ ui = dashboardPage(
         checkboxGroupInput(
           inputId = "species",
           label = "Seletor de Espécies:",
-          choices = sort(names(table(dados_aux$CATEGORIA)), decreasing = FALSE),
-          # selected = "Cacao-azul"
-          selected = dados_aux$CATEGORIA,
+          choiceValues = c("Albacora_bandolim", "Albacora_branca",
+                           "Albacora_lage", "Cacao_anequim", "Meca",
+                           "Outros", "Prego"),
+          choiceNames = c("Albacora bandolim", "Albacora branca", 
+                          "Albacora lage", "Cação Anequim", "Meca",
+                          "Outros", "Prego"),
+          selected = dados_ajustados$CATEGORIA,
         ),
-        # # Botão de ação
-        # actionButton(
-        #   inputId = "reset",
-        #   label = "Reiniciar Valores",
-        #   icon = icon("repeat")
-        # )
         actionButton(
           inputId = "selectAll",
           label = "Todos",
@@ -780,12 +811,8 @@ server <- function(input, output, session) {
   
   # Variáveis ---------------------------------------------------------------
   
-  # FALAR COM SANTANA, POIS SENHA FUNCIONA NO LOCAL, MAS NO SITE NÃO
-  # Definindo Senha da Tabela do Administrador
-  # senha_admin <- Sys.getenv("SENHA_ADMIN")
-
   # Completando dados que não estão presentes em algumas datas com NA
-  dados_completos <- dados_aux %>%
+  dados_completos <- dados_ajustados %>%
     complete(CATEGORIA, ANO, MES = 1:12, fill = list(VALOR = NA))%>% 
     filter(!(ANO == 2024 & MES >= 5))
   
@@ -797,28 +824,38 @@ server <- function(input, output, session) {
   nomes_meses <- c(
     "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho","Julho",
     "Agosto", "Setembro", "Outubro", "Novembro","Dezembro"
-    )
+  )
   
-  # Definido manualmente a paleta de cores do Mapa de Calor
-  yellow_to_red_palette <- c(
-    "#FFFF00AA", "#FFCC00AA", "#FF9900AA","#FF6600AA", "#FF3300AA", "#FF0000AA"
-    )
+  # # Definindo as Cores de cada Espécie
+  # cores <- c(
+  #   "Albacora_bandolim" = "#9467bd","Albacora_branca" = "#d62728",
+  #   "Albacora_lage" = "#2ca02c", "Meca" = "#8c564b","Outros" = "#ff7f0e", 
+  #   "Cacao_azul" = "#1f77b4","Cacao_anequim" = "#7f7f7f", "Prego" = "#e377c2"
+  # )
   
-  # Definindo as Cores de cada Espécie
+  # Cores amigáveis para pessoas com daltonismo
   cores <- c(
-    "Albacora-bandolim" = "#9467bd","Albacora-branca" = "#d62728",
-    "Albacora-lage" = "#2ca02c", "Meca" = "#8c564b","Outros" = "#ff7f0e", 
-    "Cacao-azul" = "#1f77b4","Cacao-anequim" = "#7f7f7f", "Prego" = "#e377c2"
-    )
+    "Albacora_bandolim" = "#9467bd","Albacora_branca" = "#E6194B",
+    "Albacora_lage" = "#3CB44B", "Meca" = "#911EB4","Outros" = "#F58231", 
+    "Cacao_azul" = "#4363D8","Cacao_anequim" = "#FFE119", "Prego" = "#42D4F4"
+  )
   
-  # Definindo as Cores de cada Mês
+  # # Definindo as Cores de cada Mês
+  # cores_mes <- c(
+  #   "Janeiro"="#00CCFF","Fevereiro"="#FF4500","Março"="#32CD32",
+  #   "Abril"="#FFD700","Maio"="#FF69B4","Junho"="#8B4513",
+  #   "Julho"="#4169E1","Agosto"="#CA70D6","Setembro"="#00FF7F",
+  #   "Outubro"="#DCDCDC","Novembro"="#8A2BE2","Dezembro"="#FF0000"
+  #   )
+  
+  # Definindo as Cores de cada Mês (cores amigáveis para pessoas com daltonismo)
   cores_mes <- c(
-    "Janeiro"="#00CCFF","Fevereiro"="#FF4500","Março"="#32CD32",
-    "Abril"="#FFD700","Maio"="#FF69B4","Junho"="#8B4513",
-    "Julho"="#4169E1","Agosto"="#CA70D6","Setembro"="#00FF7F",
-    "Outubro"="#DCDCDC","Novembro"="#8A2BE2","Dezembro"="#FF0000"
-    )
-
+    "Janeiro"="#42D4F4","Fevereiro"="#FABED4","Março"="#BFEF45",
+    "Abril"="#FFE119","Maio"="#F032E6","Junho"="#9A6324",
+    "Julho"="#4363D8","Agosto"="#911EB4","Setembro"="#3CB44B",
+    "Outubro"="#A9A9A9","Novembro"="#F58231","Dezembro"="#E6194B"
+  )
+  
   # Criando um Valores Reativos que vão Iniciar Nulo
   conteudo_senha_adm <- reactiveVal(NULL)
   conteudo_entrar_adm <- reactiveVal(NULL)
@@ -828,29 +865,42 @@ server <- function(input, output, session) {
   
   # Filtrando os Dados Gerais Completos Reativamente
   dados_gerais_filtrados <- reactive({
-    # Filtrando as Espécies 
-    dados_filtrados <- subset(dados_gerais, CATEGORIA %in% input$species)
+    # Filtrando as Espécies
+    # dados_aux <- subset(dados_gerais, CATEGORIA %in% input$species)
+    dados_aux <- subset(
+      dados_gerais, CATEGORIA %in% union(input$species, "Cacao_azul"))
     # Filtrando o Intervalo de Anos
-    dados_filtrados <- subset(
-      dados_filtrados,
+    dados_aux <- subset(
+      dados_aux,
       ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2])
-    data.frame(dados_filtrados)
+    data.frame(dados_aux)
   })
+  
+  
+  dados_captura_filtrada <- reactive({
+    dados_aux <- subset(
+      dados_gerais,
+      ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2])
+    data.frame(dados_aux)
+  })
+  
   
   # Filtrando os Dados da Tabela Inicial
   dados_aux_filtrados <- reactive({
     # Filtrando as Espécies 
-    dados_filtrados <- subset(dados_aux, CATEGORIA %in% input$species)
+    # dados_aux <- subset(dados_ajustados, CATEGORIA %in% input$species)
+    dados_aux <- subset(
+      dados_ajustados, CATEGORIA %in% union(input$species, "Cacao_azul"))
     # Filtrando o Intervalo de Anos
-    dados_filtrados <- subset(
-      dados_filtrados,
+    dados_aux <- subset(
+      dados_aux,
       ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2])
-    data.frame(dados_filtrados)
+    data.frame(dados_aux)
   })
   
   # Fazendo o cálculo da Média de Captura por Kg, por Viagem, por Mês/Ano
-  CapturasPorMesDesembarquePorViagem <- reactive({
-    dados_gerais_filtrados() %>%
+  dados_graficoAreaDesembarque <- reactive({
+    dados_captura_filtrada() %>%
       mutate(KG_por_Viagem = (KG/DESCARGA)) %>% 
       # Agrupa os Dados por Colunas Selecionadas
       group_by(CATEGORIA, ANO, MES) %>% 
@@ -863,18 +913,19 @@ server <- function(input, output, session) {
       # Criação de Nome do Mês para Legenda
       mutate(mes_nome = nomes_meses[MES]) %>%
       # Formata a coluna mes_ano para o modelo aceitado pelo pacote Plotly
-      mutate(mes_ano = format(as.Date(paste0(ANO, "-", MES, "-01")), "%Y-%m"))
+      # mutate(mes_ano = format(as.Date(paste0(ANO, "-", MES, "-01")), "%Y-%m"))
+      mutate(mes_ano = as.yearmon(paste0(ANO, "-", sprintf("%02d", MES))))
   })
   
   # Filtrando Dados para o Gráfico de Captura
-  CapturasMediasPorMes <- reactive({
+  dados_graficoCaptura <- reactive({
     dados_gerais_filtrados() %>%
-      mutate(KG_por_Viagem = (KG/DESCARGA)) %>% 
+      mutate(KG_por_Viagem = (KG/DESCARGA)) %>%
       group_by(CATEGORIA, ANO, MES) %>%
-      summarise(Media_KG_por_Viagem = mean(KG_por_Viagem)) %>% 
+      summarise(Media_KG_por_Viagem = mean(KG_por_Viagem)) %>%
       # Substituindo NAs por Zero
-      mutate(Media_KG_por_Viagem = replace_na(Media_KG_por_Viagem, 0)) %>% 
-      group_by(CATEGORIA, MES) %>% 
+      mutate(Media_KG_por_Viagem = replace_na(Media_KG_por_Viagem, 0)) %>%
+      group_by(CATEGORIA, MES) %>%
       # Média das Toneladas de Captura, de cada Mês, com Anos Agrupados
       summarise(MediaKG_Mes_Viagem = mean(Media_KG_por_Viagem)) %>%
       mutate(MediaKGMesViagem = round(MediaKG_Mes_Viagem, 2)) %>%
@@ -882,18 +933,9 @@ server <- function(input, output, session) {
       mutate(mes_nome = nomes_meses[MES])
   })
   
-  # Filtrando os Dados para o Histograma de Comprimento dos Tubarões Azul
-  dadostub_filtrados <- reactive({
-    dados_auxiliar <- subset(dados_gerais, CATEGORIA == "Cacao-azul")
-    subset(
-      dados_auxiliar,
-      ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2]
-    )
-  })
-  
   # Filtrando os Dados da Tabela Inicial com somente a CATEGORIA Cacao-azul
   dadostub_aux_filtrados <- reactive({
-    dados_auxiliar <- subset(dados_aux, CATEGORIA == "Cacao-azul")
+    dados_auxiliar <- subset(dados_ajustados, CATEGORIA == "Cacao_azul")
     subset(
       dados_auxiliar,
       ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2]
@@ -902,21 +944,22 @@ server <- function(input, output, session) {
   
   # Filtrando dados Para o Mapa
   db_filtrado <- reactive({
-    dados_filtrados <- subset(dados_aux, CATEGORIA %in% input$species)
-    dados_filtrados <- subset(
-      dados_filtrados,
+    dados_aux <- subset(dados_ajustados,
+                        CATEGORIA %in% union(input$species, "Cacao_azul"))
+    dados_aux <- subset(
+      dados_aux,
       ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2])
-    tab01 <- dados_filtrados %>%
+    tab01 <- dados_aux %>%
       group_by(LON, LAT) %>%
       summarise(prod = sum(KG)) %>%
       ungroup()
-    list(dados = dados_filtrados, tab01 = tab01)
+    list(dados = dados_aux, tab01 = tab01)
   })
   
   # Fazendo o cálculo do Peso Total de Capturas por Mês
   PesoMesCompleto <- reactive({
     dados_aux_filtrados() %>%
-      mutate(CATEGORIA = "Especies") %>%
+      mutate(CATEGORIA = "Espécies") %>%
       group_by(MES,CATEGORIA) %>%
       summarise(KG_Total = sum(KG)) %>%
       ungroup() %>%
@@ -925,7 +968,7 @@ server <- function(input, output, session) {
   }) 
   
   # Fazendo o cálculo de Dados Totais Registrados por Mes de Cacao-azul
-  tubAzulMesCompleto <- reactive({
+  dados_ComparaDadosTub <- reactive({
     dadostub_aux_filtrados() %>%
       group_by(CATEGORIA, MES) %>%
       summarise(Quantidade = n()) %>%
@@ -934,20 +977,21 @@ server <- function(input, output, session) {
       mutate(mes_nome = nomes_meses[MES])
   }) 
   
-# Fazendo um contador de dados Registrados de Cacao-azul em Comparação ao Resto
-  tubazul <- reactive({
+  # Contador de dados Registrados de Cacao-azul em Comparação ao Resto
+  dados_RoscaTubOutros <- reactive({
     dados_aux_filtrados() %>%
       mutate(
-        CATEGORIA = ifelse(CATEGORIA == "Cacao-azul","Cacao-azul","Outros")
+        # CATEGORIA = ifelse(CATEGORIA == "Cacao_azul","Cacao_azul","Outros")
+        CATEGORIA = ifelse(CATEGORIA == "Cacao_azul","Tubarão azul","Outros")
       ) %>%
       count(CATEGORIA)
   })
   
   # Dividindo os dados Registrados de Cacao-azul em Comparação ao Resto e 
   # Completando os Mês/Ano sem registros, completando com Zero
-  tubAzulMesAnoCompleto <- reactive({
+  dados_TubMesAno <- reactive({
     dados_aux_filtrados() %>%
-      mutate(CATEGORIA=if_else(CATEGORIA!="Cacao-azul","Outros",CATEGORIA)) %>%
+      mutate(CATEGORIA=if_else(CATEGORIA!="Cacao_azul","Outros",CATEGORIA)) %>%
       group_by(CATEGORIA, ANO, MES) %>%
       summarise(Quantidade = n()) %>%
       ungroup() %>%
@@ -973,7 +1017,7 @@ server <- function(input, output, session) {
           src = "icone_tubarao_preto.png",
           height = "30px",
           width = "30px"
-          )
+        )
       })
     } else {
       output$textoHeader <- renderUI({
@@ -1031,29 +1075,20 @@ server <- function(input, output, session) {
     )
   }, deleteFile = FALSE)
   
-  # output$Logo_UNIVALI_LEMA <- renderImage({
-  #   list(
-  #     src = "dados_brutos/logo_UNIVALI_LEMA.png",
-  #     height = "50px",
-  #     width = "200px",
-  #     contentType = "image/png"
-  #   )
-  # }, deleteFile = FALSE) 
-
   output$Logo_MAPA <- renderImage({
     list(
       src = "dados_brutos/logo_MAPA2.png",
       height = "80px",
-      width = "215px",
+      width = "300px",
       contentType = "image/png"
     )
   }, deleteFile = FALSE) 
-
+  
   # Distribuição de Comprimentos --------------------------------------------
   
   output$TubMesAno <- renderPlotly({
     # Calcula a soma total por mês/ano
-    data <- tubAzulMesAnoCompleto() %>%
+    data <- dados_TubMesAno() %>%
       group_by(mes_ano_formatado) %>%
       mutate(total = sum(Quantidade)) %>%
       ungroup() %>%
@@ -1065,12 +1100,27 @@ server <- function(input, output, session) {
       x = ~mes_ano_formatado,
       y = ~percentage,
       color = ~CATEGORIA,
-      colors = cores,
-      type = "bar",
+      # colors = cores,
+      # type = "bar",
+      type = 'scatter',
+      stackgroup = 'one',
+      groupnorm = 'percent',
+      mode = 'none',
       hoverinfo = "text",
       text = ~paste(
-        "Data: ", mes_ano, "<br>",
-        "Categoria: ", CATEGORIA, "<br>",
+        " Data: ", mes_ano, "<br>",
+        "Categoria: ",case_when(
+          CATEGORIA == "Albacora_bandolim" ~ "Albacora bandolim",
+          CATEGORIA == "Albacora_branca" ~ "Albacora branca",
+          CATEGORIA == "Albacora_lage" ~ "Albacora lage",
+          CATEGORIA == "Cacao_anequim" ~ "Cação anequim",
+          CATEGORIA == "Cacao_azul" ~ "Tubarão azul",
+          CATEGORIA == "Meca" ~ CATEGORIA,
+          CATEGORIA == "Outros" ~ CATEGORIA,
+          CATEGORIA == "Prego" ~ CATEGORIA,
+          TRUE ~ CATEGORIA
+        ),
+        "<br>",
         "Quantidade: ", Quantidade, "<br>",
         "Porcentagem: ", round(percentage, 2), "%"
       )
@@ -1078,52 +1128,26 @@ server <- function(input, output, session) {
       layout(
         title = "Dados Registrados por Mês, Ano e Categoria",
         xaxis = list(
-          title = ""
+          title = "",
+          showgrid = FALSE
         ),
         yaxis = list(
-          title = "Porcentagem (%)",
-          tickformat = ".0f"
+          title = "Porcentagem de Dados",
+          tickformat = ".0f",
+          ticksuffix = '%',
+          showgrid = FALSE
         ),
         barmode = "stack",
-        showlegend = F
+        showlegend = FALSE,
+        hovermode = "x"
       ) %>%
       config(displayModeBar = FALSE)
   })
   
-  # # Tentativa de gráfico de porcentagem de captura de Cacao-azul por Mes
-  # output$TubMesAno <- renderPlotly({
-  #   plot_ly(
-  #     data = tubAzulMesAnoCompleto(),
-  #     x = ~mes_ano_formatado,
-  #     y = ~Quantidade,
-  #     color = ~CATEGORIA,
-  #     colors = cores,
-  #     type = "bar",
-  #     hoverinfo = "text",
-  #     text = ~paste(
-  #       "Data: ",mes_ano,"<br>",
-  #       "Categoria: ", CATEGORIA, "<br>",
-  #       "Quantidade: ", Quantidade
-  #     )
-  #   ) %>%
-  #     layout(
-  #       title = "Dados Registrados por Mês, Ano e Categoria",
-  #       xaxis = list(
-  #         title = ""
-  #       ),
-  #       yaxis = list(
-  #         title = "Quantidade"
-  #       ),
-  #       barmode = "stack",
-  #       showlegend = F
-  #     ) %>%
-  #     config(displayModeBar = FALSE)
-  # })
-  
-  # Renderização do Gráfico da Comparação de Dados da Cação Azul para o Restante
+  # Renderização do Gráfico da Comparação de Dados da Tubarão azul para o Resto
   output$RoscaTubOutros <- renderPlotly({
     plot_ly(
-      data = tubazul(),
+      data = dados_RoscaTubOutros(),
       labels = ~CATEGORIA,
       values = ~n,
       type = "pie",
@@ -1134,15 +1158,19 @@ server <- function(input, output, session) {
       marker = list(colors = c("Cacao-azul" = "#1f77b4", "Outros" = "#ff7f0e"))
     ) %>%
       layout(
-        title = "Comparação de Dados da Cação Azul para o Resto",
+        title = "Comparação de Dados da Tubarão azul para o Resto",
         showlegend = FALSE
       )
   })
   
-  # Renderização do Gráfico da Comparação de Dados da Cação Azul por Mês
-  output$TubMes <- renderPlotly({
+  # Renderização do Gráfico da Comparação de Dados da Tubarão azul por Mês
+  output$ComparaDadosTub <- renderPlotly({
+    
+    dados_modificados <- dados_ComparaDadosTub() %>%
+      mutate(CATEGORIA = recode(CATEGORIA, "Cacao_azul" = "Tubarão azul"))
+    
     plot_ly(
-      data = tubAzulMesCompleto(),
+      data = dados_modificados,
       labels = ~mes_nome,
       parents = ~CATEGORIA,
       values = ~Quantidade,
@@ -1151,11 +1179,11 @@ server <- function(input, output, session) {
       hoverinfo = "percent entry+value",
       textinfo = "label",
       marker = list(
-        colors = cores_mes[as.character(tubAzulMesCompleto()$mes_nome)]
+        colors = cores_mes[as.character(dados_modificados$mes_nome)]
       )
     ) %>%
       layout(
-        title = "Dados Registrados de Cação Azul por Mês",
+        title = "Dados Registrados de Tubarão azul por Mês",
         showlegend = FALSE
       )
   })
@@ -1165,7 +1193,7 @@ server <- function(input, output, session) {
   # Renderização do Gráfico Plotly da Média Mensal de Capturas (mes)
   output$graficoCaptura <- renderPlotly({
     plot_ly(
-      data = CapturasMediasPorMes(),
+      data = dados_graficoCaptura(),
       x = ~MES,
       y = ~MediaKGMesViagem,
       type = 'scatter',
@@ -1175,8 +1203,19 @@ server <- function(input, output, session) {
       marker = list(size = 10), # Tamanho do Marcador
       hoverinfo = "text",
       text = ~paste(
-        "Espécie: ", CATEGORIA, "<br>",
-        # "Mês: ", mes_nome, "<br>",
+        "Espécie: ", 
+        case_when(
+          CATEGORIA == "Albacora_bandolim" ~ "Albacora bandolim",
+          CATEGORIA == "Albacora_branca" ~ "Albacora branca",
+          CATEGORIA == "Albacora_lage" ~ "Albacora lage",
+          CATEGORIA == "Cacao_anequim" ~ "Cação anequim",
+          CATEGORIA == "Cacao_azul" ~ "Tubarão azul",
+          CATEGORIA == "Meca" ~ CATEGORIA,
+          CATEGORIA == "Outros" ~ CATEGORIA,
+          CATEGORIA == "Prego" ~ CATEGORIA,
+          TRUE ~ CATEGORIA
+        ),
+        "<br>",
         "Média de KG: ", MediaKGMesViagem, "<br>"
       ),
       hoverlabel = list(
@@ -1192,38 +1231,157 @@ server <- function(input, output, session) {
         ),
         yaxis = list(
           title = "Captura Média (KG) por Viagem"
-        ), showlegend = FALSE
+        ), 
+        showlegend = FALSE,
+        hovermode = "x"
       )
   })
-
-  # Renderização do Gráfico de Área da Média Mensal de Capturas (mês/ano) 
+  
   output$graficoAreaDesembarque <- renderPlotly({
-    plot_ly(
-      data = CapturasPorMesDesembarquePorViagem(),
+    
+    dados_captura <- dados_graficoAreaDesembarque()
+    
+    data <- data.frame("mes_ano"=dados_captura$mes_ano, dados_captura)
+    
+    data_wide <- pivot_wider(
+      data, names_from = CATEGORIA, values_from = Media_KG_por_Viagem)
+    
+    data_wide <- data_wide %>% 
+      plotly::select(-c("ANO","MES", "mes_nome", "mes_ano.1"))
+    
+    data_wide_filtrado <- data_wide[, c("mes_ano","Cacao_azul", input$species)]
+    
+    
+    
+    # as.yearmon(paste0(ANO, "-", sprintf("%02d", MES)))
+    
+    req(ncol(data_wide_filtrado) > 1)
+    plot_data <- plot_ly(
+      data = data_wide_filtrado,
       x = ~mes_ano,
-      y = ~Media_KG_por_Viagem,
-      color = ~CATEGORIA,
-      colors = cores,
-      type = "scatter",
-      mode = "lines",
-      fill = "tozeroy",
+      type = 'scatter',
+      mode = 'none',
+      stackgroup = 'one',
+      groupnorm = 'percent',
       hoverinfo = "text",
+      y = ~Cacao_azul,
+      name = "Tubarão Azul",
+      fillcolor = "#4363D8",
       text = ~paste(
-        "Espécie: ", CATEGORIA, "<br>",
-        # "Mês: ", mes_nome, "<br>",
-        "Média de KG: ", Media_KG_por_Viagem, "<br>"
-      ),
-      hoverlabel = list(
-        font = list(
-          size = 11
+        " Espécie: ", 'Tubarão azul', "<br>",
+        "Data: ", mes_ano, "<br>",
+        "Média de KG: ", Cacao_azul, "<br>"
+      )
+    )
+    if (verifica_coluna(data_wide_filtrado, "Albacora_bandolim")) {
+      plot_data <- plot_data %>% 
+        add_trace(
+          y = ~Albacora_bandolim,
+          name = "Albacora bandolim",
+          fillcolor = "#F032E6",
+          text = ~paste(
+            " Espécie: ", 'Albacora bandolim', "<br>",
+            "Data: ", mes_ano, "<br>",
+            "Média de KG: ", Albacora_bandolim, "<br>"
+          )
         )
+    }
+    if (verifica_coluna(data_wide_filtrado, "Albacora_branca")) {
+      plot_data <- plot_data %>% 
+        add_trace(
+          y = ~Albacora_branca,
+          name = 'Albacora branca',
+          fillcolor = '#E6194B',
+          text = ~paste(
+            " Espécie: ", 'Albacora branca', "<br>",
+            "Data: ", mes_ano, "<br>",
+            "Média de KG: ", Albacora_branca, "<br>"
+          )
+        )
+    }
+    if(verifica_coluna(data_wide_filtrado, "Albacora_lage")){
+      plot_data <- plot_data %>% 
+        add_trace(
+          y = ~Albacora_lage,
+          name = 'Albacora lage',
+          fillcolor = '#3CB44B',
+          text = ~paste(
+            " Espécie: ", 'Albacora lage', "<br>",
+            "Data: ", mes_ano, "<br>",
+            "Média de KG: ", Albacora_lage, "<br>"
+          )
+        )
+    }
+    if(verifica_coluna(data_wide_filtrado, "Cacao_anequim")){
+      plot_data <- plot_data %>% 
+        add_trace(
+          y = ~Cacao_anequim,
+          name = 'Cação anequim',
+          fillcolor = '#FFE119',
+          text = ~paste(
+            " Espécie: ", 'Cação anequim', "<br>",
+            "Data: ", mes_ano, "<br>",
+            "Média de KG: ", Cacao_anequim, "<br>"
+          )
+        )
+    }
+    if(verifica_coluna(data_wide_filtrado, "Meca")){
+      plot_data <- plot_data %>% 
+        add_trace(
+          y = ~Meca,
+          name = 'Meca',
+          fillcolor = '#911EB4',
+          text = ~paste(
+            " Espécie: ", 'Meca', "<br>",
+            "Data: ", mes_ano, "<br>",
+            "Média de KG: ", Meca, "<br>"
+          )
+        )
+    }
+    if(verifica_coluna(data_wide_filtrado, "Outros")){
+      plot_data <- plot_data %>% 
+        add_trace(
+          y = ~Outros,
+          name = 'Outros',
+          fillcolor = '#F58231',
+          text = ~paste(
+            " Espécie: ", 'Outros', "<br>",
+            "Data: ", mes_ano, "<br>",
+            "Média de KG: ", Outros, "<br>"
+          )
+        )
+    }
+    if(verifica_coluna(data_wide_filtrado, "Prego")){
+      plot_data <- plot_data %>% 
+        add_trace(
+          y = ~Prego,
+          name = 'Prego',
+          fillcolor = '#42D4F4',
+          text = ~paste(
+            " Espécie: ", 'Prego', "<br>",
+            "Data: ", mes_ano, "<br>",
+            "Média de KG: ", Prego, "<br>"
+          )
+        )
+    }
+    plot_data <- plot_data %>% 
+      layout(
+        title = 'Média Mensal de Captura por Viagem ao Longo do Período',
+        xaxis = list(
+          title = "",
+          showgrid = FALSE
+        ),
+        yaxis = list(
+          title = "Porcentagem da Captura Média por Viagem",
+          showgrid = FALSE,
+          ticksuffix = '%'
+        ),
+        showlegend = FALSE,
+        hovermode = "x"
       )
-    ) %>% 
-      layout(title = "Média Mensal de Captura por Viagem ao Longo do Período",
-             xaxis = list(title = ""),
-             yaxis = list(title = "Captura Média (KG) por Viagem"), 
-             showlegend = FALSE
-      )
+    
+    plot_data
+    
   })
   
   # Renderização do Gráfico do Peso Total de Capturas por Mês
@@ -1239,7 +1397,7 @@ server <- function(input, output, session) {
       textinfo = "label",
       marker = list(
         colors = cores_mes[as.character(PesoMesCompleto()$mes_nome)]
-        )
+      )
     ) %>%
       layout(
         title = "Peso Total (KG) por Mês",
@@ -1261,10 +1419,10 @@ server <- function(input, output, session) {
       # Jitter é usado para variar um pouco o valor dos duplicados
       tab01$prod <- jitter(tab01$prod, factor = 0.1)
     }
-      
+    
     # Criar a paleta de cores com base nos intervalos
     pal <- colorQuantile(
-      palette = yellow_to_red_palette,
+      palette = "viridis",
       domain = tab01$prod,
       probs = seq(0, 1, 0.1)
     )
@@ -1287,7 +1445,8 @@ server <- function(input, output, session) {
       # Definindo a adição dos Marcadores no Mapa
       addCircleMarkers(
         group = tab01$prod,      # Define os marcadores com base na soma dos KG
-        radius = 12,             # Define o raio dos marcadores como 12 pixels
+        # radius = 12,             # Define o raio dos marcadores como 12 pixels
+        radius = 7,
         lng = tab01$LON,         # Define tab01$LON como longitude
         lat = tab01$LAT,         # Define tab01$LAT como latitude
         stroke = FALSE,          # Define que não haverá borda dos marcadores
@@ -1295,7 +1454,7 @@ server <- function(input, output, session) {
         fillOpacity = 0.7,       # Define a opacidade dos marcadores como 70%
         label = paste0(
           "Captura: ", round(tab01$prod, 0), " kg"
-          )
+        )
       ) %>%
       # Definindo a legenda com a paleta de cores e suas Porcentagens
       addLegend(
@@ -1361,7 +1520,7 @@ server <- function(input, output, session) {
           }
         }
         # Opções da Data Table
-      },options = list(paging = T, searching = FALSE))
+      },options = list(paging = TRUE, searching = FALSE))
     } else{
       # Mensagem no Caso de Senha Incorreta
       showModal(
@@ -1391,28 +1550,11 @@ server <- function(input, output, session) {
   
   # ControlBar --------------------------------------------------------------
   
-  # Verificação do Botão Reset, ao ser Pressionado Atualizará os Controles
-  # observeEvent(input$reset, {
-  #   # Atualização no Controle Deslizante 
-  #   updateSliderInput(
-  #     session,
-  #     inputId = "intervalo_anos",
-  #     value = c(min(dados_aux$ANO), max(dados_aux$ANO))
-  #   )
-  #   
-  #   # Atualização no Grupo de Caixas de Seleção
-  #   updateCheckboxGroupInput(
-  #     session, 
-  #     inputId = "species",
-  #     selected = unique(dados_aux$CATEGORIA)
-  #   )
-  # })
-  
   observeEvent(input$selectAll, {
     updateCheckboxGroupInput(
       session, 
       inputId = "species",
-      selected = unique(dados_aux$CATEGORIA)
+      selected = unique(dados_ajustados$CATEGORIA)
     )
   })
   
@@ -1426,4 +1568,4 @@ server <- function(input, output, session) {
 }
 
 # Inicialização da aplicação Shiny
-shinyApp(ui,server)
+shinyApp(ui, server)
