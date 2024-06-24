@@ -26,6 +26,8 @@ dados_ajustados <- dados %>%
     )
   )
 
+notificacoes <- read_excel("dados_brutos/Notificacoes.xlsx")
+
 verifica_coluna <- function(df, coluna) {
   return(any(names(df) == coluna))
 }
@@ -62,7 +64,8 @@ ui <- dashboardPage(
   # Header ------------------------------------------------------------------
   # Definindo a Header do Painel
   header = dashboardHeader(
-    titleWidth = 250,
+    titleWidth = 300,
+    # titleWidth = 250,
     # Definição do Título com Link da Header
     title = tags$a( # Cria uma tag que define um hyperlink
       href = "https://lrpdc.shinyapps.io/proj_tubarao_azul/", # Link URL
@@ -74,21 +77,30 @@ ui <- dashboardPage(
       ),
       class = "logo"
     ),
-    controlbarIcon = icon("sliders")#, # Definição do ícone da aba de Controle
+    controlbarIcon = icon("sliders"), # Definição do ícone da aba de Controle
     # Definição do Menu Suspenso
+    dropdownMenuOutput("notification_menu")
     # dropdownMenu(
     #   type = "notifications", # Tipo de Menu Suspenso
     #   icon = icon("bell"),
+    #   
     #   # Criação da Notificação
     #   notificationItem(
     #     text = "Nova embarcação ocorrerá dia 20/03.",
     #     href = "https://lrpdc.shinyapps.io/proj_tubarao_azul/",
-    #     icon = icon("ship")
+    #     icon = icon("ship"),
+    #     status = "primary"#,
+    #     # inputId = "notification1"
     #   ),
     #   notificationItem(
-    #     text = "Nova embarcação ocorrerá dia 17/04.",
-    #     href = NULL,
-    #     icon = icon("ferry")
+    #     icon = icon("ferry"),
+    #     status = "primary",
+    #     tags$div(
+    #       tags$span("Data: 17/04", style = "font-weight: bold;"),
+    #       tags$br(),
+    #       tags$span("Nova embarcação ocorrerá.", style = "font-style: italic;")
+    #     ),
+    #     href = NULL
     #   )
     # )
   ),
@@ -117,9 +129,10 @@ ui <- dashboardPage(
       padding-left: 2rem;
     }
                               ')
-    )
-    ),
-    width = 250,   # Definição da Largura em pixels
+                         )
+              ),
+    width = 300,
+    # width = 250,   # Definição da Largura em pixels
     minified = TRUE,  # Se a aba lateral ao ser fechada deverá mostrar os ícones
     collapsed = FALSE, # Se a aba lateral deve ser iniciada fechada
     # Definindo do Menu Sidebar
@@ -147,14 +160,14 @@ ui <- dashboardPage(
         # text = "Distribuição de comprimentos",
         text = "Distribuição de captura",
         tabName = "tab2header",
-        icon = icon("chart-simple")
+        icon = icon("chart-pie")
       ),
       # Definindo o item do Menu de Desembarques
       menuItem(
         text = "Desembarques",
         tabName = "tab3header",
-        # icon = icon("chart-area")
-        icon = icon("ship")
+        icon = icon("chart-area")
+        # icon = icon("ship")
       ),
       # Definindo o item do Menu da Distribuição espacial das capturas
       menuItem(
@@ -168,8 +181,22 @@ ui <- dashboardPage(
         text = "Administrador",
         tabName = "tab5header",
         icon = icon("user-tie")
+      ),
+      menuItem(
+        text = "Distribuição de comprimentos",
+        tabName = "tab6header",
+        icon = icon("chart-simple")
+      ),
+      menuItem(
+        text = "Mapa de distribuição de comprimentos",
+        tabName = "tab7header",
+        icon = icon("map")
+      ),
+      menuItem(
+        text = "Tabela de Embarcações",
+        tabName = "tab8header",
+        icon = icon("ship")
       )
-      # Saída da Imagem, com os créditos dos financiadores do Projeto
     )
   ),
   
@@ -663,7 +690,7 @@ ui <- dashboardPage(
       # Definindo o conteúdo do Administrador
       tabItem(
         tabName = "tab5header",
-        value = "tab5header",
+        # value = "tab5header",
         fluidRow(
           column(
             width = 4,
@@ -679,6 +706,51 @@ ui <- dashboardPage(
             width = 12,
             # Saída da Tabela com os dados para Interface do Usuário
             uiOutput("tabelaAdm")
+          )
+        )
+      ),
+      tabItem(
+        tabName = "tab6header",
+        fluidRow(
+          column(
+            width = 6,
+            box(
+              width = 12,
+              solidHeader = T,
+              title = "Histograma",
+              status = "primary"
+            )
+          ),
+          column(
+            width = 6,
+            box(
+              width = 12,
+              solidHeader = T,
+              title = "Gráfico de Rosca",
+              status = "primary"
+            )
+          )
+        )
+      ),
+      tabItem(
+        tabName = "tab7header",
+        fluidRow(
+          column(
+            width = 12,
+            box(
+              
+            )
+          )
+        )
+      ),
+      tabItem(
+        tabName = "tab8header",
+        fluidRow(
+          column(
+            width = 12,
+            box(
+              DTOutput("tabelaEmbarcacoes")
+            )
           )
         )
       )
@@ -1001,6 +1073,78 @@ server <- function(input, output, session) {
       mutate(mes_ano = as.yearmon(paste0(ANO, "-", sprintf("%02d", MES)))) %>%
       mutate(mes_ano_formatado = format(mes_ano_formatado, "%Y-%m"))
   }) 
+  
+  # Header ------------------------------------------------------------------
+
+  output$notification_menu <- renderMenu({
+    notification_items <- lapply(1:nrow(notificacoes), function(i) {
+      notificationItem(
+        icon = icon("bell"),
+        status = "primary",
+        href = notificacoes$Link[i],
+        tags$div(
+          tags$span(
+            paste(
+              "Local:",
+              notificacoes$Local[i]
+            ),
+            style = "font-weight: bold;"
+          ),
+          br(),
+          tags$span(
+            paste(
+              "Data:", format(
+                notificacoes$Data[i],
+                "%d/%m/%Y"
+                )
+              ),
+            style = "font-weight: bold;"
+            ),
+          tags$br(),
+          tags$span(
+            paste(
+              "Hora:",
+              sprintf(
+                "%02d:%02d",
+                notificacoes$Hora[i], 
+                notificacoes$Minuto[i]
+                )
+              ),
+            style = "font-weight: bold;"
+            )#,
+          # tags$br(),
+          # if(!is.na(notificacoes$TextoOpcional[i])){
+          #   tags$span(
+          #     notificacoes$TextoOpcional[i],
+          #     style = "font-style: italic;"
+          #   )
+          # }
+        )
+      )
+    })
+    dropdownMenu(
+      type = "notifications",
+      icon = icon("bell"),
+      .list = notification_items
+    )
+  })
+  
+  output$tabelaEmbarcacoes <- renderDT({
+    # notificacoes
+    datatable(notificacoes) %>%
+      formatDate(columns = "Data", 
+                 method = "toLocaleDateString",
+                 params = list(
+                   "pt-BR", 
+                   list(
+                     year = "numeric",
+                     month = "2-digit",
+                     day = "2-digit")
+                   )
+                 )
+    
+  })
+  
   
   # Sidebar -----------------------------------------------------------------
   
