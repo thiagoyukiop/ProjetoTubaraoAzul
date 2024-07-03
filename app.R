@@ -502,7 +502,8 @@ ui <- dashboardPage(
                 div(
                   class = "graficos",
                   # Saída do Gráfico de Rosca, sobre a Comparação de dados
-                  plotlyOutput("RoscaTubOutros", height = "100%")
+                  # plotlyOutput("RoscaTubOutros", height = "100%")
+                  plotlyOutput("BarraTubOutros", height = "100%")
                 ),
                 sidebar = boxSidebar(
                   id = "boxsidebar3",
@@ -1055,14 +1056,27 @@ server <- function(input, output, session) {
       mutate(mes_nome = nomes_meses[MES])
   }) 
   
-  # Contador de dados Registrados de Cacao-azul em Comparação ao Resto
-  dados_RoscaTubOutros <- reactive({
+  # # Contador de dados Registrados de Cacao-azul em Comparação ao Resto
+  # dados_RoscaTubOutros <- reactive({
+  #   dados_aux_filtrados() %>%
+  #     mutate(
+  #       # CATEGORIA = ifelse(CATEGORIA == "Cacao_azul","Cacao_azul","Outros")
+  #       CATEGORIA = ifelse(CATEGORIA == "Cacao_azul","Tubarão azul","Outros")
+  #     ) %>%
+  #     count(CATEGORIA)
+  # })
+  # 
+  dados_BarraTubOutros <- reactive({
     dados_aux_filtrados() %>%
+      group_by(MES) %>% 
       mutate(
-        # CATEGORIA = ifelse(CATEGORIA == "Cacao_azul","Cacao_azul","Outros")
-        CATEGORIA = ifelse(CATEGORIA == "Cacao_azul","Tubarão azul","Outros")
-      ) %>%
-      count(CATEGORIA)
+        CATEGORIA = if_else(
+          CATEGORIA != "Cacao_azul", "Outros", CATEGORIA
+          )
+        ) %>%
+      count(CATEGORIA) %>% 
+      mutate(prop = n / sum(n)*100) %>% 
+      mutate(prop = round(prop,2))
   })
   
   # Dividindo os dados Registrados de Cacao-azul em Comparação ao Resto e 
@@ -1294,27 +1308,72 @@ server <- function(input, output, session) {
         ),
         barmode = "stack",
         showlegend = FALSE,
-        hovermode = "x"
+        hovermode = "x",
+        xaxis = list(
+          categoryorder = "category ascending"  
+        )
       ) %>%
       config(displayModeBar = FALSE)
   })
   
-  # Renderização do Gráfico da Comparação de Dados da Tubarão azul para o Resto
-  output$RoscaTubOutros <- renderPlotly({
+  # # Renderização do Gráfico da Comparação de Dados da Tubarão azul para o Resto
+  # output$RoscaTubOutros <- renderPlotly({
+  #   plot_ly(
+  #     data = dados_RoscaTubOutros(),
+  #     labels = ~CATEGORIA,
+  #     values = ~n,
+  #     type = "pie",
+  #     hole = 0.6,
+  #     textinfo = "label",
+  #     hoverinfo = "text+percent",
+  #     text = ~paste("Quantidade: ", n),
+  #     marker = list(colors = c("Cacao-azul" = "#4363D8", "Outros" = "#F58231"))
+  #   ) %>%
+  #     layout(
+  #       title = "Comparação de Dados da Tubarão azul para o Resto",
+  #       showlegend = FALSE
+  #     )
+  # })
+  
+  output$BarraTubOutros <- renderPlotly({
     plot_ly(
-      data = dados_RoscaTubOutros(),
-      labels = ~CATEGORIA,
-      values = ~n,
-      type = "pie",
-      hole = 0.6,
-      textinfo = "label",
-      hoverinfo = "text+percent",
-      text = ~paste("Quantidade: ", n),
-      marker = list(colors = c("Cacao-azul" = "#4363D8", "Outros" = "#F58231"))
+      data = dados_BarraTubOutros(),
+      x = ~MES,
+      y = ~prop,
+      color = ~CATEGORIA,
+      colors = cores,
+      type = 'bar',
+      text = ~paste(
+        "Categoria: ",case_when(
+          CATEGORIA == "Cacao_azul" ~ "Tubarão azul",
+          CATEGORIA == "Outros" ~ CATEGORIA,
+          TRUE ~ CATEGORIA
+        ),
+        "<br>",
+        "Quantidade: ", n, "<br>",
+        "Porcentagem: ", round(prop, 2), "%"
+      ),
+      # text = ~paste0(prop, '%'),
+      hoverinfo = 'text'
     ) %>%
       layout(
-        title = "Comparação de Dados da Tubarão azul para o Resto",
-        showlegend = FALSE
+        title = "Comparação de Dados da Tubarão Azul para Outros",
+        showlegend = FALSE,
+        yaxis = list(
+          title = "Porcentagem de Dados",
+          tickformat = ".0f",
+          ticksuffix = '%',
+          showgrid = FALSE
+        ),
+        barmode = "stack",
+        showlegend = FALSE,
+        hovermode = "x",
+        xaxis = list(
+          title = "Mês",
+          categoryorder = "category descending",
+          tickvals = unique(dados_BarraTubOutros()$MES), 
+          ticktext = unique(dados_BarraTubOutros()$MES)
+        )
       )
   })
   
