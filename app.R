@@ -32,6 +32,13 @@ dados_falsos <- read.table(
 
 notificacoes <- read_excel("dados_brutos/Notificacoes.xlsx")
 
+not_modificadas <- notificacoes %>% 
+  mutate(Data = format(as.Date(Data), "%d/%m/%Y")) %>% 
+  mutate(Horario = sprintf("%02d:%02d", Hora, Minuto)) %>% 
+  plotly::select(-c(Hora, Minuto))
+
+notificacoes <- not_modificadas
+
 verifica_coluna <- function(df, coluna) {
   return(any(names(df) == coluna))
 }
@@ -495,7 +502,8 @@ ui <- dashboardPage(
             column(
               width = 6,
               box(
-                title = "Gráfico de Rosca",
+                # title = "Gráfico de Rosca",
+                title = "Gráfico de Barras",
                 width = 12,
                 solidHeader = TRUE,
                 status = "primary",
@@ -509,11 +517,16 @@ ui <- dashboardPage(
                   id = "boxsidebar3",
                   icon = icon("circle-info"),
                   background = "#A6ACAFEF",
-                  p("Este gráfico de rosca compara a presença de Tubarão azul
-                    com a categoria 'Outros', que representa a junção dos dados
-                    de todas as outras espécies de pesca. Ele mostra a proporção 
-                    de Tubarão azul em relação ao total, permitindo visualizar
-                    sua participação comparada com as demais categorias.")
+                  # p("Este gráfico de rosca compara a presença de Tubarão azul
+                  #   com a categoria 'Outros', que representa a junção dos dados
+                  #   de todas as outras espécies de pesca. Ele mostra a proporção 
+                  #   de Tubarão azul em relação ao total, permitindo visualizar
+                  #   sua participação comparada com as demais categorias.")
+                  p("Este gráfico de barra, compara a presença de Tubarão azul
+                    com a categoria 'Outros', que representa a média de dados
+                    de todas as outras espéciesde pesca. Ele mostra a proporção
+                    de dados de Tubarão azul comparada com as demais categorias,
+                    por mês")
                 )
               )
             ),
@@ -539,12 +552,11 @@ ui <- dashboardPage(
                   #   mês específico, mostrando a distribuição proporcional dos
                   #   dados ao longo do período analisado, permitindo visualizar
                   #   variações sazonais ou tendências.")
-                  p("Este mapa de calor compara os dados obtidos em cada mês e
-                    ano para todas as espécies de pesca. Cada quadrado 
-                    representa um mês de um ano específico, mostrando a 
-                    distribuição proporcional dos dados ao longo do período 
-                    analisado, permitindo visualizar variações sazionais ou
-                    tendências.")
+                  p("Este mapa de calor compara os dados de Tubarão Azul obtidos
+                    em cada mês e ano. Cada quadrado representa um mês de um ano
+                    específico, mostrando a distribuição proporcional dos dados
+                    ao longo do período analisado, permitindo visualizar 
+                    variações sazionais ou tendências.")
                 )
               )
             )
@@ -707,12 +719,31 @@ ui <- dashboardPage(
         fluidRow(
           column(
             width = 6,
+            # flipBox(
+            #   id = "teste",
+            #   front = plotlyOutput("histograma_comprimentoM"),
+            #   back = plotlyOutput("histograma_comprimentoF"),
+            #   trigger = "click"
+            # )
+            # box(
+            #   width = 12,
+            #   solidHeader = T,
+            #   title = "Histograma",
+            #   status = "primary",
+            #   plotlyOutput("histograma_comprimento")
+            # )
             box(
               width = 12,
               solidHeader = T,
-              title = "Histograma",
+              title = "Histograma de comprimento",
               status = "primary",
-              plotlyOutput("histograma_comprimento")
+              flipBox(
+                id = "teste",
+                width = 12,
+                front = plotlyOutput("histograma_comprimentoM"),
+                back = plotlyOutput("histograma_comprimentoF"),
+                trigger = "click"
+              )
             )
           ),
           column(
@@ -721,7 +752,8 @@ ui <- dashboardPage(
               width = 12,
               solidHeader = T,
               title = "Gráfico de Rosca",
-              status = "primary"
+              status = "primary",
+              plotlyOutput("boxplot_comprimento")
             )
           )
         )
@@ -757,7 +789,8 @@ ui <- dashboardPage(
         fluidRow(
           column(
             width = 12,
-            uiOutput("lista_embarcacoes")
+            # uiOutput("lista_embarcacoes")
+            DTOutput("tabela_embarcacoes")
           )
         )
       )
@@ -1033,7 +1066,7 @@ server <- function(input, output, session) {
     list(dados = dados_aux, tab01 = tab01)
   })
 
-  PesoMesCompleto <- reactive({ 
+  dados_PesoMes <- reactive({ 
     dados_aux_filtrados() %>%
       mutate(KG_por_Viagem = (KG/DESCARGA)) %>%
       complete(CATEGORIA, ANO, MES, fill = list(KG_por_Viagem = 0)) %>% 
@@ -1043,7 +1076,17 @@ server <- function(input, output, session) {
       group_by(CATEGORIA, MES) %>%
       summarise(Media_KG_por_Viagem = mean(MedKGPorViagemMesAno)) %>%
       mutate(Media_KG = round(Media_KG_por_Viagem, 2)) %>%
-      mutate(mes_nome = nomes_meses[MES])
+      mutate(mes_nome = nomes_meses[MES]) %>% 
+      mutate(
+        CATEGORIA = case_when(
+          CATEGORIA == "Albacora_bandolim" ~ "Albacora bandolim",
+          CATEGORIA == "Albacora_branca" ~ "Albacora branca",
+          CATEGORIA == "Albacora_lage" ~ "Albacora lage",
+          CATEGORIA == "Cacao_anequim" ~ "Cação anequim",
+          CATEGORIA == "Cacao_azul" ~ "Tubarão azul",
+          TRUE ~ CATEGORIA
+        )
+      )
   })
   
   # Fazendo o cálculo de Dados Totais Registrados por Mes de Cacao-azul
@@ -1119,23 +1162,23 @@ server <- function(input, output, session) {
           ),
           br(),
           tags$span(
+            # paste(
+            #   "Data:", format(
+            #     notificacoes$Data[i],
+            #     "%d/%m/%Y"
+            #     )
+            #   ),
             paste(
-              "Data:", format(
-                notificacoes$Data[i],
-                "%d/%m/%Y"
-                )
-              ),
+              "Data:", 
+              notificacoes$Data[i]
+            ),
             style = "font-weight: bold;"
             ),
           tags$br(),
           tags$span(
             paste(
               "Hora:",
-              sprintf(
-                "%02d:%02d",
-                notificacoes$Hora[i], 
-                notificacoes$Minuto[i]
-                )
+              notificacoes$Horario[i]
               ),
             style = "font-weight: bold;"
             )#,
@@ -1357,10 +1400,11 @@ server <- function(input, output, session) {
       hoverinfo = 'text'
     ) %>%
       layout(
-        title = "Comparação de Dados da Tubarão Azul para Outros",
+        # title = "Comparação de Dados da Tubarão Azul para Outros",
+        title = "Comparação de Dados Registrados",
         showlegend = FALSE,
         yaxis = list(
-          title = "Porcentagem de Dados",
+          # title = "Porcentagem de Dados",
           tickformat = ".0f",
           ticksuffix = '%',
           showgrid = FALSE
@@ -1418,6 +1462,7 @@ server <- function(input, output, session) {
       )
     ) %>%
       layout(
+        title = "Comparação de Dados Registrados",
         xaxis = list(
           title = "Mês",
           tickvals = unique(dados_ComparaDadosTub()$MES), 
@@ -1632,30 +1677,9 @@ server <- function(input, output, session) {
     plot_data
   })
   
-  # # Renderização do Gráfico do Peso Total de Capturas por Mês
-  # output$pesoMes <- renderPlotly({
-  #   plot_ly(
-  #     data = PesoMesCompleto(),
-  #     labels = ~mes_nome,
-  #     parents = ~CATEGORIA,
-  #     values = ~KG_Total,
-  #     type = "sunburst",
-  #     branchvalues = "total", 
-  #     hoverinfo = "percent entry+value",
-  #     textinfo = "label",
-  #     marker = list(
-  #       colors = cores_mes[as.character(PesoMesCompleto()$mes_nome)]
-  #     )
-  #   ) %>%
-  #     layout(
-  #       title = "Peso Total (KG) por Mês",
-  #       showlegend = FALSE
-  #     )
-  # })
-  
   output$pesoMes <- renderPlotly({
     plot_ly(
-      data = PesoMesCompleto(),
+      data = dados_PesoMes(),
       x = ~MES,
       y = ~CATEGORIA,
       z = ~Media_KG,
@@ -1669,11 +1693,12 @@ server <- function(input, output, session) {
       )
     ) %>%
       layout(
+        title = "Média Mensal de Captura por Viagem",
         xaxis = list(
           title = "Mês",
-          tickvals = unique(PesoMesCompleto()$MES), 
-          ticktext = unique(PesoMesCompleto()$MES)
-          ),
+          tickvals = unique(dados_PesoMes()$MES), 
+          ticktext = unique(dados_PesoMes()$MES)
+        ),
         yaxis = list(title = ""),
         legend = list(
           orientation = "h",
@@ -1906,66 +1931,164 @@ server <- function(input, output, session) {
         )
   })
   
-# Tabela de Embarcações ---------------------------------------------------
-
-  output$lista_embarcacoes <- renderUI({
-    # tabela_embarcacoes <- 
-    lapply(1:nrow(notificacoes), function(i) {
-      box(
-        title = notificacoes$Titulo[i],
-        width = 12,
-        status = "primary",
-        solidHeader = T,
-        collapsible = T,
-        collapsed = T,
-        closable = T,
-        tags$div(
-          tags$span(
-            paste(
-              "Local:",
-              notificacoes$Local[i]
-            ),
-            style = "font-weight: bold;"
-          ),
-          br(),
-          tags$span(
-            paste(
-              "Data:", format(
-                notificacoes$Data[i],
-                "%d/%m/%Y"
-              )
-            ),
-            style = "font-weight: bold;"
-          ),
-          tags$br(),
-          tags$span(
-            paste(
-              "Hora:",
-              sprintf(
-                "%02d:%02d",
-                notificacoes$Hora[i],
-                notificacoes$Minuto[i]
-              )
-            ),
-            style = "font-weight: bold;"
-          ),
-          tags$br(),
-          if(!is.na(notificacoes$TextoOpcional[i])){
-            tags$span(
-              paste(
-                "Texto:"
-              ),
-              style = "font-weight: bold;",
-              br(),
-              paste(
-                notificacoes$TextoOpcional[i]
-              )
-            )
-          }
+  output$histograma_comprimentoM <- renderPlotly({
+    plot_ly(
+      data = dados_falsos %>% filter(Sexo == "M"),
+      x = ~IDL,
+      name = "Masculino",
+      type = 'histogram'
+    ) %>% 
+      layout(
+        title = "Macho",
+        hovermode = "x",
+        xaxis = list(
+          title = "Comprimento (cm)",
+          showgrid = TRUE
+        ),
+        yaxis = list(
+          showgrid = TRUE,
+          ticksuffix = '%'
         )
       )
-    })
   })
+  
+  output$histograma_comprimentoF <- renderPlotly({
+    plot_ly(
+      data = dados_falsos %>% filter(Sexo == "F"),
+      x = ~IDL,
+      name = "Masculino",
+      type = 'histogram'
+    ) %>% 
+      layout(
+        title = "Fêmea",
+        hovermode = "x",
+        xaxis = list(
+          title = "Comprimento (cm)",
+          showgrid = TRUE
+        ),
+        yaxis = list(
+          showgrid = TRUE,
+          ticksuffix = '%'
+        )
+      )
+  })
+  
+  output$boxplot_comprimento <- renderPlotly({
+    plot_ly(
+      data = dados_falsos,
+      y = ~IDL,
+      x = ~Sexo,
+      type = "box",
+      marker = list(color = "primary")
+    ) %>% 
+      layout(
+        title = "Distribuição de Comprimento de Tubarões azul",
+        hovermode = "x",
+        xaxis = list(
+          title = ""
+        ),
+        yaxis = list(
+          title = "Comprimento (cm)"
+        )
+      )
+  })
+  
+# Tabela de Embarcações ---------------------------------------------------
+  
+  output$tabela_embarcacoes <- renderDT({
+    datatable(notificacoes[, !names(notificacoes) %in% c("TextoOpcional", "Link")])
+  })
+  
+  observeEvent(input$tabela_embarcacoes_rows_selected, {
+    i <- input$tabela_embarcacoes_rows_selected
+    if (length(i) == 1) {
+      # Verifica se há link disponível e cria o título do modal
+      title_text <- paste("Detalhes da Embarcação", notificacoes$id[i])
+      title_text <- tags$a(title_text, href = notificacoes$Link[i], target = "_blank")
+      
+      
+      # Verifica se há informações extras disponíveis
+      info_extra <- if(!is.na(notificacoes$TextoOpcional[i])){
+        tags$span(
+          paste(
+            "Texto:"
+          ),
+          style = "font-weight: bold;",
+          br(),
+          paste(
+            notificacoes$TextoOpcional[i]
+          )
+        )
+      }
+      
+      # Exibe o modal com o título e informações extras
+      showModal(modalDialog(
+        title = title_text,
+        info_extra,
+        easyClose = TRUE,
+        footer = NULL
+      ))
+    }
+  })
+
+  # output$lista_embarcacoes <- renderUI({
+  #   # tabela_embarcacoes <- 
+  #   lapply(1:nrow(notificacoes), function(i) {
+  #     box(
+  #       title = notificacoes$Titulo[i],
+  #       width = 12,
+  #       status = "primary",
+  #       solidHeader = T,
+  #       collapsible = T,
+  #       collapsed = T,
+  #       closable = T,
+  #       tags$div(
+  #         tags$span(
+  #           paste(
+  #             "Local:",
+  #             notificacoes$Local[i]
+  #           ),
+  #           style = "font-weight: bold;"
+  #         ),
+  #         br(),
+  #         tags$span(
+  #           paste(
+  #             "Data:", format(
+  #               notificacoes$Data[i],
+  #               "%d/%m/%Y"
+  #             )
+  #           ),
+  #           style = "font-weight: bold;"
+  #         ),
+  #         tags$br(),
+  #         tags$span(
+  #           paste(
+  #             "Hora:",
+  #             sprintf(
+  #               "%02d:%02d",
+  #               notificacoes$Hora[i],
+  #               notificacoes$Minuto[i]
+  #             )
+  #           ),
+  #           style = "font-weight: bold;"
+  #         ),
+  #         tags$br(),
+  #         if(!is.na(notificacoes$TextoOpcional[i])){
+  #           tags$span(
+  #             paste(
+  #               "Texto:"
+  #             ),
+  #             style = "font-weight: bold;",
+  #             br(),
+  #             paste(
+  #               notificacoes$TextoOpcional[i]
+  #             )
+  #           )
+  #         }
+  #       )
+  #     )
+  #   })
+  # })
   
   # ControlBar --------------------------------------------------------------
   
