@@ -33,8 +33,9 @@ dados_falsos <- read.table(
 notificacoes <- read_excel("dados_brutos/Notificacoes.xlsx")
 
 not_modificadas <- notificacoes %>% 
-  mutate(Data = format(as.Date(Data), "%d/%m/%Y")) %>% 
-  mutate(Horario = sprintf("%02d:%02d", Hora, Minuto)) %>% 
+  # mutate(Data = format(as.Date(Data), "%d/%m/%Y")) %>%
+  mutate(Data = format(as.Date(Data), "%Y-%m-%d")) %>% 
+  mutate(Horário = sprintf("%02d:%02d", Hora, Minuto)) %>% 
   plotly::select(-c(Hora, Minuto))
 
 notificacoes <- not_modificadas
@@ -517,11 +518,6 @@ ui <- dashboardPage(
                   id = "boxsidebar3",
                   icon = icon("circle-info"),
                   background = "#A6ACAFEF",
-                  # p("Este gráfico de rosca compara a presença de Tubarão azul
-                  #   com a categoria 'Outros', que representa a junção dos dados
-                  #   de todas as outras espécies de pesca. Ele mostra a proporção 
-                  #   de Tubarão azul em relação ao total, permitindo visualizar
-                  #   sua participação comparada com as demais categorias.")
                   p("Este gráfico de barra, compara a presença de Tubarão azul
                     com a categoria 'Outros', que representa a média de dados
                     de todas as outras espéciesde pesca. Ele mostra a proporção
@@ -547,11 +543,6 @@ ui <- dashboardPage(
                   id = "boxsidebar4",
                   icon = icon("circle-info"),
                   background = "#A6ACAFEF",
-                  # p("Este gráfico de rosca compara os dados obtidos em cada mês
-                  #   para todas as espécies de pesca. Cada fatia representa um 
-                  #   mês específico, mostrando a distribuição proporcional dos
-                  #   dados ao longo do período analisado, permitindo visualizar
-                  #   variações sazonais ou tendências.")
                   p("Este mapa de calor compara os dados de Tubarão Azul obtidos
                     em cada mês e ano. Cada quadrado representa um mês de um ano
                     específico, mostrando a distribuição proporcional dos dados
@@ -611,11 +602,6 @@ ui <- dashboardPage(
                   id = "boxsidebar7",
                   icon = icon("circle-info"),
                   background = "#A6ACAFEF",
-                  # p("Este gráfico de rosca ilustra a composição de espécies
-                  #   presentes nos dados de pesca, indicando a porcentagem de 
-                  #   cada espécie em relação ao total. Cada segmento do gráfico 
-                  #   representa uma espécie, facilitando a visualização das 
-                  #   proporções relativas entre elas.")
                   p("Este mapa de calor ilustra a composição de espécies 
                     presente nos dados de pesca, indicando a porcentagem de 
                     cada espécie em relação ao total. Cada linha do mapa 
@@ -719,19 +705,6 @@ ui <- dashboardPage(
         fluidRow(
           column(
             width = 6,
-            # flipBox(
-            #   id = "teste",
-            #   front = plotlyOutput("histograma_comprimentoM"),
-            #   back = plotlyOutput("histograma_comprimentoF"),
-            #   trigger = "click"
-            # )
-            # box(
-            #   width = 12,
-            #   solidHeader = T,
-            #   title = "Histograma",
-            #   status = "primary",
-            #   plotlyOutput("histograma_comprimento")
-            # )
             box(
               width = 12,
               solidHeader = T,
@@ -938,28 +911,13 @@ server <- function(input, output, session) {
     "Agosto", "Setembro", "Outubro", "Novembro","Dezembro"
   )
   
-  # # Definindo as Cores de cada Espécie
-  # cores <- c(
-  #   "Albacora_bandolim" = "#9467bd","Albacora_branca" = "#d62728",
-  #   "Albacora_lage" = "#2ca02c", "Meca" = "#8c564b","Outros" = "#ff7f0e", 
-  #   "Cacao_azul" = "#1f77b4","Cacao_anequim" = "#7f7f7f", "Prego" = "#e377c2"
-  # )
-  
   # Cores amigáveis para pessoas com daltonismo
   cores <- c(
     "Albacora_bandolim" = "#9467bd","Albacora_branca" = "#E6194B",
     "Albacora_lage" = "#3CB44B", "Meca" = "#911EB4","Outros" = "#F58231", 
     "Cacao_azul" = "#4363D8","Cacao_anequim" = "#FFE119", "Prego" = "#42D4F4"
   )
-  
-  # # Definindo as Cores de cada Mês
-  # cores_mes <- c(
-  #   "Janeiro"="#00CCFF","Fevereiro"="#FF4500","Março"="#32CD32",
-  #   "Abril"="#FFD700","Maio"="#FF69B4","Junho"="#8B4513",
-  #   "Julho"="#4169E1","Agosto"="#CA70D6","Setembro"="#00FF7F",
-  #   "Outubro"="#DCDCDC","Novembro"="#8A2BE2","Dezembro"="#FF0000"
-  #   )
-  
+
   # Definindo as Cores de cada Mês (cores amigáveis para pessoas com daltonismo)
   cores_mes <- c(
     "Janeiro"="#42D4F4","Fevereiro"="#FABED4","Março"="#BFEF45",
@@ -1099,16 +1057,6 @@ server <- function(input, output, session) {
       mutate(mes_nome = nomes_meses[MES])
   }) 
   
-  # # Contador de dados Registrados de Cacao-azul em Comparação ao Resto
-  # dados_RoscaTubOutros <- reactive({
-  #   dados_aux_filtrados() %>%
-  #     mutate(
-  #       # CATEGORIA = ifelse(CATEGORIA == "Cacao_azul","Cacao_azul","Outros")
-  #       CATEGORIA = ifelse(CATEGORIA == "Cacao_azul","Tubarão azul","Outros")
-  #     ) %>%
-  #     count(CATEGORIA)
-  # })
-  # 
   dados_BarraTubOutros <- reactive({
     dados_aux_filtrados() %>%
       group_by(MES) %>% 
@@ -1138,83 +1086,72 @@ server <- function(input, output, session) {
   }) 
   
   # Header ------------------------------------------------------------------
-
+  
   output$notification_menu <- renderMenu({
     notification_items <- lapply(1:nrow(notificacoes), function(i) {
-      notificationItem(
-        icon = icon("bell"),
-        status = "primary",
-        href = notificacoes$Link[i],
-        tags$div(
-          tags$span(
-            paste(
-              notificacoes$Titulo[i]
-            ),
-            style = "font-weight: bold;"
-          ),
-          br(),
-          tags$span(
-            paste(
-              "Local:",
-              notificacoes$Local[i]
-            ),
-            style = "font-weight: bold;"
-          ),
-          br(),
-          tags$span(
-            # paste(
-            #   "Data:", format(
-            #     notificacoes$Data[i],
-            #     "%d/%m/%Y"
-            #     )
-            #   ),
-            paste(
-              "Data:", 
-              notificacoes$Data[i]
-            ),
-            style = "font-weight: bold;"
-            ),
-          tags$br(),
-          tags$span(
-            paste(
-              "Hora:",
-              notificacoes$Horario[i]
+      current_date <- Sys.Date()
+      current_time <- format(Sys.time(), "%H:%M")
+
+      notification_status <- "primary"
+
+      if (notificacoes$Data[i] == current_date) {
+        if (notificacoes$Horário[i] <= current_time) {
+          notification_status <- "danger"
+        } else {
+          notification_status <- "warning"
+        }
+      }
+
+      if (notificacoes$Data[i] >= current_date) {
+        notificationItem(
+          icon = icon("bell"),
+          status = notification_status,
+          href = notificacoes$Link[i],
+          tags$div(
+            tags$span(
+              paste(
+                notificacoes$Titulo[i]
               ),
-            style = "font-weight: bold;"
-            )#,
-          # tags$br(),
-          # if(!is.na(notificacoes$TextoOpcional[i])){
-          #   tags$span(
-          #     notificacoes$TextoOpcional[i],
-          #     style = "font-style: italic;"
-          #   )
-          # }
+              style = "font-weight: bold;"
+            ),
+            br(),
+            tags$span(
+              paste(
+                "Local:",
+                notificacoes$Local[i]
+              ),
+              style = "font-weight: bold;"
+            ),
+            br(),
+            tags$span(
+              paste(
+                "Data:",
+                notificacoes$Data[i]
+              ),
+              style = "font-weight: bold;"
+            ),
+            br(),
+            tags$span(
+              paste(
+                "Hora:",
+                notificacoes$Horário[i]
+              ),
+              style = "font-weight: bold;"
+            )
+          )
         )
-      )
+      }
     })
+
+    # Remover itens NULL da lista
+    notification_items <- notification_items[!sapply(notification_items, is.null)]
+
     dropdownMenu(
       type = "notifications",
       icon = icon("bell"),
       .list = notification_items
     )
   })
-  
-  output$tabelaEmbarcacoes <- renderDT({
-    datatable(notificacoes) %>%
-      formatDate(
-        columns = "Data",
-        method = "toLocaleDateString",
-        params = list(
-          "pt-BR",
-          list(
-            year = "numeric",
-            month = "2-digit",
-            day = "2-digit"
-            )
-          )
-        )
-    })
-  
   
   # Sidebar -----------------------------------------------------------------
   
@@ -1860,7 +1797,17 @@ server <- function(input, output, session) {
           }
         }
         # Opções da Data Table
-      },options = list(paging = TRUE, searching = FALSE))
+      },options = list(
+        paging = TRUE,
+        searching = FALSE,
+        rownames = FALSE,
+        columnDefs = list(
+          list(className = 'dt-center', targets = "_all")
+          )
+        ),
+      class = "cell-border stripe hover",
+      selection = "single"
+      )
     } else{
       # Mensagem no Caso de Senha Incorreta
       showModal(
@@ -1887,7 +1834,6 @@ server <- function(input, output, session) {
   output$tabelaAdm <- renderUI({
     conteudo_tabela_adm()
   })
-  
 
 # Distribuição de Comprimentos --------------------------------------------
   
@@ -1996,7 +1942,21 @@ server <- function(input, output, session) {
 # Tabela de Embarcações ---------------------------------------------------
   
   output$tabela_embarcacoes <- renderDT({
-    datatable(notificacoes[, !names(notificacoes) %in% c("TextoOpcional", "Link")])
+    datatable(
+      notificacoes[, !names(notificacoes) %in% c("TextoOpcional", "Link")],
+      rownames = FALSE,
+      filter = "none",
+      options = list(
+        paging = FALSE,
+        searching = FALSE,
+        pageLength = 10,
+        columnDefs = list(
+          list(className = 'dt-center', targets = "_all")  # Centraliza o texto
+        )
+      ),
+      class = "cell-border stripe hover",
+      selection = "single"
+    )
   })
   
   observeEvent(input$tabela_embarcacoes_rows_selected, {
@@ -2005,7 +1965,6 @@ server <- function(input, output, session) {
       # Verifica se há link disponível e cria o título do modal
       title_text <- paste("Detalhes da Embarcação", notificacoes$id[i])
       title_text <- tags$a(title_text, href = notificacoes$Link[i], target = "_blank")
-      
       
       # Verifica se há informações extras disponíveis
       info_extra <- if(!is.na(notificacoes$TextoOpcional[i])){
@@ -2031,65 +1990,6 @@ server <- function(input, output, session) {
     }
   })
 
-  # output$lista_embarcacoes <- renderUI({
-  #   # tabela_embarcacoes <- 
-  #   lapply(1:nrow(notificacoes), function(i) {
-  #     box(
-  #       title = notificacoes$Titulo[i],
-  #       width = 12,
-  #       status = "primary",
-  #       solidHeader = T,
-  #       collapsible = T,
-  #       collapsed = T,
-  #       closable = T,
-  #       tags$div(
-  #         tags$span(
-  #           paste(
-  #             "Local:",
-  #             notificacoes$Local[i]
-  #           ),
-  #           style = "font-weight: bold;"
-  #         ),
-  #         br(),
-  #         tags$span(
-  #           paste(
-  #             "Data:", format(
-  #               notificacoes$Data[i],
-  #               "%d/%m/%Y"
-  #             )
-  #           ),
-  #           style = "font-weight: bold;"
-  #         ),
-  #         tags$br(),
-  #         tags$span(
-  #           paste(
-  #             "Hora:",
-  #             sprintf(
-  #               "%02d:%02d",
-  #               notificacoes$Hora[i],
-  #               notificacoes$Minuto[i]
-  #             )
-  #           ),
-  #           style = "font-weight: bold;"
-  #         ),
-  #         tags$br(),
-  #         if(!is.na(notificacoes$TextoOpcional[i])){
-  #           tags$span(
-  #             paste(
-  #               "Texto:"
-  #             ),
-  #             style = "font-weight: bold;",
-  #             br(),
-  #             paste(
-  #               notificacoes$TextoOpcional[i]
-  #             )
-  #           )
-  #         }
-  #       )
-  #     )
-  #   })
-  # })
-  
   # ControlBar --------------------------------------------------------------
   
   observeEvent(input$selectAll, {
