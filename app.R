@@ -181,7 +181,7 @@ ui <- dashboardPage(
         icon = icon("map")
       ),
       menuItem(
-        text = "Tabela de Embarcações",
+        text = "Tabela de embarcações",
         tabName = "tab8header",
         icon = icon("ship")
       )
@@ -237,7 +237,13 @@ ui <- dashboardPage(
     #LogoPTA img {
         min-width: 200px;   /* Defina a largura mínima desejada */
         max-width: 400px;   /* Defina a largura máxima desejada */
-      }
+    }
+    
+    .box-header .box-title{
+      font-size: 18px;
+      # font-size: 15px;
+      # Tentar alinhar o título, mas ver o que é melhor
+    }
                               ')
     )
     ),
@@ -416,7 +422,15 @@ ui <- dashboardPage(
             column(
               width = 10,
               offset = 1,
+              tags$head(
+                tags$style(HTML("
+                  #boxWithoutHeader .box-header {
+                    display: none;
+                  }
+                "))
+              ),
               box(
+                id = "boxWithoutHeader",
                 title = "Texto Leia-me",
                 width = 12,
                 # Se deve exibir uma borda abaixo do cabeçalho
@@ -473,8 +487,8 @@ ui <- dashboardPage(
               width = 12,
               # Definindo Caixa com conteúdo da Distribuição de Comprimentos
               box(
-                # title = "Gráfico de Barras Empilhadas",
-                title = "Gráfico de Área Relativa",
+                # title = "Gráfico de Área Relativa",
+                title = "Dados Registrados por Mês, Ano e Categoria",
                 width = 12,
                 solidHeader = TRUE, # Se a Header é sólida
                 status = "primary",
@@ -503,15 +517,13 @@ ui <- dashboardPage(
             column(
               width = 6,
               box(
-                # title = "Gráfico de Rosca",
-                title = "Gráfico de Barras",
+                # title = "Gráfico de Barras",
+                title = "Comparação da Média de Dados Registrados por Mês",
                 width = 12,
                 solidHeader = TRUE,
                 status = "primary",
                 div(
                   class = "graficos",
-                  # Saída do Gráfico de Rosca, sobre a Comparação de dados
-                  # plotlyOutput("RoscaTubOutros", height = "100%")
                   plotlyOutput("BarraTubOutros", height = "100%")
                 ),
                 sidebar = boxSidebar(
@@ -529,8 +541,8 @@ ui <- dashboardPage(
             column(
               width = 6,
               box(
-                # title = "Gráfico de Rosca",
-                title = "Mapa de Calor",
+                # title = "Mapa de Calor",
+                title = "Comparação de Dados Registrados por Mês/Ano",
                 width = 12,
                 solidHeader = TRUE,
                 status = "primary",
@@ -562,7 +574,8 @@ ui <- dashboardPage(
             column(
               width = 6,
               box(
-                title = "Gráfico de Linhas",
+                # title = "Gráfico de Linhas",
+                title = "Média Mensal de Captura por Viagem",
                 width = 12,
                 solidHeader = TRUE, 
                 collapsible = TRUE,
@@ -587,8 +600,8 @@ ui <- dashboardPage(
             column(
               width = 6,
               box(
-                # title = "Gráfico de Rosca",
-                title = "Mapa de Calor",
+                # title = "Mapa de Calor",
+                title = "Média Mensal de Captura por Viagem",
                 width = 12,
                 collapsible = TRUE,
                 solidHeader = TRUE,
@@ -615,7 +628,8 @@ ui <- dashboardPage(
             column(
               width = 12,
               box(
-                title = "Gráfico de Área Relativa",
+                # title = "Gráfico de Área Relativa",
+                title = 'Média Mensal de Captura por Viagem ao Longo do Período',
                 width = 12,
                 collapsible = TRUE,
                 solidHeader = TRUE,
@@ -1103,6 +1117,16 @@ server <- function(input, output, session) {
       }
 
       if (notificacoes$Data[i] >= current_date) {
+        notification_time <- format(
+          as.POSIXct(
+            paste(
+              notificacoes$Data[i], 
+              notificacoes$Horário[i]
+              )
+            ),
+          "%d/%m/%Y %H:%M:%S"
+          # "%Y-%m-%d %H:%M:%S"
+          )
         notificationItem(
           icon = icon("bell"),
           status = notification_status,
@@ -1125,29 +1149,41 @@ server <- function(input, output, session) {
             br(),
             tags$span(
               paste(
-                "Data:",
-                notificacoes$Data[i]
+                "Hora exata:",
+                notification_time
               ),
               style = "font-weight: bold;"
             ),
-            br(),
-            tags$span(
-              paste(
-                "Hora:",
-                notificacoes$Horário[i]
-              ),
-              style = "font-weight: bold;"
-            )
+            br()
+            # tags$span(
+            #   paste(
+            #     "Data:",
+            #     notificacoes$Data[i]
+            #   ),
+            #   style = "font-weight: bold;"
+            # ),
+            # br(),
+            # tags$span(
+            #   paste(
+            #     "Hora:",
+            #     notificacoes$Horário[i]
+            #   ),
+            #   style = "font-weight: bold;"
+            # )
           )
         )
       }
     })
 
     # Remover itens NULL da lista
-    notification_items <- notification_items[!sapply(notification_items, is.null)]
+    notification_items <- notification_items[!sapply(notification_items, 
+                                                     is.null)]
 
     dropdownMenu(
       type = "notifications",
+      headerText = paste(
+        "Você tem ", length(notification_items), "notificações"
+      ),
       icon = icon("bell"),
       .list = notification_items
     )
@@ -1275,13 +1311,13 @@ server <- function(input, output, session) {
       )
     ) %>%
       layout(
-        title = "Dados Registrados por Mês, Ano e Categoria",
+        # title = "Dados Registrados por Mês, Ano e Categoria",
         xaxis = list(
           title = "",
           showgrid = FALSE
         ),
         yaxis = list(
-          title = "Porcentagem de Dados",
+          title = " ",
           tickformat = ".0f",
           ticksuffix = '%',
           showgrid = FALSE
@@ -1338,10 +1374,10 @@ server <- function(input, output, session) {
     ) %>%
       layout(
         # title = "Comparação de Dados da Tubarão Azul para Outros",
-        title = "Comparação de Dados Registrados",
+        # title = "Comparação de Dados Registrados",
         showlegend = FALSE,
         yaxis = list(
-          # title = "Porcentagem de Dados",
+          title = " ",
           tickformat = ".0f",
           ticksuffix = '%',
           showgrid = FALSE
@@ -1399,7 +1435,7 @@ server <- function(input, output, session) {
       )
     ) %>%
       layout(
-        title = "Comparação de Dados Registrados",
+        # title = "Comparação de Dados Registrados",
         xaxis = list(
           title = "Mês",
           tickvals = unique(dados_ComparaDadosTub()$MES), 
@@ -1459,7 +1495,7 @@ server <- function(input, output, session) {
       )
     ) %>%
       layout(
-        title = "Média Mensal de Captura por Viagem",
+        # title = "Média Mensal de Captura por Viagem",
         xaxis = list(
           title = "Mês",
           tickvals = unique(dados_graficoCaptura()$MES), 
@@ -1598,7 +1634,7 @@ server <- function(input, output, session) {
     }
     plot_data <- plot_data %>% 
       layout(
-        title = 'Média Mensal de Captura por Viagem ao Longo do Período',
+        # title = 'Média Mensal de Captura por Viagem ao Longo do Período',
         xaxis = list(
           title = "",
           showgrid = FALSE
@@ -1630,7 +1666,7 @@ server <- function(input, output, session) {
       )
     ) %>%
       layout(
-        title = "Média Mensal de Captura por Viagem",
+        # title = "Média Mensal de Captura por Viagem",
         xaxis = list(
           title = "Mês",
           tickvals = unique(dados_PesoMes()$MES), 
@@ -1964,7 +2000,11 @@ server <- function(input, output, session) {
     if (length(i) == 1) {
       # Verifica se há link disponível e cria o título do modal
       title_text <- paste("Detalhes da Embarcação", notificacoes$id[i])
-      title_text <- tags$a(title_text, href = notificacoes$Link[i], target = "_blank")
+      title_text <- tags$a(
+        title_text,
+        href = notificacoes$Link[i],
+        target = "_blank"
+        )
       
       # Verifica se há informações extras disponíveis
       info_extra <- if(!is.na(notificacoes$TextoOpcional[i])){
@@ -1972,7 +2012,7 @@ server <- function(input, output, session) {
           paste(
             "Texto:"
           ),
-          style = "font-weight: bold;",
+          # style = "font-weight: bold;",
           br(),
           paste(
             notificacoes$TextoOpcional[i]
