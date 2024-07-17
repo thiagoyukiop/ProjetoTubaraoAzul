@@ -32,13 +32,13 @@ dados_falsos <- read.table(
 
 notificacoes <- read_excel("dados_brutos/Notificacoes.xlsx")
 
-not_modificadas <- notificacoes %>% 
+notificacoes <- notificacoes %>% 
   # mutate(Data = format(as.Date(Data), "%d/%m/%Y")) %>%
   mutate(Data = format(as.Date(Data), "%Y-%m-%d")) %>% 
   mutate(Horário = sprintf("%02d:%02d", Hora, Minuto)) %>% 
   plotly::select(-c(Hora, Minuto))
 
-notificacoes <- not_modificadas
+# notificacoes <- not_modificadas
 
 verifica_coluna <- function(df, coluna) {
   return(any(names(df) == coluna))
@@ -122,7 +122,7 @@ ui <- dashboardPage(
     width = 300,
     # width = 250,   # Definição da Largura em pixels
     minified = TRUE,  # Se a aba lateral ao ser fechada deverá mostrar os ícones
-    collapsed = FALSE, # Se a aba lateral deve ser iniciada fechada
+    collapsed = TRUE, # Se a aba lateral deve ser iniciada fechada
     # Definindo do Menu Sidebar
     sidebarMenu(
       id = "sidebarMenu",
@@ -665,7 +665,7 @@ ui <- dashboardPage(
               width = 12,
               box(
                 width = 12,
-                title = "Mapa de Capturas",
+                title = "Mapa de Capturas (KG Total)",
                 solidHeader = TRUE,
                 status = "primary",
                 div(
@@ -678,14 +678,44 @@ ui <- dashboardPage(
                   icon = icon("circle-info"),
                   width = 30,
                   background = "#A6ACAFEF",
-                  p("Este mapa de calor mostra a localização das capturas, onde
-                    a cor dos círculos varia de verde a roxo, indicando a
-                    porcentagem de capturas em cada área. As áreas com uma 
-                    porcentagem menor de capturas são representadas em tons 
-                    mais claros de verde, enquanto áreas com uma porcentagem
-                    maior são exibidas em tons mais escuros de roxo Isso 
-                    permite visualizar facilmente as áreas com maior e menor 
-                    concentração de capturas.")
+                  p("Este mapa de calor mostra a localização das capturas, com o
+                    valor total de Quilos capturados, onde a cor dos círculos 
+                    varia de verde a roxo, indicando a porcentagem de capturas 
+                    em cada área. As áreas com uma porcentagem menor de capturas 
+                    são representadas em tons mais claros de verde, enquanto 
+                    áreas com uma porcentagem maior são exibidas em tons mais 
+                    escuros de roxo. Isso permite visualizar facilmente as 
+                    áreas com maior e menor concentração de capturas.")
+                )
+              )
+            )
+          ),
+          fluidRow(
+            column(
+              width = 12,
+              box(
+                width = 12,
+                title = "Mapa de Capturas (Kg por Viagem)",
+                solidHeader = TRUE,
+                status = "primary",
+                div(
+                  class = "mapa",
+                  # Saída do Gráfico do Mapa de Calor
+                  leafletOutput("MapaCapturaPorViagem",height = "100%")
+                ),
+                sidebar = boxSidebar(
+                  id = "boxsidebar91",
+                  icon = icon("circle-info"),
+                  width = 30,
+                  background = "#A6ACAFEF",
+                  p("Este mapa de calor mostra a localização das capturas,com o
+                    valor em Quilos por Viagem, onde a cor dos círculos varia de
+                    verde a roxo, indicando a porcentagem de capturas em cada 
+                    área. As áreas com uma porcentagem menor de capturas são 
+                    representadas em tons mais claros de verde, enquanto áreas 
+                    com uma porcentagem maior são exibidas em tons mais escuros 
+                    de roxo. Isso permite visualizar facilmente as áreas com 
+                    maior e menor concentração de capturas.")
                 )
               )
             )
@@ -722,7 +752,7 @@ ui <- dashboardPage(
             box(
               width = 12,
               solidHeader = T,
-              title = "Histograma de comprimento",
+              title = "Histograma de Comprimento",
               status = "primary",
               flipBox(
                 id = "teste",
@@ -730,6 +760,17 @@ ui <- dashboardPage(
                 front = plotlyOutput("histograma_comprimentoM"),
                 back = plotlyOutput("histograma_comprimentoF"),
                 trigger = "click"
+              ),
+              sidebar = boxSidebar(
+                id = "boxsidebar10",
+                icon = icon("circle-info"),
+                width = 50,
+                background = "#A6ACAFEF",
+                p("Esta é uma flipBox, que contém os histogramas do comprimento
+                  de Tubarões azul machos e fêmeas. Que indica a distribuição de
+                  comprimento por intervalos específicos, que estão em 
+                  centímetros. Para ver o outro histograma é necessário clicar 
+                  no gráfico.")
               )
             )
           ),
@@ -738,9 +779,20 @@ ui <- dashboardPage(
             box(
               width = 12,
               solidHeader = T,
-              title = "Gráfico de Rosca",
+              title = "Diagrama de Caixa",
               status = "primary",
-              plotlyOutput("boxplot_comprimento")
+              plotlyOutput("boxplot_comprimento"),
+              sidebar = boxSidebar(
+                id = "boxsidebar11",
+                icon = icon("circle-info"),
+                width = 50,
+                background = "#A6ACAFEF",
+                p("Esta é uma boxplot do comprimento de Tubarões azul machos e
+                  fêmeas. Ela indica 5 dados, o mínimo, o primeiro quartil (Q1),
+                  a mediana (Q2), o terceiro quartil (Q3), e o máximo. Os 
+                  círculos fora da linha que se estendem a partir da caixa, são
+                  os outliers")
+              )
             )
           )
         )
@@ -849,9 +901,10 @@ ui <- dashboardPage(
   # Definindo o Controlbar do Painel
   controlbar = dashboardControlbar(
     overlay = FALSE, # Se vai sobrepor o conteúdo
-    collapsed = FALSE,
+    collapsed = TRUE,
     skin = "dark",
     id = "controlbar",
+    width = 300,
     # Definindo controlbar Menu
     controlbarMenu(
       id = "controlbarMenu",
@@ -1033,7 +1086,10 @@ server <- function(input, output, session) {
       ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2])
     tab01 <- dados_aux %>%
       group_by(LON, LAT) %>%
-      summarise(prod = sum(KG)) %>%
+      summarise(
+        prod = sum(KG),
+        prod2 = sum(KG)/sum(DESCARGA)
+        ) %>%
       ungroup()
     list(dados = dados_aux, tab01 = tab01)
   })
@@ -1640,7 +1696,8 @@ server <- function(input, output, session) {
           showgrid = FALSE
         ),
         yaxis = list(
-          title = "Porcentagem da Captura Média por Viagem",
+          # title = "Porcentagem da Captura Média por Viagem",
+          title = " ",
           showgrid = FALSE,
           ticksuffix = '%'
         ),
@@ -1739,6 +1796,76 @@ server <- function(input, output, session) {
       # Definindo a legenda com a paleta de cores e suas Porcentagens
       addLegend(
         pal = pal, values = tab01$prod, group = tab01$prod,
+        position = "bottomright", title = "Percentual da Captura"
+      ) %>%
+      # Controle de Estilo de Mapa
+      addLayersControl(
+        position = "topleft",
+        baseGroups = c("Dark Map", "Light Map"),
+        options =
+          layersControlOptions(collapsed = FALSE)
+      ) %>%
+      # Adicionando Mini Mapa
+      addMiniMap(
+        position = "bottomleft"
+      ) %>%
+      # Adicionando um Medidor 
+      addMeasure(
+        position = "bottomleft"
+      )
+  })
+  
+  output$MapaCapturaPorViagem <- renderLeaflet({
+    tab01 <- db_filtrado()$tab01
+    
+    # Cálculo dos quantis para categorizar os dados do mapa de calor
+    breaks <- quantile(tab01$prod2, probs = seq(0, 1, 0.1), na.rm = TRUE)
+    
+    # Verificando se há breaks duplicados 
+    if (any(duplicated(breaks))) {
+      # Jitter é usado para variar um pouco o valor dos duplicados
+      tab01$prod2 <- jitter(tab01$prod2, factor = 0.1)
+    }
+    
+    # Criar a paleta de cores com base nos intervalos
+    pal <- colorQuantile(
+      palette = "viridis",
+      domain = tab01$prod2,
+      probs = seq(0, 1, 0.1)
+    )
+    
+    leaflet() %>%
+      # Definindo a primeira opção do estilo do Mapa (Claro)
+      addProviderTiles(
+        providers$CartoDB.Positron,
+        group = "Light Map"
+      ) %>%
+      # Definindo a segunda opção do estilo do Mapa (Escuro)
+      addProviderTiles(
+        providers$CartoDB.DarkMatter,
+        group = "Dark Map"
+      ) %>%
+      # Definindo a Posição Inicial da visão sobre o Mapa
+      setView(
+        lng = -40, lat = -28, zoom = 5
+      ) %>%
+      # Definindo a adição dos Marcadores no Mapa
+      addCircleMarkers(
+        group = tab01$prod2,      # Define os marcadores com base na soma dos KG
+        # radius = 12,             # Define o raio dos marcadores como 12 pixels
+        radius = 7,
+        lng = tab01$LON,         # Define tab01$LON como longitude
+        lat = tab01$LAT,         # Define tab01$LAT como latitude
+        stroke = FALSE,          # Define que não haverá borda dos marcadores
+        color = pal(tab01$prod2), # Define a paleta de cores dos marcadores
+        fillOpacity = 0.7,       # Define a opacidade dos marcadores como 70%
+        label = paste0(
+          "Captura: ", round(tab01$prod2, 0), " kg"
+        )
+      ) %>%
+      # Definindo a legenda com a paleta de cores e suas Porcentagens
+      addLegend(
+        pal = pal, values = tab01$prod2, group = tab01$prod,
         position = "bottomright", title = "Percentual da Captura"
       ) %>%
       # Controle de Estilo de Mapa
@@ -1918,7 +2045,13 @@ server <- function(input, output, session) {
       data = dados_falsos %>% filter(Sexo == "M"),
       x = ~IDL,
       name = "Masculino",
-      type = 'histogram'
+      type = 'histogram',
+    marker = list(
+      line = list(
+        color = 'black',  # cor da borda
+        width = 1        # espessura da borda
+      )
+    )
     ) %>% 
       layout(
         title = "Macho",
@@ -1939,7 +2072,13 @@ server <- function(input, output, session) {
       data = dados_falsos %>% filter(Sexo == "F"),
       x = ~IDL,
       name = "Masculino",
-      type = 'histogram'
+      type = 'histogram',
+      marker = list(
+        line = list(
+          color = 'black',  # cor da borda
+          width = 1        # espessura da borda
+        )
+      )
     ) %>% 
       layout(
         title = "Fêmea",
