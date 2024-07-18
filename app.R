@@ -183,8 +183,17 @@ ui <- dashboardPage(
       menuItem(
         text = "Tabela de embarcações",
         tabName = "tab8header",
-        icon = icon("ship")
-      )
+        icon = icon("ship"),
+        badgeLabel = nrow(notificacoes),
+        badgeColor = "red"
+      ),
+      menuItem(
+        text = "Perguntas",
+        icon = icon("circle-question"),
+        badgeLabel = "new",
+        badgeColor = "aqua",
+        tabName = "tab9header"
+        )
     )
   ),
   
@@ -831,6 +840,36 @@ ui <- dashboardPage(
             # uiOutput("lista_embarcacoes")
             DTOutput("tabela_embarcacoes")
           )
+        )
+      ),
+      tabItem(
+        tabName = "tab9header",
+        box(
+          width = 6,
+          solidHeader = T,
+          title = "Qual é o Mês com que tem mais capturas Totais (KG)?",
+          status = "primary",
+          plotlyOutput("BarrasKGMes")
+        ),
+        box(
+          width = 6,
+          solidHeader = T,
+          # title = "Qual é o Mês com que tem mais capturas Totais (KG)?",
+          status = "primary"
+        ),
+        box(
+          width = 12,
+          solidHeader = T,
+          title = "Quilos Totais por Mês",
+          status = "primary",
+          plotlyOutput("BarrasKGMesAno")
+        ),
+        box(
+          width = 12,
+          solidHeader = T,
+          title = "Quilos por Viagem, por Mês",
+          status = "primary",
+          plotlyOutput("BarrasKGMesAnoMedia")
         )
       )
     )
@@ -2167,6 +2206,89 @@ server <- function(input, output, session) {
         footer = NULL
       ))
     }
+  })
+  
+
+# Perguntas ---------------------------------------------------------------
+
+  output$BarrasKGMes <- renderPlotly({
+    
+    dados_auxiliares <- dados_ajustados %>% 
+      group_by(MES) %>% 
+      summarise(KG_Total = sum(KG)) %>% 
+      ungroup()
+    
+    plot_ly(
+      data = dados_auxiliares,
+      type = "bar",
+      x = ~MES,
+      y = ~KG_Total
+      ) %>% 
+      layout(
+        hovermode = "x",
+        xaxis = list(
+          title = "Mês",
+          tickvals = unique(dados_auxiliares$MES), 
+          ticktext = unique(dados_auxiliares$MES)
+        ),
+        yaxis = list(
+          title = "Quilos Totais",
+          ticksuffix = ' (Kg)'
+        )
+      )
+  })
+  
+  output$BarrasKGMesAno <- renderPlotly({
+    dados_auxiliares2 <- dados_ajustados %>% 
+      group_by(MES, ANO) %>% 
+      summarise(KG_Total = sum(KG)) %>% 
+      ungroup() %>% 
+      mutate(mes_ano = make_date(ANO, MES)) %>% 
+      mutate(mes_ano = format(mes_ano, "%Y-%m"))
+    
+    plot_ly(
+      data = dados_auxiliares2,
+      x = ~mes_ano,
+      y = ~KG_Total
+    ) %>% 
+      layout(
+        hovermode = "x",
+        yaxis = list(
+          title = "Quilos Totais",
+          ticksuffix = ' (Kg)'
+        )
+      )
+  })
+  
+  output$BarrasKGMesAnoMedia <- renderPlotly({
+    dados_auxiliares3 <- dados_ajustados %>% 
+      mutate(KG_por_descarga = KG/DESCARGA) %>% 
+      group_by(MES, ANO) %>% 
+      summarise(
+        KG_Total = round(mean(KG_por_descarga),2),
+        Descarga_total = sum(DESCARGA)
+        ) %>% 
+      ungroup() %>% 
+      mutate(mes_ano = make_date(ANO, MES)) %>% 
+      mutate(mes_ano = format(mes_ano, "%Y-%m"))
+    
+    plot_ly(
+      data = dados_auxiliares3,
+      x = ~mes_ano,
+      y = ~KG_Total,
+      hoverinfo = "text",
+      text = ~paste(
+        "Captura média por viagem: ", KG_Total, "Kg <br>",
+        "Viagens Totais: ", Descarga_total, "<br>"
+        )
+    ) %>% 
+      layout(
+        hovermode = "x",
+        yaxis = list(
+          title = "Quilos Totais",
+          ticksuffix = ' (Kg)'
+        )
+      )
   })
 
   # ControlBar --------------------------------------------------------------
