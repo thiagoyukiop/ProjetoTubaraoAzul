@@ -3,7 +3,7 @@
 # Carregando os Pacotes que serão utilizados no dashboard
 pacman::p_load(
   shiny, shinydashboard, shinydashboardPlus, leaflet, dplyr, scales, plotly,
-  zoo, tidyverse, digest, DT, shinyjs, raster, readxl
+  zoo, tidyverse, digest, DT, shinyjs, raster, readxl, leaflet.extras
 )
 
 # Carregando os Dados de um Arquivo csv
@@ -482,14 +482,14 @@ ui <- dashboardPage(
           )
         )
       ),
-      # Definindo o conteúdo da Distribuição de Comprimentos
+      # Definindo o conteúdo da Distribuição de Captura
       tabItem(
         tabName = "tab2header",
         fluidPage(
           fluidRow(
             column(
               width = 12,
-              # Definindo Caixa com conteúdo da Distribuição de Comprimentos
+              # Definindo Caixa com conteúdo da Distribuição de Captura
               box(
                 # title = "Gráfico de Área Relativa",
                 title = "Dados Registrados por Mês, Ano e Categoria",
@@ -522,7 +522,7 @@ ui <- dashboardPage(
               width = 6,
               box(
                 # title = "Gráfico de Barras",
-                title = "Comparação da Média de Dados Registrados por Mês",
+                title = "Comparação de Dados Registrados por Mês",
                 width = 12,
                 solidHeader = TRUE,
                 status = "primary",
@@ -535,10 +535,9 @@ ui <- dashboardPage(
                   icon = icon("circle-info"),
                   background = "#A6ACAFEF",
                   p("Este gráfico de barra, compara a presença de Tubarão azul
-                    com a categoria 'Outros', que representa a média de dados
-                    de todas as outras espéciesde pesca. Ele mostra a proporção
-                    de dados de Tubarão azul comparada com as demais categorias,
-                    por mês")
+                    com a categoria 'Outros', que representa dados de todas as
+                    outras espécies de pesca. Ele mostra a proporção de dados de
+                    Tubarão azul comparada com as demais categorias, por mês")
                 )
               )
             ),
@@ -723,6 +722,28 @@ ui <- dashboardPage(
                 )
               )
             )
+          ),
+          fluidRow(
+            column(
+              width = 12,
+              box(
+                width = 12,
+                title = "Mapa de Capturas (Kg por Viagem)",
+                solidHeader = TRUE,
+                status = "primary",
+                div(
+                  class = "mapa",
+                  # Saída do Gráfico do Mapa de Calor
+                  leafletOutput("MapaCapturaPorViagem2", height = "100%")
+                ),
+                sidebar = boxSidebar(
+                  id = "boxsidebar91",
+                  icon = icon("circle-info"),
+                  width = 30,
+                  background = "#A6ACAFEF"
+                )
+              )
+            )
           )
         )
       ),
@@ -849,7 +870,7 @@ ui <- dashboardPage(
         box(
           width = 6,
           solidHeader = T,
-          title = "Qual é o Mês com que tem mais capturas Médias por Viagem(KG)?",
+          title = "Qual é o Mês com que tem mais capturas Médias por Viagem (KG)?",
           status = "primary",
           plotlyOutput("BarrasKGMediaMes")
         ),
@@ -1191,8 +1212,8 @@ server <- function(input, output, session) {
           )
         ) %>%
       count(CATEGORIA) %>% 
-      mutate(prop = n / sum(n)*100) %>% 
-      mutate(prop = round(prop,2))
+      mutate(prop = (n / sum(n)) * 100) %>% 
+      mutate(media = round(n / 12, 2))
   })
   
   # Dividindo os dados Registrados de Cacao-azul em Comparação ao Resto e 
@@ -1207,7 +1228,12 @@ server <- function(input, output, session) {
       filter(!(ANO == 2024 & MES >= 5)) %>%
       mutate(mes_ano_formatado = make_date(ANO, MES)) %>%
       mutate(mes_ano = as.yearmon(paste0(ANO, "-", sprintf("%02d", MES)))) %>%
-      mutate(mes_ano_formatado = format(mes_ano_formatado, "%Y-%m"))
+      mutate(mes_ano_formatado = format(mes_ano_formatado, "%Y-%m")) %>% 
+      group_by(mes_ano_formatado) %>%
+      mutate(total = sum(Quantidade)) %>%
+      ungroup() %>%
+      # Calcula a porcentagem para cada categoria
+      mutate(percentage = Quantidade / total*100)
   }) 
   
   # Header ------------------------------------------------------------------
@@ -1364,7 +1390,7 @@ server <- function(input, output, session) {
   
   output$Logo_LEMA <- renderImage({
     list(
-      src = "dados_brutos/Logo_LEMA2.png",
+      src = "dados_brutos/Logo_Lema2.png",
       height = "80px",
       width = "75px",
       contentType = "image/png"
@@ -1380,19 +1406,11 @@ server <- function(input, output, session) {
     )
   }, deleteFile = FALSE)
   
-  # Distribuição de Comprimentos --------------------------------------------
+  # Distribuição de Captura --------------------------------------------
   
   output$TubMesAno <- renderPlotly({
-    # Calcula a soma total por mês/ano
-    data <- dados_TubMesAno() %>%
-      group_by(mes_ano_formatado) %>%
-      mutate(total = sum(Quantidade)) %>%
-      ungroup() %>%
-      # Calcula a porcentagem para cada categoria
-      mutate(percentage = Quantidade / total*100)
-    
     plot_ly(
-      data = data,
+      data = dados_TubMesAno(),
       x = ~mes_ano_formatado,
       y = ~percentage,
       color = ~CATEGORIA,
@@ -1443,25 +1461,6 @@ server <- function(input, output, session) {
       config(displayModeBar = FALSE)
   })
   
-  # # Renderização do Gráfico da Comparação de Dados da Tubarão azul para o Resto
-  # output$RoscaTubOutros <- renderPlotly({
-  #   plot_ly(
-  #     data = dados_RoscaTubOutros(),
-  #     labels = ~CATEGORIA,
-  #     values = ~n,
-  #     type = "pie",
-  #     hole = 0.6,
-  #     textinfo = "label",
-  #     hoverinfo = "text+percent",
-  #     text = ~paste("Quantidade: ", n),
-  #     marker = list(colors = c("Cacao-azul" = "#4363D8", "Outros" = "#F58231"))
-  #   ) %>%
-  #     layout(
-  #       title = "Comparação de Dados da Tubarão azul para o Resto",
-  #       showlegend = FALSE
-  #     )
-  # })
-  
   output$BarraTubOutros <- renderPlotly({
     plot_ly(
       data = dados_BarraTubOutros(),
@@ -1471,16 +1470,16 @@ server <- function(input, output, session) {
       colors = cores,
       type = 'bar',
       text = ~paste(
-        "Categoria: ",case_when(
+        " Categoria: ",case_when(
           CATEGORIA == "Cacao_azul" ~ "Tubarão azul",
           CATEGORIA == "Outros" ~ CATEGORIA,
           TRUE ~ CATEGORIA
         ),
         "<br>",
-        "Quantidade: ", n, "<br>",
-        "Porcentagem: ", round(prop, 2), "%"
+        "Quantidade Total: ", n, "<br>",
+        "Quantidade Média: ", media, "<br>",
+        "Porcentagem: ", round(prop,2), "%"
       ),
-      # text = ~paste0(prop, '%'),
       hoverinfo = 'text'
     ) %>%
       layout(
@@ -1504,31 +1503,6 @@ server <- function(input, output, session) {
         )
       )
   })
-  
-  # # Renderização do Gráfico da Comparação de Dados da Tubarão azul por Mês
-  # output$ComparaDadosTub <- renderPlotly({
-  #   
-  #   dados_modificados <- dados_ComparaDadosTub() %>%
-  #     mutate(CATEGORIA = recode(CATEGORIA, "Cacao_azul" = "Tubarão azul"))
-  #   
-  #   plot_ly(
-  #     data = dados_modificados,
-  #     labels = ~mes_nome,
-  #     parents = ~CATEGORIA,
-  #     values = ~Quantidade,
-  #     type = "sunburst",
-  #     branchvalues = "total", 
-  #     hoverinfo = "percent entry+value",
-  #     textinfo = "label",
-  #     marker = list(
-  #       colors = cores_mes[as.character(dados_modificados$mes_nome)]
-  #     )
-  #   ) %>%
-  #     layout(
-  #       title = "Dados Registrados de Tubarão azul por Mês",
-  #       showlegend = FALSE
-  #     )
-  # })
   
   output$ComparaDadosTub <- renderPlotly({
     plot_ly(
@@ -1584,7 +1558,7 @@ server <- function(input, output, session) {
       marker = list(size = 10), # Tamanho do Marcador
       hoverinfo = "text",
       text = ~paste(
-        "Espécie: ", 
+        " Espécie: ", 
         case_when(
           CATEGORIA == "Albacora_bandolim" ~ "Albacora bandolim",
           CATEGORIA == "Albacora_branca" ~ "Albacora branca",
@@ -1624,15 +1598,18 @@ server <- function(input, output, session) {
     
     dados_captura <- dados_graficoAreaDesembarque()
     
-    data <- data.frame("mes_ano"=dados_captura$mes_ano, dados_captura)
+    data <- data.frame("mes_ano" = dados_captura$mes_ano, dados_captura)
     
     data_wide <- pivot_wider(
       data, names_from = CATEGORIA, values_from = Media_KG_por_Viagem)
     
-    data_wide <- data_wide %>% 
-      plotly::select(-c("ANO","MES", "mes_nome", "mes_ano.1"))
+    # data_wide <- data_wide %>% 
+    #   plotly::select(-c("ANO","MES", "mes_nome", "mes_ano.1"))
     
-    data_wide_filtrado <- data_wide[, c("mes_ano","Cacao_azul", input$species)]
+    # data_wide_filtrado <- data_wide[, c("mes_ano","Cacao_azul", input$species)]
+    
+    data_wide_filtrado <- data_wide %>% 
+      dplyr::select(c("mes_ano","Cacao_azul", input$species))
     
     req(ncol(data_wide_filtrado) > 1)
     plot_data <- plot_ly(
@@ -1939,6 +1916,60 @@ server <- function(input, output, session) {
         position = "bottomleft"
       )
   })
+
+  output$MapaCapturaPorViagem2 <- renderLeaflet({
+    tab01 <- db_filtrado()$tab01
+    
+    # Criar a paleta de cores com base nos intervalos
+    pal <- colorQuantile(
+      palette = "viridis",
+      domain = tab01$prod2,
+      probs = seq(0, 1, 0.1)
+    )
+    
+    # Calcular o raio dos círculos com base em prod2
+    radii <- (tab01$prod2 - min(tab01$prod2)) / (max(tab01$prod2) - min(tab01$prod2)) * 30 + 6 
+    
+    leaflet() %>%
+      addProviderTiles(
+        providers$CartoDB.Positron,
+        group = "Light Map"
+      ) %>%
+      addProviderTiles(
+        providers$CartoDB.DarkMatter,
+        group = "Dark Map"
+      ) %>%
+      setView(
+        lng = -40, lat = -28, zoom = 5
+      ) %>%
+      addCircleMarkers(
+        lng = tab01$LON,
+        lat = tab01$LAT,
+        radius = radii,
+        stroke = FALSE,
+        color = pal(tab01$prod2),
+        fillOpacity = 0.7,
+        label = paste0(
+          "Captura: ", round(tab01$prod2, 0), " kg"
+        )
+      ) %>%
+      addLegend(
+        pal = pal, values = tab01$prod2,
+        position = "bottomright", title = "Percentual da Captura"
+      ) %>%
+      addLayersControl(
+        position = "topleft",
+        baseGroups = c("Dark Map", "Light Map"),
+        options = layersControlOptions(collapsed = FALSE)
+      ) %>%
+      addMiniMap(
+        position = "bottomleft"
+      ) %>%
+      addMeasure(
+        position = "bottomleft"
+      )
+  })
+  
   
   output$MapaComprimento <- renderLeaflet({
     leaflet() %>%
@@ -2256,7 +2287,7 @@ server <- function(input, output, session) {
   output$BarrasKGMediaMes <- renderPlotly({
     dados_auxiliares9 <- dados_ajustados %>% 
       group_by(MES) %>% 
-      summarise(KG_Media = round(sum(KG)/sum(DESCARGA),2)) %>% 
+      summarise(KG_Media = round(sum(KG)/sum(DESCARGA), 2)) %>% 
       ungroup()
     
     plot_ly(
