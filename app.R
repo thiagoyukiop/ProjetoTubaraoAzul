@@ -2,14 +2,26 @@
 
 # Carregando os Pacotes que serão utilizados no dashboard
 pacman::p_load(
-  shiny, shinydashboard, shinydashboardPlus, leaflet, dplyr, scales, plotly,
-  zoo, tidyverse, digest, DT, shinyjs, raster, readxl, leaflet.extras
+  shiny, shinydashboard, shinydashboardPlus, leaflet, dplyr, scales, plotly, DT,
+  zoo, tidyverse, digest, shinyjs, raster, readxl, leaflet.extras, DBI, RSQLite
 )
 
-# Carregando os Dados de um Arquivo csv
-dados <- read.table(
-  "dados_brutos/dados_17_24_Outros.csv", header = TRUE, sep = ",", dec = "."
-)
+db <- dbConnect(SQLite(), "dados_brutos/database.sqlite")
+
+# Ler os dados da tabela de notificações
+notificacoes <- dbReadTable(db, "Notificacoes")
+
+dados <- dbReadTable(db, "Dados")
+
+dados_falsos <- dbReadTable(db, "Dados_falsos")
+
+# Fechar a conexão
+dbDisconnect(db)
+
+# # Carregando os Dados de um Arquivo csv
+# dados <- read.table(
+#   "dados_brutos/dados_17_24_Outros.csv", header = TRUE, sep = ",", dec = "."
+# )
 # Ajuste nos nomes das CATEGORIAS
 dados_ajustados <- dados %>% 
   mutate(
@@ -26,15 +38,15 @@ dados_ajustados <- dados %>%
     )
   )
 
-dados_falsos <- read.table(
-  "dados_falsos.csv", header = TRUE, sep = ",", dec = "."
-)
+# dados_falsos <- read.table(
+#   "dados_falsos.csv", header = TRUE, sep = ",", dec = "."
+# )
 
-notificacoes <- read_excel("dados_brutos/Notificacoes.xlsx")
+# notificacoes <- read_excel("dados_brutos/Notificacoes.xlsx")
 
-notificacoes <- notificacoes %>% 
-  mutate(Data = format(as.Date(Data), "%Y-%m-%d")) %>% 
-  mutate(Horário = sprintf("%02d:%02d", Hora, Minuto)) %>% 
+notificacoes <- notificacoes %>%
+  # mutate(Data = format(as.Date(Data), "%Y-%m-%d")) %>%
+  mutate(Horário = sprintf("%02d:%02d", Hora, Minuto)) %>%
   plotly::select(-c(Hora, Minuto))
 
 verifica_coluna <- function(df, coluna) {
@@ -735,6 +747,28 @@ ui <- dashboardPage(
                   class = "mapa",
                   # Saída do Gráfico do Mapa de Calor
                   leafletOutput("MapaCapturaPorViagem2", height = "100%")
+                ),
+                sidebar = boxSidebar(
+                  id = "boxsidebar91",
+                  icon = icon("circle-info"),
+                  width = 30,
+                  background = "#A6ACAFEF"
+                )
+              )
+            )
+          ),
+          fluidRow(
+            column(
+              width = 12,
+              box(
+                width = 12,
+                title = "Mapa de Capturas (Kg por Viagem)",
+                solidHeader = TRUE,
+                status = "primary",
+                div(
+                  class = "mapa",
+                  # Saída do Gráfico do Mapa de Calor
+                  leafletOutput("MapaCapturaPorViagem3", height = "100%")
                 ),
                 sidebar = boxSidebar(
                   id = "boxsidebar91",
@@ -1927,8 +1961,12 @@ server <- function(input, output, session) {
       probs = seq(0, 1, 0.1)
     )
     
-    # Calcular o raio dos círculos com base em prod2
-    radii <- (tab01$prod2 - min(tab01$prod2)) / (max(tab01$prod2) - min(tab01$prod2)) * 30 + 6 
+    
+    tab01 <- tab01 %>% 
+      mutate(
+        radii = (tab01$prod2 - min(tab01$prod2)) / 
+          (max(tab01$prod2) - min(tab01$prod2)) * 30 + 6 
+        )
     
     leaflet() %>%
       addProviderTiles(
@@ -1945,7 +1983,7 @@ server <- function(input, output, session) {
       addCircleMarkers(
         lng = tab01$LON,
         lat = tab01$LAT,
-        radius = radii,
+        radius = tab01$radii,
         stroke = FALSE,
         color = pal(tab01$prod2),
         fillOpacity = 0.7,
@@ -1970,6 +2008,61 @@ server <- function(input, output, session) {
       )
   })
   
+  output$MapaCapturaPorViagem3 <- renderLeaflet({
+    tab01 <- db_filtrado()$tab01
+    
+    # Definindo uma cor fixa para todos os círculos
+    fixedColor <- "#FF5733" # Escolha uma cor fixa, por exemplo, vermelho
+    
+    # Normalizando os valores de prod2 para o intervalo [0.1, 1] para usar na opacidade
+    minProd2 <- min(tab01$prod2, na.rm = TRUE)
+    maxProd2 <- max(tab01$prod2, na.rm = TRUE)
+    tab01 <- tab01 %>%
+      mutate(opacity = (prod2 - minProd2) / (maxProd2 - minProd2) * 0.9 + 0.1) # Intervalo [0.1, 1]
+    
+    leaflet() %>%
+      # Definindo a primeira opção do estilo do Mapa (Claro)
+      addProviderTiles(
+        providers$CartoDB.Positron,
+        group = "Light Map"
+      ) %>%
+      # Definindo a segunda opção do estilo do Mapa (Escuro)
+      addProviderTiles(
+        providers$CartoDB.DarkMatter,
+        group = "Dark Map"
+      ) %>%
+      # Definindo a Posição Inicial da visão sobre o Mapa
+      setView(
+        lng = -40, lat = -28, zoom = 5
+      ) %>%
+      # Definindo a adição dos Marcadores no Mapa
+      addCircleMarkers(
+        group = "Capturas",      # Define o grupo dos marcadores
+        radius = 7,             # Define o raio dos marcadores como 7 pixels
+        lng = tab01$LON,         # Define tab01$LON como longitude
+        lat = tab01$LAT,         # Define tab01$LAT como latitude
+        stroke = FALSE,          # Define que não haverá borda dos marcadores
+        color = fixedColor,      # Define uma cor fixa para todos os marcadores
+        fillOpacity = tab01$opacity, # Define a opacidade dos marcadores com base em prod2
+        label = paste0(
+          "Captura: ", round(tab01$prod2, 0), " kg"
+        )
+      ) %>%
+      # Controle de Estilo de Mapa
+      addLayersControl(
+        position = "topleft",
+        baseGroups = c("Dark Map", "Light Map"),
+        options = layersControlOptions(collapsed = FALSE)
+      ) %>%
+      # Adicionando Mini Mapa
+      addMiniMap(
+        position = "bottomleft"
+      ) %>%
+      # Adicionando um Medidor 
+      addMeasure(
+        position = "bottomleft"
+      )
+  })
   
   output$MapaComprimento <- renderLeaflet({
     leaflet() %>%
