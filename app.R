@@ -168,8 +168,7 @@ ui <- dashboardPage(
       menuItem(
         text = "Distribuição espacial das capturas",
         tabName = "tab4header",
-        icon = icon("earth-americas"),
-        expandedName = "Distribuição espacial das capturas2"
+        icon = icon("earth-americas")
       ),
       # Definindo o item do Menu do Administrador
       menuItem(
@@ -675,36 +674,36 @@ ui <- dashboardPage(
       tabItem(
         tabName = "tab4header",
         fluidPage(
-          fluidRow(
-            column(
-              width = 12,
-              box(
-                width = 12,
-                title = "Mapa de Capturas (KG Total)",
-                solidHeader = TRUE,
-                status = "primary",
-                div(
-                  class = "mapa",
-                  # Saída do Gráfico do Mapa de Calor
-                  leafletOutput("MapaCaptura",height = "100%")
-                ),
-                sidebar = boxSidebar(
-                  id = "boxsidebar9",
-                  icon = icon("circle-info"),
-                  width = 30,
-                  background = "#A6ACAFEF",
-                  p("Este mapa de calor mostra a localização das capturas, com o
-                    valor total de Quilos capturados, onde a cor dos círculos 
-                    varia de verde a roxo, indicando a porcentagem de capturas 
-                    em cada área. As áreas com uma porcentagem menor de capturas 
-                    são representadas em tons mais claros de verde, enquanto 
-                    áreas com uma porcentagem maior são exibidas em tons mais 
-                    escuros de roxo. Isso permite visualizar facilmente as 
-                    áreas com maior e menor concentração de capturas.")
-                )
-              )
-            )
-          ),
+          # fluidRow(
+          #   column(
+          #     width = 12,
+          #     box(
+          #       width = 12,
+          #       title = "Mapa de Capturas (KG Total)",
+          #       solidHeader = TRUE,
+          #       status = "primary",
+          #       div(
+          #         class = "mapa",
+          #         # Saída do Gráfico do Mapa de Calor
+          #         leafletOutput("MapaCaptura",height = "100%")
+          #       ),
+          #       sidebar = boxSidebar(
+          #         id = "boxsidebar9",
+          #         icon = icon("circle-info"),
+          #         width = 30,
+          #         background = "#A6ACAFEF",
+          #         p("Este mapa de calor mostra a localização das capturas, com o
+          #           valor total de Quilos capturados, onde a cor dos círculos 
+          #           varia de verde a roxo, indicando a porcentagem de capturas 
+          #           em cada área. As áreas com uma porcentagem menor de capturas 
+          #           são representadas em tons mais claros de verde, enquanto 
+          #           áreas com uma porcentagem maior são exibidas em tons mais 
+          #           escuros de roxo. Isso permite visualizar facilmente as 
+          #           áreas com maior e menor concentração de capturas.")
+          #       )
+          #     )
+          #   )
+          # ),
           fluidRow(
             column(
               width = 12,
@@ -1883,23 +1882,23 @@ server <- function(input, output, session) {
   
   output$MapaCapturaPorViagem <- renderLeaflet({
     tab01 <- db_filtrado()$tab01
-    
+
     # Cálculo dos quantis para categorizar os dados do mapa de calor
     breaks <- quantile(tab01$prod2, probs = seq(0, 1, 0.1), na.rm = TRUE)
-    
-    # Verificando se há breaks duplicados 
+
+    # Verificando se há breaks duplicados
     if (any(duplicated(breaks))) {
       # Jitter é usado para variar um pouco o valor dos duplicados
       tab01$prod2 <- jitter(tab01$prod2, factor = 0.1)
     }
-    
+
     # Criar a paleta de cores com base nos intervalos
     pal <- colorQuantile(
       palette = "viridis",
       domain = tab01$prod2,
       probs = seq(0, 1, 0.1)
     )
-    
+
     leaflet() %>%
       # Definindo a primeira opção do estilo do Mapa (Claro)
       addProviderTiles(
@@ -1917,7 +1916,8 @@ server <- function(input, output, session) {
       ) %>%
       # Definindo a adição dos Marcadores no Mapa
       addCircleMarkers(
-        group = tab01$prod2,      # Define os marcadores com base na soma dos KG
+        group = "Marcadores Circulares",
+        # group = tab01$prod2,      # Define os marcadores com base na soma dos KG
         # radius = 12,             # Define o raio dos marcadores como 12 pixels
         radius = 7,
         lng = tab01$LON,         # Define tab01$LON como longitude
@@ -1938,19 +1938,44 @@ server <- function(input, output, session) {
       addLayersControl(
         position = "topleft",
         baseGroups = c("Dark Map", "Light Map"),
-        options =
-          layersControlOptions(collapsed = FALSE)
+        options = layersControlOptions(collapsed = FALSE)
       ) %>%
+      # addLayersControl(
+      #   position = "bottomleft",
+      #   baseGroups = c("Marcadores Circulares", "Mapa de Calor"),
+      #   options = layersControlOptions(collapsed = FALSE)
+      # ) %>%
       # Adicionando Mini Mapa
       addMiniMap(
         position = "bottomleft"
       ) %>%
-      # Adicionando um Medidor 
+      # Adicionando um Medidor
       addMeasure(
         position = "bottomleft"
+      ) %>%
+      addScaleBar(
+        position = "bottomright",
+        options = scaleBarOptions(metric = TRUE, imperial = FALSE)
+      ) %>%
+      addFullscreenControl(
+        position = "topright"
+      ) %>%
+      addResetMapButton() %>%
+      # addHeatmap(
+      #   group = "Mapa de Calor",
+      #   lng = tab01$LON,
+      #   lat = tab01$LAT,
+      #   intensity = tab01$prod2,
+      #   blur = 20,
+      #   max = 0.05,
+      #   radius = 12
+      # ) %>% 
+      setMaxBounds(
+        lng1 = -180, lat1 = -90,  # Limite inferior esquerdo
+        lng2 = 180, lat2 = 90     # Limite superior direito
       )
   })
-
+  
   output$MapaCapturaPorViagem2 <- renderLeaflet({
     tab01 <- db_filtrado()$tab01
     
@@ -1960,7 +1985,6 @@ server <- function(input, output, session) {
       domain = tab01$prod2,
       probs = seq(0, 1, 0.1)
     )
-    
     
     tab01 <- tab01 %>% 
       mutate(
@@ -2010,16 +2034,16 @@ server <- function(input, output, session) {
   
   output$MapaCapturaPorViagem3 <- renderLeaflet({
     tab01 <- db_filtrado()$tab01
-    
+
     # Definindo uma cor fixa para todos os círculos
     fixedColor <- "#FF5733" # Escolha uma cor fixa, por exemplo, vermelho
-    
+
     # Normalizando os valores de prod2 para o intervalo [0.1, 1] para usar na opacidade
     minProd2 <- min(tab01$prod2, na.rm = TRUE)
     maxProd2 <- max(tab01$prod2, na.rm = TRUE)
     tab01 <- tab01 %>%
       mutate(opacity = (prod2 - minProd2) / (maxProd2 - minProd2) * 0.9 + 0.1) # Intervalo [0.1, 1]
-    
+
     leaflet() %>%
       # Definindo a primeira opção do estilo do Mapa (Claro)
       addProviderTiles(
@@ -2058,10 +2082,11 @@ server <- function(input, output, session) {
       addMiniMap(
         position = "bottomleft"
       ) %>%
-      # Adicionando um Medidor 
+      # Adicionando um Medidor
       addMeasure(
         position = "bottomleft"
-      )
+      ) 
+    
   })
   
   output$MapaComprimento <- renderLeaflet({
