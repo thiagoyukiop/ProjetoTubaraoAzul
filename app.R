@@ -674,36 +674,37 @@ ui <- dashboardPage(
       tabItem(
         tabName = "tab4header",
         fluidPage(
-          # fluidRow(
-          #   column(
-          #     width = 12,
-          #     box(
-          #       width = 12,
-          #       title = "Mapa de Capturas (KG Total)",
-          #       solidHeader = TRUE,
-          #       status = "primary",
-          #       div(
-          #         class = "mapa",
-          #         # Saída do Gráfico do Mapa de Calor
-          #         leafletOutput("MapaCaptura",height = "100%")
-          #       ),
-          #       sidebar = boxSidebar(
-          #         id = "boxsidebar9",
-          #         icon = icon("circle-info"),
-          #         width = 30,
-          #         background = "#A6ACAFEF",
-          #         p("Este mapa de calor mostra a localização das capturas, com o
-          #           valor total de Quilos capturados, onde a cor dos círculos 
-          #           varia de verde a roxo, indicando a porcentagem de capturas 
-          #           em cada área. As áreas com uma porcentagem menor de capturas 
-          #           são representadas em tons mais claros de verde, enquanto 
-          #           áreas com uma porcentagem maior são exibidas em tons mais 
-          #           escuros de roxo. Isso permite visualizar facilmente as 
-          #           áreas com maior e menor concentração de capturas.")
-          #       )
-          #     )
-          #   )
-          # ),
+          fluidRow(
+            column(
+              width = 12,
+              box(
+                width = 12,
+                title = "Mapa de Capturas (KG Total)",
+                solidHeader = TRUE,
+                status = "primary",
+                closable = T,
+                div(
+                  class = "mapa",
+                  # Saída do Gráfico do Mapa de Calor
+                  leafletOutput("MapaCaptura",height = "100%")
+                ),
+                sidebar = boxSidebar(
+                  id = "boxsidebar9",
+                  icon = icon("circle-info"),
+                  width = 30,
+                  background = "#A6ACAFEF",
+                  p("Este mapa de calor mostra a localização das capturas, com o
+                    valor total de Quilos capturados, onde a cor dos círculos
+                    varia de verde a roxo, indicando a porcentagem de capturas
+                    em cada área. As áreas com uma porcentagem menor de capturas
+                    são representadas em tons mais claros de verde, enquanto
+                    áreas com uma porcentagem maior são exibidas em tons mais
+                    escuros de roxo. Isso permite visualizar facilmente as
+                    áreas com maior e menor concentração de capturas.")
+                )
+              )
+            )
+          ),
           fluidRow(
             column(
               width = 12,
@@ -712,6 +713,7 @@ ui <- dashboardPage(
                 title = "Mapa de Capturas (Kg por Viagem)",
                 solidHeader = TRUE,
                 status = "primary",
+                closable = T,
                 div(
                   class = "mapa",
                   # Saída do Gráfico do Mapa de Calor
@@ -742,6 +744,7 @@ ui <- dashboardPage(
                 title = "Mapa de Capturas (Kg por Viagem)",
                 solidHeader = TRUE,
                 status = "primary",
+                closable = T,
                 div(
                   class = "mapa",
                   # Saída do Gráfico do Mapa de Calor
@@ -764,10 +767,33 @@ ui <- dashboardPage(
                 title = "Mapa de Capturas (Kg por Viagem)",
                 solidHeader = TRUE,
                 status = "primary",
+                closable = T,
                 div(
                   class = "mapa",
                   # Saída do Gráfico do Mapa de Calor
                   leafletOutput("MapaCapturaPorViagem3", height = "100%")
+                ),
+                sidebar = boxSidebar(
+                  id = "boxsidebar91",
+                  icon = icon("circle-info"),
+                  width = 30,
+                  background = "#A6ACAFEF"
+                )
+              )
+            )
+          ),
+          fluidRow(
+            column(
+              width = 12,
+              box(
+                width = 12,
+                title = "Mapa de Viagens",
+                solidHeader = TRUE,
+                status = "primary",
+                div(
+                  class = "mapa",
+                  # Saída do Gráfico do Mapa de Calor
+                  leafletOutput("MapaViagens", height = "100%")
                 ),
                 sidebar = boxSidebar(
                   id = "boxsidebar91",
@@ -1197,7 +1223,8 @@ server <- function(input, output, session) {
       group_by(LON, LAT) %>%
       summarise(
         prod = sum(KG),
-        prod2 = sum(KG)/sum(DESCARGA)
+        prod2 = sum(KG)/sum(DESCARGA),
+        viagem = sum(DESCARGA)
         ) %>%
       ungroup()
     list(dados = dados_aux, tab01 = tab01)
@@ -1489,7 +1516,8 @@ server <- function(input, output, session) {
         hovermode = "x",
         xaxis = list(
           categoryorder = "category ascending"  
-        )
+        ),
+        margin = list(t = 10, b = 40, l = 20, r = 20)
       ) %>%
       config(displayModeBar = FALSE)
   })
@@ -1518,6 +1546,7 @@ server <- function(input, output, session) {
       layout(
         # title = "Comparação de Dados da Tubarão Azul para Outros",
         # title = "Comparação de Dados Registrados",
+        title = NULL,
         showlegend = FALSE,
         yaxis = list(
           title = " ",
@@ -1533,7 +1562,8 @@ server <- function(input, output, session) {
           categoryorder = "category descending",
           tickvals = unique(dados_BarraTubOutros()$MES), 
           ticktext = unique(dados_BarraTubOutros()$MES)
-        )
+        ),
+        margin = list(t = 10, b = 40, l = 20, r = 20)
       )
   })
   
@@ -1554,25 +1584,28 @@ server <- function(input, output, session) {
     ) %>%
       layout(
         # title = "Comparação de Dados Registrados",
+        title = NULL,
         xaxis = list(
           title = "Mês",
-          tickvals = unique(dados_ComparaDadosTub()$MES), 
+          tickvals = unique(dados_ComparaDadosTub()$MES),
           ticktext = unique(dados_ComparaDadosTub()$MES)
           ),
         yaxis = list(
           title = "Ano",
           tickformat = ".0f",
-          tickvals = unique(floor(dados_ComparaDadosTub()$ANO)), 
+          tickvals = unique(floor(dados_ComparaDadosTub()$ANO)),
           ticktext = unique(floor(dados_ComparaDadosTub()$ANO))),
         legend = list(
           orientation = "h",
           y = 0.9,
-          x = 0.1, 
+          x = 0.1,
           font = list(
             size = 10
           )
         ),
-        showlegend = F
+        showlegend = F,  # Desativa a legenda
+        # margin = list(t = 10, b = 40)
+        margin = list(t = 10, b = 40, l = 20, r = 20)
       )
   })
   
@@ -1623,7 +1656,8 @@ server <- function(input, output, session) {
           title = "Captura Média (KG) por Viagem"
         ), 
         showlegend = FALSE,
-        hovermode = "x"
+        hovermode = "x",
+        margin = list(t = 10, b = 40, l = 20, r = 20)
       )
   })
   
@@ -1767,7 +1801,8 @@ server <- function(input, output, session) {
           ticksuffix = '%'
         ),
         showlegend = FALSE,
-        hovermode = "x"
+        hovermode = "x",
+        margin = list(t = 0, b = 20, l = 20, r = 20)
       )
     plot_data
   })
@@ -1803,7 +1838,8 @@ server <- function(input, output, session) {
             size = 10
           )
         ),
-        showlegend = F
+        showlegend = F, 
+        margin = list(t = 10, b = 40, l = 20, r = 20)
       )
   })
   
@@ -1842,7 +1878,7 @@ server <- function(input, output, session) {
       ) %>%
       # Definindo a Posição Inicial da visão sobre o Mapa
       setView(
-        lng = -40, lat = -28, zoom = 5
+        lng = -40, lat = -28, zoom = 4
       ) %>%
       # Definindo a adição dos Marcadores no Mapa
       addCircleMarkers(
@@ -1854,9 +1890,9 @@ server <- function(input, output, session) {
         stroke = FALSE,          # Define que não haverá borda dos marcadores
         color = pal(tab01$prod), # Define a paleta de cores dos marcadores
         fillOpacity = 0.7,       # Define a opacidade dos marcadores como 70%
-        label = paste0(
-          "Captura: ", round(tab01$prod, 0), " kg"
-        )
+        label = lapply(paste0(
+          "Captura: ", round(tab01$prod, 0), " kg <br> Viagens: ", tab01$viagem
+        ), HTML)
       ) %>%
       # Definindo a legenda com a paleta de cores e suas Porcentagens
       addLegend(
@@ -1877,6 +1913,18 @@ server <- function(input, output, session) {
       # Adicionando um Medidor 
       addMeasure(
         position = "bottomleft"
+      ) %>%
+      addScaleBar(
+        position = "bottomright",
+        options = scaleBarOptions(metric = TRUE, imperial = FALSE)
+      ) %>%
+      addFullscreenControl(
+        position = "topright"
+      ) %>%
+      addResetMapButton() %>%
+      setMaxBounds(
+        lng1 = -180, lat1 = -90,  # Limite inferior esquerdo
+        lng2 = 180, lat2 = 90     # Limite superior direito
       )
   })
   
@@ -1912,7 +1960,7 @@ server <- function(input, output, session) {
       ) %>%
       # Definindo a Posição Inicial da visão sobre o Mapa
       setView(
-        lng = -40, lat = -28, zoom = 5
+        lng = -40, lat = -28, zoom = 4
       ) %>%
       # Definindo a adição dos Marcadores no Mapa
       addCircleMarkers(
@@ -2002,7 +2050,7 @@ server <- function(input, output, session) {
         group = "Dark Map"
       ) %>%
       setView(
-        lng = -40, lat = -28, zoom = 5
+        lng = -40, lat = -28, zoom = 4
       ) %>%
       addCircleMarkers(
         lng = tab01$LON,
@@ -2029,6 +2077,18 @@ server <- function(input, output, session) {
       ) %>%
       addMeasure(
         position = "bottomleft"
+      ) %>%
+      addScaleBar(
+        position = "bottomright",
+        options = scaleBarOptions(metric = TRUE, imperial = FALSE)
+      ) %>%
+      addFullscreenControl(
+        position = "topright"
+      ) %>%
+      addResetMapButton() %>%
+      setMaxBounds(
+        lng1 = -180, lat1 = -90,  # Limite inferior esquerdo
+        lng2 = 180, lat2 = 90     # Limite superior direito
       )
   })
   
@@ -2057,7 +2117,7 @@ server <- function(input, output, session) {
       ) %>%
       # Definindo a Posição Inicial da visão sobre o Mapa
       setView(
-        lng = -40, lat = -28, zoom = 5
+        lng = -40, lat = -28, zoom = 4
       ) %>%
       # Definindo a adição dos Marcadores no Mapa
       addCircleMarkers(
@@ -2085,8 +2145,99 @@ server <- function(input, output, session) {
       # Adicionando um Medidor
       addMeasure(
         position = "bottomleft"
-      ) 
+      ) %>%
+      addScaleBar(
+        position = "bottomright",
+        options = scaleBarOptions(metric = TRUE, imperial = FALSE)
+      ) %>%
+      addFullscreenControl(
+        position = "topright"
+      ) %>%
+      addResetMapButton() %>%
+      setMaxBounds(
+        lng1 = -180, lat1 = -90,  # Limite inferior esquerdo
+        lng2 = 180, lat2 = 90     # Limite superior direito
+      )
+  })
+  
+  output$MapaViagens <- renderLeaflet({
+    tab01 <- db_filtrado()$tab01
     
+    # Cálculo dos quantis para categorizar os dados do mapa de calor
+    breaks <- quantile(tab01$viagem, probs = seq(0, 1, 0.1), na.rm = TRUE)
+    
+    # Verificando se há breaks duplicados 
+    if (any(duplicated(breaks))) {
+      # Jitter é usado para variar um pouco o valor dos duplicados
+      tab01$viagem <- jitter(tab01$viagem, factor = 0.1)
+    }
+    
+    # Criar a paleta de cores com base nos intervalos
+    pal <- colorQuantile(
+      palette = "viridis",
+      domain = tab01$viagem,
+      probs = seq(0, 1, 0.1)
+    )
+    
+    leaflet() %>%
+      # Definindo a primeira opção do estilo do Mapa (Claro)
+      addProviderTiles(
+        providers$CartoDB.Positron,
+        group = "Light Map"
+      ) %>%
+      # Definindo a segunda opção do estilo do Mapa (Escuro)
+      addProviderTiles(
+        providers$CartoDB.DarkMatter,
+        group = "Dark Map"
+      ) %>%
+      # Definindo a Posição Inicial da visão sobre o Mapa
+      setView(
+        lng = -40, lat = -28, zoom = 4
+      ) %>%
+      # Definindo a adição dos Marcadores no Mapa
+      addCircleMarkers(
+        group = tab01$viagem,      # Define os marcadores com base na soma dos KG
+        # radius = 12,             # Define o raio dos marcadores como 12 pixels
+        radius = 7,
+        lng = tab01$LON,         # Define tab01$LON como longitude
+        lat = tab01$LAT,         # Define tab01$LAT como latitude
+        stroke = FALSE,          # Define que não haverá borda dos marcadores
+        color = pal(tab01$viagem), # Define a paleta de cores dos marcadores
+        fillOpacity = 0.7,       # Define a opacidade dos marcadores como 70%
+        label = paste0("Viagens: ", round(tab01$viagem),0)
+      ) %>%
+      # Definindo a legenda com a paleta de cores e suas Porcentagens
+      addLegend(
+        pal = pal, values = tab01$viagem, group = tab01$viagem,
+        position = "bottomright", title = "Percentual da Viagens"
+      ) %>%
+      # Controle de Estilo de Mapa
+      addLayersControl(
+        position = "topleft",
+        baseGroups = c("Dark Map", "Light Map"),
+        options =
+          layersControlOptions(collapsed = FALSE)
+      ) %>%
+      # Adicionando Mini Mapa
+      addMiniMap(
+        position = "bottomleft"
+      ) %>%
+      # Adicionando um Medidor 
+      addMeasure(
+        position = "bottomleft"
+      ) %>%
+      addScaleBar(
+        position = "bottomright",
+        options = scaleBarOptions(metric = TRUE, imperial = FALSE)
+      ) %>%
+      addFullscreenControl(
+        position = "topright"
+      ) %>%
+      addResetMapButton() %>%
+      setMaxBounds(
+        lng1 = -180, lat1 = -90,  # Limite inferior esquerdo
+        lng2 = 180, lat2 = 90     # Limite superior direito
+      )
   })
   
   output$MapaComprimento <- renderLeaflet({
@@ -2119,6 +2270,18 @@ server <- function(input, output, session) {
       # Adicionando um Medidor 
       addMeasure(
         position = "bottomleft"
+      ) %>%
+      addScaleBar(
+        position = "bottomright",
+        options = scaleBarOptions(metric = TRUE, imperial = FALSE)
+      ) %>%
+      addFullscreenControl(
+        position = "topright"
+      ) %>%
+      addResetMapButton() %>%
+      setMaxBounds(
+        lng1 = -180, lat1 = -90,  # Limite inferior esquerdo
+        lng2 = 180, lat2 = 90     # Limite superior direito
       )
   })
   
