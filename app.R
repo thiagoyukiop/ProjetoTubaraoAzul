@@ -2,41 +2,53 @@
 
 # Carregando os Pacotes que serão utilizados no dashboard
 pacman::p_load(
-  shiny, shinydashboard, shinydashboardPlus, leaflet, dplyr, scales, plotly, DT,
-  zoo, tidyverse, digest, shinyjs, raster, readxl, leaflet.extras, DBI, RSQLite
+  shiny, shinydashboard, shinydashboardPlus,
+  leaflet, leaflet.extras,
+  dplyr, tidyverse, scales, zoo, DT,
+  plotly, shinyjs,
+  raster, readxl, digest,
+  DBI, RSQLite
 )
 
 db <- dbConnect(SQLite(), "dados_brutos/database.sqlite")
+on.exit(dbDisconnect(db))
 
-# Ler os dados da tabela de notificações
 notificacoes <- dbReadTable(db, "Notificacoes")
-
 dados <- dbReadTable(db, "Dados")
-
 dados_falsos <- dbReadTable(db, "Dados_falsos")
 
-# Fechar a conexão
-dbDisconnect(db)
 
 # # Carregando os Dados de um Arquivo csv
 # dados <- read.table(
 #   "dados_brutos/dados_17_24_Outros.csv", header = TRUE, sep = ",", dec = "."
 # )
 # Ajuste nos nomes das CATEGORIAS
-dados_ajustados <- dados %>% 
-  mutate(
-    CATEGORIA = case_when(
-      CATEGORIA == "Albacora-bandolim" ~ "Albacora_bandolim",
-      CATEGORIA == "Albacora-branca" ~ "Albacora_branca",
-      CATEGORIA == "Albacora-lage" ~ "Albacora_lage",
-      CATEGORIA == "Cacao-anequim" ~ "Cacao_anequim",
-      CATEGORIA == "Cacao-azul" ~ "Cacao_azul",
-      CATEGORIA == "Meca" ~ CATEGORIA,
-      CATEGORIA == "Outros" ~ CATEGORIA,
-      CATEGORIA == "Prego" ~ CATEGORIA, 
-      TRUE ~ CATEGORIA
-    )
-  )
+# dados_ajustados <- dados %>% 
+#   mutate(
+#     CATEGORIA = case_when(
+#       CATEGORIA == "Albacora-bandolim" ~ "Albacora_bandolim",
+#       CATEGORIA == "Albacora-branca" ~ "Albacora_branca",
+#       CATEGORIA == "Albacora-lage" ~ "Albacora_lage",
+#       CATEGORIA == "Cacao-anequim" ~ "Cacao_anequim",
+#       CATEGORIA == "Cacao-azul" ~ "Cacao_azul",
+#       CATEGORIA == "Meca" ~ CATEGORIA,
+#       CATEGORIA == "Outros" ~ CATEGORIA,
+#       CATEGORIA == "Prego" ~ CATEGORIA, 
+#       TRUE ~ CATEGORIA
+#     )
+#   )
+
+# Dicionário para substituição de categorias
+categoria_substituicoes <- c(
+  "Albacora-bandolim" = "Albacora_bandolim",
+  "Albacora-branca" = "Albacora_branca",
+  "Albacora-lage" = "Albacora_lage",
+  "Cacao-anequim" = "Cacao_anequim",
+  "Cacao-azul" = "Cacao_azul"
+)
+
+dados_ajustados <- dados %>%
+  mutate(CATEGORIA = recode(CATEGORIA, !!!categoria_substituicoes))
 
 # dados_falsos <- read.table(
 #   "dados_falsos.csv", header = TRUE, sep = ",", dec = "."
@@ -50,17 +62,23 @@ notificacoes <- notificacoes %>%
   plotly::select(-c(Hora, Minuto))
 
 verifica_coluna <- function(df, coluna) {
+  if (!any(names(df) == coluna)) {
+    message(paste("Coluna", coluna, "não encontrada."))
+  }
   return(any(names(df) == coluna))
 }
 
 check_password <- function(input_password, filename) {
-  # Ler o hash da senha do arquivo
+  if (!file.exists(filename)) {
+    stop("Arquivo de senha não encontrado.")
+  }
+  
   hashed_password <- readLines(filename)
-  # Calcular o hash da senha fornecida
   input_hash <- digest(input_password, algo = "sha256", serialize = FALSE)
-  # Verificar se os hashes são iguais
+  
   identical(input_hash, hashed_password)
 }
+
 
 # Interface do Usuário ----------------------------------------------------
 
@@ -246,22 +264,22 @@ ui <- dashboardPage(
     }
     
     .content-wrapper {
-               background-color: #FFFFFF; /* cor de fundo branca */
+      background-color: #FFFFFF; /* cor de fundo branca */
     }
     
     #LogoPTA img {
-        min-width: 200px;   /* Defina a largura mínima desejada */
-        max-width: 400px;   /* Defina a largura máxima desejada */
+      min-width: 200px;   /* Defina a largura mínima desejada */
+      max-width: 400px;   /* Defina a largura máxima desejada */
     }
     
-    .box-header .box-title{
-      font-size: 18px;
-      # font-size: 15px;
-      # Tentar alinhar o título, mas ver o que é melhor
-    }
+    # .box-header .box-title{
+    #   font-size: 18px;
+    #   # font-size: 15px;
+    #   # Tentar alinhar o título, mas ver o que é melhor
+    # }
                               ')
-    )
-    ),
+                         )
+              ),
     tabItems(
       # Definindo o conteúdo do Projeto
       tabItem(
@@ -1128,6 +1146,8 @@ server <- function(input, output, session) {
     "Outubro"="#A9A9A9","Novembro"="#F58231","Dezembro"="#E6194B"
   )
   
+  
+  
   # Criando um Valores Reativos que vão Iniciar Nulo
   conteudo_senha_adm <- reactiveVal(NULL)
   conteudo_entrar_adm <- reactiveVal(NULL)
@@ -1408,6 +1428,8 @@ server <- function(input, output, session) {
     }
   })
   
+  
+  
   # Projeto -----------------------------------------------------------------
   
   output$LogoPTA <- renderImage({
@@ -1624,7 +1646,7 @@ server <- function(input, output, session) {
       marker = list(size = 10), # Tamanho do Marcador
       hoverinfo = "text",
       text = ~paste(
-        " Espécie: ", 
+        " Espécie: ",
         case_when(
           CATEGORIA == "Albacora_bandolim" ~ "Albacora bandolim",
           CATEGORIA == "Albacora_branca" ~ "Albacora branca",
@@ -1649,12 +1671,12 @@ server <- function(input, output, session) {
         # title = "Média Mensal de Captura por Viagem",
         xaxis = list(
           title = "Mês",
-          tickvals = unique(dados_graficoCaptura()$MES), 
+          tickvals = unique(dados_graficoCaptura()$MES),
           ticktext = unique(dados_graficoCaptura()$MES)
         ),
         yaxis = list(
           title = "Captura Média (KG) por Viagem"
-        ), 
+        ),
         showlegend = FALSE,
         hovermode = "x",
         margin = list(t = 10, b = 40, l = 20, r = 20)
@@ -2098,12 +2120,12 @@ server <- function(input, output, session) {
     # Definindo uma cor fixa para todos os círculos
     fixedColor <- "#FF5733" # Escolha uma cor fixa, por exemplo, vermelho
 
-    # Normalizando os valores de prod2 para o intervalo [0.1, 1] para usar na opacidade
+# Normalizando os valores de prod2 para o intervalo [0.1, 1] para usar na opacidade
     minProd2 <- min(tab01$prod2, na.rm = TRUE)
     maxProd2 <- max(tab01$prod2, na.rm = TRUE)
     tab01 <- tab01 %>%
-      mutate(opacity = (prod2 - minProd2) / (maxProd2 - minProd2) * 0.9 + 0.1) # Intervalo [0.1, 1]
-
+      # Intervalo [0.1, 1]
+      mutate(opct = (prod2 - minProd2) / (maxProd2 - minProd2) * 0.9 + 0.1)
     leaflet() %>%
       # Definindo a primeira opção do estilo do Mapa (Claro)
       addProviderTiles(
@@ -2127,7 +2149,7 @@ server <- function(input, output, session) {
         lat = tab01$LAT,         # Define tab01$LAT como latitude
         stroke = FALSE,          # Define que não haverá borda dos marcadores
         color = fixedColor,      # Define uma cor fixa para todos os marcadores
-        fillOpacity = tab01$opacity, # Define a opacidade dos marcadores com base em prod2
+        fillOpacity = tab01$opct, # Define a opacidade dos marcadores com base em prod2
         label = paste0(
           "Captura: ", round(tab01$prod2, 0), " kg"
         )
