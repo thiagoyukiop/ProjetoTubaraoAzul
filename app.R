@@ -10,6 +10,40 @@ pacman::p_load(
   DBI, RSQLite
 )
 
+# # Ativa o modo de desenvolvimento do Shiny, desativando cache e 
+# # facilitando o debug.
+# options(shiny.devmode = TRUE)
+# 
+# # Habilita o recarregamento automático do aplicativo ao detectar mudanças.
+# options(shiny.autoreload = TRUE)
+# 
+# # Define o intervalo de 0,5 segundos entre as verificações de mudanças 
+# # no código para o recarregamento automático.
+# options(shiny.autoreload.interval = 0.5)
+# 
+# # Desativa a minificação de arquivos CSS e JavaScript, útil para depuração.
+# options(shiny.minified = FALSE)
+# 
+# # Define que, ao ocorrer um erro, o R entra no modo de navegação
+# # de erro (browser) para facilitar o debug.
+# # options(shiny.error = browser)
+# 
+# # Desativa a sanitização das mensagens de erro, permitindo que detalhes 
+# # completos sejam exibidos.
+# options(shiny.sanitize.errors = FALSE)
+# 
+# # Exibe a stack trace completa quando um erro ocorre, ajudando na 
+# # identificação do ponto exato do problema.
+# options(shiny.fullstacktrace = TRUE)
+# 
+# # Habilita o log de reatividade, permitindo a visualização das 
+# # interações entre valores reativos no Shiny.
+# options(shiny.reactlog = TRUE)
+# 
+# # Ativa o modo de teste do Shiny, que pode desabilitar certas 
+# # funcionalidades não necessárias para desenvolvimento ou testes.
+# options(shiny.testmode = TRUE)
+
 db <- dbConnect(SQLite(), "dados_brutos/database.sqlite")
 on.exit(dbDisconnect(db))
 
@@ -17,6 +51,24 @@ notificacoes <- dbReadTable(db, "Notificacoes")
 dados <- dbReadTable(db, "Dados")
 dados_falsos <- dbReadTable(db, "Dados_falsos")
 
+# dbWriteTable(
+#   db,
+#   "Notificacoes",
+#   data.frame(
+#     id = c(10, 11, 12),
+#     Titulo = c("Embarcação de Prego", "Embarcação de Tubarão Azul", "Embarcação de Peixes"),
+#     Local = c("Itajaí","Itajaí","Itajaí"),
+#     Data = format(as.Date(c("2024-08-27", "2024-08-28", "2024-08-29")), "%Y-%m-%d"),
+#     Hora = c("14", "15", "15"),
+#     Minuto = c("30", "30", "45"),
+#     Link = c(NA, NA, NA),
+#     TextoOpcional = c(NA, NA, NA)
+#   ),
+#   append = TRUE,
+#   row.names = FALSE
+#   )
+# 
+# dbExecute(db, "DELETE FROM Notificacoes WHERE id IN (10, 11, 12)")
 
 # # Carregando os Dados de um Arquivo csv
 # dados <- read.table(
@@ -72,10 +124,10 @@ check_password <- function(input_password, filename) {
   if (!file.exists(filename)) {
     stop("Arquivo de senha não encontrado.")
   }
-  
+
   hashed_password <- readLines(filename)
   input_hash <- digest(input_password, algo = "sha256", serialize = FALSE)
-  
+
   identical(input_hash, hashed_password)
 }
 
@@ -168,9 +220,8 @@ ui <- dashboardPage(
           icon = icon("readme")
         )
       ),
-      # Definindo o item do Menu de Distribuição de Comprimentos
+      # Definindo o item do Menu de Distribuição de Captura
       menuItem(
-        # text = "Distribuição de comprimentos",
         text = "Distribuição de captura",
         tabName = "tab2header",
         icon = icon("chart-pie")
@@ -199,11 +250,11 @@ ui <- dashboardPage(
         tabName = "tab6header",
         icon = icon("chart-simple")
       ),
-      menuItem(
-        text = "Mapa de distribuição de comprimentos",
-        tabName = "tab7header",
-        icon = icon("map")
-      ),
+      # menuItem(
+      #   text = "Mapa de distribuição de comprimentos",
+      #   tabName = "tab7header",
+      #   icon = icon("map")
+      # ),
       menuItem(
         text = "Tabela de embarcações",
         tabName = "tab8header",
@@ -225,6 +276,12 @@ ui <- dashboardPage(
   
   # Definindo o Body do Painel
   body = dashboardBody(
+    shiny::useBusyIndicators(),
+    busyIndicatorOptions(
+      spinner_type = 'bars3',
+      spinner_delay = 0,
+      spinner_size = 100
+    ),
     # Ajustando Visualização de Mapa para que sempre fique com a altura ideal
     tags$head(tags$style(HTML(' 
     .mapa {
@@ -436,7 +493,7 @@ ui <- dashboardPage(
                   estoque e proposição/adoção de medidas para os órgãos de 
                   manejo responsáveis, conforme o fluxograma."),
               br(),
-              h3("Fluxograma do Plano de Gestão da pesca de Tubarão Azul 
+              h3("Fluxograma do Plano de Gestão da pesca de Tubarão azul 
                    no Rio Grande do Sul"),
               div(
                 style = "text-align: center;",
@@ -464,7 +521,7 @@ ui <- dashboardPage(
               ),
               box(
                 id = "boxWithoutHeader",
-                title = "Texto Leia-me",
+                title = NULL,
                 width = 12,
                 # Se deve exibir uma borda abaixo do cabeçalho
                 headerBorder = FALSE, 
@@ -497,15 +554,7 @@ ui <- dashboardPage(
                 p("Para a construção dos gráficos apresentados nesta plataforma
                   são utilizados dados atualizados anualmente."),
                 p("Para maiores informações, por favor, entre em contato através
-                  do e-mail ",strong("proj.tubaraoazul.furg@gmail.com.")),
-                sidebar = boxSidebar(
-                  id = "boxsidebar1",
-                  icon = icon("circle-info"),
-                  width = 30,
-                  background = "#A6ACAFEF",
-                  p("Contém informações detalhadas sobre as abas presentes no
-                    dashboard e contato para mais informações."),
-                )
+                  do e-mail ",strong("proj.tubaraoazul.furg@gmail.com."))
               )
             )
           )
@@ -573,14 +622,13 @@ ui <- dashboardPage(
             column(
               width = 6,
               box(
-                # title = "Mapa de Calor",
                 title = "Comparação de Dados Registrados por Mês/Ano",
                 width = 12,
                 solidHeader = TRUE,
                 status = "primary",
                 div(
                   class = "graficos",
-                  # Saída do Gráfico de Rosca que compara os dados por mês
+                  # Saída do Mapa de Calor que compara os dados por mês
                   plotlyOutput("ComparaDadosTub", height = "100%")
                 ),
                 sidebar = boxSidebar(
@@ -614,7 +662,7 @@ ui <- dashboardPage(
                 status = "primary",
                 div(
                   class = "graficos",
-                  # Saída do Gráfico Plotly de Captura 
+                  # Saída do Gráfico de Linha de Captura 
                   plotlyOutput("graficoCaptura", height = "100%")
                 ),
                 sidebar = boxSidebar(
@@ -632,7 +680,6 @@ ui <- dashboardPage(
             column(
               width = 6,
               box(
-                # title = "Mapa de Calor",
                 title = "Média Mensal de Captura por Viagem",
                 width = 12,
                 collapsible = TRUE,
@@ -640,7 +687,7 @@ ui <- dashboardPage(
                 status = "primary",
                 div(
                   class = "graficos",
-                  # Saída do Gráfico Plotly das Espécies
+                  # Saída do Mapa de Calor do Peso das Espécies
                   plotlyOutput("pesoMes", height = "100%")
                 ),
                 sidebar = boxSidebar(
@@ -769,7 +816,7 @@ ui <- dashboardPage(
                   leafletOutput("MapaCapturaPorViagem2", height = "100%")
                 ),
                 sidebar = boxSidebar(
-                  id = "boxsidebar91",
+                  id = "boxsidebar92",
                   icon = icon("circle-info"),
                   width = 30,
                   background = "#A6ACAFEF"
@@ -792,7 +839,7 @@ ui <- dashboardPage(
                   leafletOutput("MapaCapturaPorViagem3", height = "100%")
                 ),
                 sidebar = boxSidebar(
-                  id = "boxsidebar91",
+                  id = "boxsidebar93",
                   icon = icon("circle-info"),
                   width = 30,
                   background = "#A6ACAFEF"
@@ -814,7 +861,7 @@ ui <- dashboardPage(
                   leafletOutput("MapaViagens", height = "100%")
                 ),
                 sidebar = boxSidebar(
-                  id = "boxsidebar91",
+                  id = "boxsidebar94",
                   icon = icon("circle-info"),
                   width = 30,
                   background = "#A6ACAFEF"
@@ -827,7 +874,6 @@ ui <- dashboardPage(
       # Definindo o conteúdo do Administrador
       tabItem(
         tabName = "tab5header",
-        # value = "tab5header",
         fluidRow(
           column(
             width = 4,
@@ -848,6 +894,11 @@ ui <- dashboardPage(
       ),
       tabItem(
         tabName = "tab6header",
+        fluidRow(
+          box(
+            title = "Dados Falsos"
+          )
+        ),
         fluidRow(
           column(
             width = 6,
@@ -999,7 +1050,7 @@ ui <- dashboardPage(
         ),
         column(
           # width = 3,
-          width = 4,
+          width = 2,
           tags$a(
             href = "http://www.univali.br", target = "_blank",
             tags$img(
@@ -1009,7 +1060,7 @@ ui <- dashboardPage(
           )
         ),
         column(
-          width = 1,
+          width = 2,
           tags$img(
             # Saída do Logo do LEMA
             imageOutput("Logo_LEMA", height = "100%", width = "100%")
@@ -1017,6 +1068,7 @@ ui <- dashboardPage(
         ),
         column(
           width = 1,
+          offset = 1,
           tags$a(
             href = "http://www.furg.br", target = "_blank",
             tags$img(
@@ -1201,10 +1253,13 @@ server <- function(input, output, session) {
       # Arredondando a Média de Toneladas para Duas Casas Decimais
       mutate(Media_KG_por_Viagem = round(Media_KG_por_Viagem, 2)) %>%
       # Criação de Nome do Mês para Legenda
-      mutate(mes_nome = nomes_meses[MES]) %>%
-      # Formata a coluna mes_ano para o modelo aceitado pelo pacote Plotly
-      # mutate(mes_ano = format(as.Date(paste0(ANO, "-", MES, "-01")), "%Y-%m"))
-      mutate(mes_ano = as.yearmon(paste0(ANO, "-", sprintf("%02d", MES))))
+      # mutate(mes_nome = nomes_meses[MES]) %>%
+      # # Formata a coluna mes_ano para o modelo aceitado pelo pacote Plotly
+      # # mutate(mes_ano = format(as.Date(paste0(ANO, "-", MES, "-01")), "%Y-%m"))
+      # mutate(mes_ano = as.yearmon(paste0(ANO, "-", sprintf("%02d", MES))))
+      mutate(mes_ano_formatado = make_date(ANO, MES)) %>%
+      mutate(mes_ano = as.yearmon(paste0(ANO, "-", sprintf("%02d", MES)))) %>%
+      mutate(mes_ano_formatado = format(mes_ano_formatado, "%Y-%m")) 
   })
   
   # Filtrando Dados para o Gráfico de Captura
@@ -1433,6 +1488,7 @@ server <- function(input, output, session) {
   # Projeto -----------------------------------------------------------------
   
   output$LogoPTA <- renderImage({
+    # Sys.sleep(1)
     list(
       src = "dados_brutos/logo_tuba_azul_2.png", # Local do arquivo da Imagem
       height = "100%",                     # Altura da Imagem
@@ -1456,25 +1512,25 @@ server <- function(input, output, session) {
     list(
       src = "dados_brutos/FURG_fundo.png",
       height = "80px",
-      width = "72px",
+      width = "55px",
       contentType = "image/png"
     )
   }, deleteFile = FALSE)
   
   output$Logo_UNIVALI <- renderImage({
     list(
-      src = "dados_brutos/Logo_univali.jpg",
+      src = "dados_brutos/Logo_univali2.png",
       height = "80px",
-      width = "320px",
+      width = "140px",
       contentType = "image/jpg"
     )
   }, deleteFile = FALSE)
   
   output$Logo_LEMA <- renderImage({
     list(
-      src = "dados_brutos/Logo_Lema2.png",
+      src = "dados_brutos/Logo_Lema3.png",
       height = "80px",
-      width = "75px",
+      width = "175px",
       contentType = "image/png"
     )
   }, deleteFile = FALSE)
@@ -1483,7 +1539,7 @@ server <- function(input, output, session) {
     list(
       src = "dados_brutos/logo_MAPA2.png",
       height = "80px",
-      width = "300px",
+      width = "315px",
       contentType = "image/png"
     )
   }, deleteFile = FALSE)
@@ -1525,6 +1581,10 @@ server <- function(input, output, session) {
         # title = "Dados Registrados por Mês, Ano e Categoria",
         xaxis = list(
           title = "",
+          tickvals = dados_TubMesAno()$mes_ano_formatado[seq(
+            1, length(dados_TubMesAno()$mes_ano_formatado), by = 2)],
+          ticktext = dados_TubMesAno()$mes_ano_formatado[seq(
+            1, length(dados_TubMesAno()$mes_ano_formatado), by = 2)], 
           showgrid = FALSE
         ),
         yaxis = list(
@@ -1687,23 +1747,28 @@ server <- function(input, output, session) {
     
     dados_captura <- dados_graficoAreaDesembarque()
     
-    data <- data.frame("mes_ano" = dados_captura$mes_ano, dados_captura)
+    data <- data.frame(
+      "mes_ano" = dados_captura$mes_ano,
+      "mes_ano_formatado" = dados_captura$mes_ano_formatado,
+      dados_captura)
     
     data_wide <- pivot_wider(
       data, names_from = CATEGORIA, values_from = Media_KG_por_Viagem)
     
-    # data_wide <- data_wide %>% 
-    #   plotly::select(-c("ANO","MES", "mes_nome", "mes_ano.1"))
-    
-    # data_wide_filtrado <- data_wide[, c("mes_ano","Cacao_azul", input$species)]
-    
     data_wide_filtrado <- data_wide %>% 
-      dplyr::select(c("mes_ano","Cacao_azul", input$species))
+      dplyr::select(
+        c(
+          "mes_ano",
+          "mes_ano_formatado",
+          "Cacao_azul",
+          input$species
+        )
+      )
     
     req(ncol(data_wide_filtrado) > 1)
     plot_data <- plot_ly(
       data = data_wide_filtrado,
-      x = ~mes_ano,
+      x = ~mes_ano_formatado,
       type = 'scatter',
       mode = 'none',
       stackgroup = 'one',
@@ -1814,6 +1879,10 @@ server <- function(input, output, session) {
         # title = 'Média Mensal de Captura por Viagem ao Longo do Período',
         xaxis = list(
           title = "",
+          tickvals = data_wide_filtrado$mes_ano_formatado[seq(
+            1, length(data_wide_filtrado$mes_ano_formatado), by = 2)],
+          ticktext = data_wide_filtrado$mes_ano_formatado[seq(
+            1, length(data_wide_filtrado$mes_ano_formatado), by = 2)], 
           showgrid = FALSE
         ),
         yaxis = list(
