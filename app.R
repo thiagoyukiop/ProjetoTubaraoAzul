@@ -14,9 +14,9 @@ pacman::p_load(
 # # facilitando o debug.
 # options(shiny.devmode = TRUE)
 # 
-# # Habilita o recarregamento automático do aplicativo ao detectar mudanças.
-# options(shiny.autoreload = TRUE)
-# 
+# Habilita o recarregamento automático do aplicativo ao detectar mudanças.
+options(shiny.autoreload = TRUE)
+
 # # Define o intervalo de 0,5 segundos entre as verificações de mudanças 
 # # no código para o recarregamento automático.
 # options(shiny.autoreload.interval = 0.5)
@@ -56,7 +56,8 @@ dados_falsos <- dbReadTable(db, "Dados_falsos")
 #   "Notificacoes",
 #   data.frame(
 #     id = c(10, 11, 12),
-#     Titulo = c("Embarcação de Prego", "Embarcação de Tubarão Azul", "Embarcação de Peixes"),
+#     Titulo = c("Embarcação de Prego", "Embarcação de Tubarão Azul", 
+#     "Embarcação de Peixes"),
 #     Local = c("Itajaí","Itajaí","Itajaí"),
 #     Data = format(as.Date(c("2024-08-27", "2024-08-28", "2024-08-29")), "%Y-%m-%d"),
 #     Hora = c("14", "15", "15"),
@@ -1670,13 +1671,16 @@ server <- function(input, output, session) {
         xaxis = list(
           title = "Mês",
           tickvals = unique(dados_ComparaDadosTub()$MES),
-          ticktext = unique(dados_ComparaDadosTub()$MES)
+          ticktext = unique(dados_ComparaDadosTub()$MES),
+          showgrid = F
           ),
         yaxis = list(
           title = "Ano",
           tickformat = ".0f",
           tickvals = unique(floor(dados_ComparaDadosTub()$ANO)),
-          ticktext = unique(floor(dados_ComparaDadosTub()$ANO))),
+          ticktext = unique(floor(dados_ComparaDadosTub()$ANO)),
+          showgrid = F
+          ),
         legend = list(
           orientation = "h",
           y = 0.9,
@@ -1732,10 +1736,12 @@ server <- function(input, output, session) {
         xaxis = list(
           title = "Mês",
           tickvals = unique(dados_graficoCaptura()$MES),
-          ticktext = unique(dados_graficoCaptura()$MES)
+          ticktext = unique(dados_graficoCaptura()$MES),
+          showgrid = F
         ),
         yaxis = list(
-          title = "Captura Média (KG) por Viagem"
+          title = "Captura Média (KG) por Viagem",
+          showgrid = F
         ),
         showlegend = FALSE,
         hovermode = "x",
@@ -1969,7 +1975,9 @@ server <- function(input, output, session) {
       ) %>%
       # Definindo a Posição Inicial da visão sobre o Mapa
       setView(
-        lng = -40, lat = -28, zoom = 4
+        lng = -40,
+        lat = -28, 
+        zoom = 4
       ) %>%
       # Definindo a adição dos Marcadores no Mapa
       addCircleMarkers(
@@ -1987,23 +1995,31 @@ server <- function(input, output, session) {
       ) %>%
       # Definindo a legenda com a paleta de cores e suas Porcentagens
       addLegend(
-        pal = pal, values = tab01$prod, group = tab01$prod,
-        position = "bottomright", title = "Percentual da Captura"
+        pal = pal, 
+        values = tab01$prod,
+        group = tab01$prod,
+        position = "bottomright", 
+        title = "Percentual da Captura"
       ) %>%
       # Controle de Estilo de Mapa
       addLayersControl(
         position = "topleft",
         baseGroups = c("Dark Map", "Light Map"),
-        options =
-          layersControlOptions(collapsed = FALSE)
+        options = layersControlOptions(collapsed = FALSE)
       ) %>%
       # Adicionando Mini Mapa
       addMiniMap(
-        position = "bottomleft"
+        position = "bottomleft",
+        toggleDisplay = T
       ) %>%
       # Adicionando um Medidor 
       addMeasure(
-        position = "bottomleft"
+        position = "bottomleft",
+        primaryLengthUnit = "meters",
+        secondaryLengthUnit = "kilometers",
+        primaryAreaUnit = "sqmeters",
+        secondaryAreaUnit = "hectares",
+        localization = "pt_br"
       ) %>%
       addScaleBar(
         position = "bottomright",
