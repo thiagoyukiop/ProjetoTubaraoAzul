@@ -47,8 +47,8 @@ options(shiny.autoreload = TRUE)
 db <- dbConnect(SQLite(), "dados_brutos/database.sqlite")
 on.exit(dbDisconnect(db))
 
-notificacoes <- dbReadTable(db, "Notificacoes")
 dados <- dbReadTable(db, "Dados")
+notificacoes <- dbReadTable(db, "Notificacoes")
 dados_falsos <- dbReadTable(db, "Dados_falsos")
 
 # dbWriteTable(
@@ -169,7 +169,16 @@ ui <- dashboardPage(
     ),
     controlbarIcon = icon("sliders"), # Definição do ícone da aba de Controle
     # Definição do Menu Suspenso
-    dropdownMenuOutput("notification_menu")
+    dropdownMenuOutput("notification_menu"),
+    leftUi = tagList(
+      dropdownBlock(
+        id = "mydropdown",
+        title = "Login",
+        icon = icon("user"),
+        uiOutput("bodyContent", fill = T,),
+        badgeStatus = NULL
+      )
+    )
   ),
   
   # Sidebar -----------------------------------------------------------------
@@ -879,10 +888,21 @@ ui <- dashboardPage(
           column(
             width = 4,
             offset = 4,
-            # Saída do PasswordInput para a Interface do Usuário
-            uiOutput("senhaAdm"),
-            # Saída do ActionButton para a Interface do Usuário
-            uiOutput("entrarAdm")
+            tags$head(
+              tags$style(HTML("
+                .centered-text {
+                  text-align: center;  /* Centraliza o texto */
+                  font-size: 36px;     /* Define o tamanho da fonte */
+                  # color: #007bff;      /* Define a cor do texto */
+                  margin-top: 50px;    /* Adiciona margem superior */
+                }
+              "))
+            ),
+            uiOutput("TextoRestrito")
+            # # Saída do PasswordInput para a Interface do Usuário
+            # uiOutput("senhaAdm"),
+            # # Saída do ActionButton para a Interface do Usuário
+            # uiOutput("entrarAdm")
           )
         ),
         fluidRow(
@@ -1426,23 +1446,7 @@ server <- function(input, output, session) {
                 notification_time
               ),
               style = "font-weight: bold;"
-            ),
-            br()
-            # tags$span(
-            #   paste(
-            #     "Data:",
-            #     notificacoes$Data[i]
-            #   ),
-            #   style = "font-weight: bold;"
-            # ),
-            # br(),
-            # tags$span(
-            #   paste(
-            #     "Hora:",
-            #     notificacoes$Horário[i]
-            #   ),
-            #   style = "font-weight: bold;"
-            # )
+            )
           )
         )
       }
@@ -1460,6 +1464,52 @@ server <- function(input, output, session) {
       icon = icon("bell"),
       .list = notification_items
     )
+  })
+  
+  user_authenticated <- reactiveVal(FALSE)
+
+  # output$bodyContent <- renderUI({
+  #   if(user_authenticated()) {
+  #     h2("Login Bem sucedido")
+  #   } else {
+  #     box(
+  #       title = "Login",
+  #       width = 12,
+  #       status = "primary",
+  #       solidHeader = TRUE,
+  #       textInput("username", "Usuário"),
+  #       passwordInput("password", "Senha"),
+  #       actionButton("loginBtn", "Entrar")
+  #     )
+  #   }
+  # })
+  
+  output$bodyContent <- renderUI({
+    # Define um div que preenche todo o espaço disponível
+      wellPanel(
+        h3("Login"),
+        textInput("username", "Usuário"),
+        passwordInput("password", "Senha"),
+        div(
+          style = "text-align: center;",
+          actionButton("loginBtn", "Entrar", style = "display: inline-block;"))
+      )
+  })
+  
+
+  observeEvent(input$loginBtn, {
+    # Aqui você pode adicionar sua lógica de autenticação
+    if (input$username == "admin" && input$password == "password") {
+      user_authenticated(TRUE)
+      # Redirecionar ou carregar a próxima página após o login
+    } else {
+      showModal(modalDialog(
+        title = "Erro",
+        "Usuário ou senha incorretos",
+        easyClose = TRUE,
+        footer = NULL
+      ))
+    }
   })
   
   # Sidebar -----------------------------------------------------------------
@@ -2394,45 +2444,106 @@ server <- function(input, output, session) {
   
   # Administrador -----------------------------------------------------------
   
-  # Valor Reativo Recebe a Entrada de Senha
-  conteudo_senha_adm({
-    output$senhaOutput <- renderUI({
-      passwordInput(
-        inputId = "senha",
-        label = "Senha:",
-        value = ""
-      )
-    })
-  })
+  # # Valor Reativo Recebe a Entrada de Senha
+  # conteudo_senha_adm({
+  #   output$senhaOutput <- renderUI({
+  #     passwordInput(
+  #       inputId = "senha",
+  #       label = "Senha:",
+  #       value = ""
+  #     )
+  #   })
+  # })
+  # 
+  # # Valor Reativo Recebe um Botão
+  # conteudo_entrar_adm({
+  #   output$entrarOutput <- renderUI({
+  #     actionButton(
+  #       inputId = "entrar",
+  #       label = "Entrar"
+  #     )
+  #   })
+  # })
   
-  # Valor Reativo Recebe um Botão
-  conteudo_entrar_adm({
-    output$entrarOutput <- renderUI({
-      actionButton(
-        inputId = "entrar",
-        label = "Entrar"
-      )
-    })
+  # # Verificação do Pressionamento do Botão Entrar
+  # observeEvent(input$entrar, {
+  #   senha_correta <- check_password(input$senha, "senha_hash.txt")
+  #   if (senha_correta) {
+  #     conteudo_tabela_adm({
+  #       # Saída da Data Table, que Possuí a Tabela com os Dados
+  #       DTOutput("tabela_tub")
+  #     })
+  #     # Valores Reativos Recebem o Valor de Nulo
+  #     conteudo_senha_adm(NULL)
+  #     conteudo_entrar_adm(NULL)
+  #     # Renderizando a DataTable com os Dados Filtrados
+  #     output$tabela_tub <- renderDT({
+  #       if (!is.null(input$entrar) && input$entrar > 0) {
+  #         if (senha_correta) {
+  #           dados_aux_filtrados()
+  #         }
+  #       }
+  #       # Opções da Data Table
+  #     },options = list(
+  #       paging = TRUE,
+  #       searching = FALSE,
+  #       rownames = FALSE,
+  #       columnDefs = list(
+  #         list(className = 'dt-center', targets = "_all")
+  #         )
+  #       ),
+  #     class = "cell-border stripe hover",
+  #     selection = "single"
+  #     )
+  #   } else{
+  #     # Mensagem no Caso de Senha Incorreta
+  #     showModal(
+  #       modalDialog(
+  #         title = "Erro de login",
+  #         "Senha incorreta. Tente novamente.",
+  #         easyClose = TRUE
+  #       )
+  #     )
+  #     # Valor Reativo Recebe Valor Nulo
+  #     conteudo_tabela_adm(NULL)
+  #   }
+  # })
+  
+  # # Renderizando UI com Conteúdo dos Valores Reativos
+  # output$senhaAdm <- renderUI({
+  #   conteudo_senha_adm()
+  # })
+  # 
+  # output$entrarAdm <- renderUI({
+  #   conteudo_entrar_adm()
+  # })
+  
+  output$TextoRestrito <- renderUI({
+    if (user_authenticated() == FALSE) {
+      div(class = "centered-text", "ACESSO RESTRITO!")
+    }
   })
   
   # Verificação do Pressionamento do Botão Entrar
-  observeEvent(input$entrar, {
-    senha_correta <- check_password(input$senha, "senha_hash.txt")
-    if (senha_correta) {
+  # observeEvent(input$entrar, {
+  observeEvent(input$loginBtn, {
+    if (user_authenticated()==TRUE) {
+      # cat("1")
       conteudo_tabela_adm({
         # Saída da Data Table, que Possuí a Tabela com os Dados
         DTOutput("tabela_tub")
       })
       # Valores Reativos Recebem o Valor de Nulo
-      conteudo_senha_adm(NULL)
-      conteudo_entrar_adm(NULL)
+      # conteudo_senha_adm(NULL)
+      # conteudo_entrar_adm(NULL)
       # Renderizando a DataTable com os Dados Filtrados
       output$tabela_tub <- renderDT({
-        if (!is.null(input$entrar) && input$entrar > 0) {
-          if (senha_correta) {
-            dados_aux_filtrados()
-          }
-        }
+        # if (!is.null(input$entrar) && input$entrar > 0) {
+          # if (senha_correta) {
+          # cat("2")
+          dados_aux_filtrados()
+          # }
+        # }
         # Opções da Data Table
       },options = list(
         paging = TRUE,
@@ -2440,34 +2551,13 @@ server <- function(input, output, session) {
         rownames = FALSE,
         columnDefs = list(
           list(className = 'dt-center', targets = "_all")
-          )
-        ),
+        )
+      ),
       class = "cell-border stripe hover",
       selection = "single"
       )
-    } else{
-      # Mensagem no Caso de Senha Incorreta
-      showModal(
-        modalDialog(
-          title = "Erro de login",
-          "Senha incorreta. Tente novamente.",
-          easyClose = TRUE
-        )
-      )
-      # Valor Reativo Recebe Valor Nulo
-      conteudo_tabela_adm(NULL)
     }
   })
-  
-  # Renderizando UI com Conteúdo dos Valores Reativos
-  output$senhaAdm <- renderUI({
-    conteudo_senha_adm()
-  })
-  
-  output$entrarAdm <- renderUI({
-    conteudo_entrar_adm()
-  })
-  
   output$tabelaAdm <- renderUI({
     conteudo_tabela_adm()
   })
