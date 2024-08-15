@@ -2,9 +2,9 @@
 
 # Carregando os Pacotes que serão utilizados no dashboard
 pacman::p_load(
-  shiny, shinydashboard, shinydashboardPlus,
+  shiny, shinydashboard, shinydashboardPlus, shinyauthr,
   leaflet, leaflet.extras,
-  dplyr, tidyverse, scales, zoo, DT,
+  dplyr, tidyverse, scales, zoo, DT, tibble,
   plotly, shinyjs,
   raster, readxl, digest,
   DBI, RSQLite
@@ -91,6 +91,23 @@ dados_falsos <- dbReadTable(db, "Dados_falsos")
 #     )
 #   )
 
+# user_base <- tibble(
+#   user = c("admin", "user"),
+#   password = c("password", "password"),
+#   permissions = c("Administrador", "Padrão"),
+#   name = c("User One", "User Two")
+# )
+
+# user_base <- tibble(
+#   user = c("admin"),
+#   password = c("password"),
+#   permissions = c("Administrador"),
+#   name = c("User One")
+# )
+
+# in your app code, read in the user base rds file
+user_base <- readRDS("dados_brutos/user_base.rds")
+
 # Dicionário para substituição de categorias
 categoria_substituicoes <- c(
   "Albacora-bandolim" = "Albacora_bandolim",
@@ -172,11 +189,17 @@ ui <- dashboardPage(
     dropdownMenuOutput("notification_menu"),
     leftUi = tagList(
       dropdownBlock(
-        id = "mydropdown",
+        id = "loginDropdown",
         title = "Login",
         icon = icon("user"),
-        uiOutput("bodyContent", fill = T,),
-        badgeStatus = NULL
+        badgeStatus = NULL,
+        loginUI(
+          id = "login",
+          title = "Login",
+          user_title = "Nome do usuário",
+          pass_title = "Senha",
+          error_message = "Usuário ou senha incorretos"
+        )
       )
     )
   ),
@@ -909,7 +932,7 @@ ui <- dashboardPage(
           column(
             width = 12,
             # Saída da Tabela com os dados para Interface do Usuário
-            uiOutput("tabelaAdm")
+            DTOutput("tabelaAdm")
           )
         )
       ),
@@ -1136,8 +1159,14 @@ ui <- dashboardPage(
       id = "controlbarMenu",
       # Definindo o Item Opções
       controlbarItem(
-        "Opções",
+        title = "Opções",
         icon = icon("gear"),
+        div(
+          class = "pull-right",
+          logoutUI(
+            id = "logout"
+          )
+        ),
         # Entrada do controle deslizante
         sliderInput(
           inputId = "intervalo_anos",    # Identificador do controle deslizante
@@ -2444,6 +2473,49 @@ server <- function(input, output, session) {
   
   # Administrador -----------------------------------------------------------
   
+  # Configura o módulo de login
+  # credentials <- loginServer(
+  #   id = "login",
+  #   data = user_base,
+  #   user_col = user,
+  #   pwd_col = password,
+  #   log_out = reactive(logout_init())
+  # )
+  
+  credentials <- loginServer(
+    id = "login",
+    data = user_base,
+    user_col = user,
+    pwd_col = password,
+    sodium_hashed = TRUE,
+    log_out = reactive(logout_init())
+  )
+  
+  # Configura o módulo de logout
+  logout_init <- logoutServer(
+    id = "logout",
+    active = reactive(credentials()$user_auth)
+  )
+  
+  # Renderiza a box de informações do usuário após o login
+  output$user_info_box <- renderUI({
+    req(credentials()$user_auth) # Só mostra a box se o usuário estiver autenticado
+    fluidRow(
+      box(
+        title = "Informações do Usuário",
+        status = "primary",
+        solidHeader = TRUE,
+        tableOutput("user_table")
+      )
+    )
+  })
+  
+  # Renderiza a tabela de usuários
+  output$user_table <- renderTable({
+    req(credentials()$user_auth) # Só renderiza se o usuário estiver autenticado
+    credentials()$info
+  })
+  
   # # Valor Reativo Recebe a Entrada de Senha
   # conteudo_senha_adm({
   #   output$senhaOutput <- renderUI({
@@ -2519,48 +2591,65 @@ server <- function(input, output, session) {
   # })
   
   output$TextoRestrito <- renderUI({
-    if (user_authenticated() == FALSE) {
-      div(class = "centered-text", "ACESSO RESTRITO!")
-    }
+    # if (user_authenticated() == FALSE) {
+    req(!credentials()$user_auth)
+    div(class = "centered-text", "ACESSO RESTRITO!")
+    # }
   })
   
-  # Verificação do Pressionamento do Botão Entrar
-  # observeEvent(input$entrar, {
-  observeEvent(input$loginBtn, {
-    if (user_authenticated()==TRUE) {
-      # cat("1")
-      conteudo_tabela_adm({
-        # Saída da Data Table, que Possuí a Tabela com os Dados
-        DTOutput("tabela_tub")
-      })
-      # Valores Reativos Recebem o Valor de Nulo
-      # conteudo_senha_adm(NULL)
-      # conteudo_entrar_adm(NULL)
-      # Renderizando a DataTable com os Dados Filtrados
-      output$tabela_tub <- renderDT({
-        # if (!is.null(input$entrar) && input$entrar > 0) {
-          # if (senha_correta) {
-          # cat("2")
-          dados_aux_filtrados()
-          # }
-        # }
-        # Opções da Data Table
-      },options = list(
-        paging = TRUE,
-        searching = FALSE,
-        rownames = FALSE,
-        columnDefs = list(
-          list(className = 'dt-center', targets = "_all")
-        )
-      ),
-      class = "cell-border stripe hover",
-      selection = "single"
-      )
-    }
-  })
-  output$tabelaAdm <- renderUI({
-    conteudo_tabela_adm()
-  })
+  output$tabelaAdm <- renderDT({
+    req(credentials()$user_auth)
+    dados_aux_filtrados()
+  },options = list(
+    paging = TRUE,
+    searching = FALSE,
+    rownames = FALSE,
+    columnDefs = list(
+      list(className = 'dt-center', targets = "_all")
+    )
+  ),
+  class = "cell-border stripe hover",
+  selection = "single"
+  )
+  
+  # # Verificação do Pressionamento do Botão Entrar
+  # # observeEvent(input$entrar, {
+  # observeEvent(input$loginBtn, {
+  #   req(credentials()$user_auth)
+  #   # if (user_authenticated()==TRUE) {
+  #     # cat("1")
+  #     conteudo_tabela_adm({
+  #       # Saída da Data Table, que Possuí a Tabela com os Dados
+  #       DTOutput("tabela_tub")
+  #     })
+  #     # Valores Reativos Recebem o Valor de Nulo
+  #     # conteudo_senha_adm(NULL)
+  #     # conteudo_entrar_adm(NULL)
+  #     # Renderizando a DataTable com os Dados Filtrados
+  #     output$tabela_tub <- renderDT({
+  #       # if (!is.null(input$entrar) && input$entrar > 0) {
+  #         # if (senha_correta) {
+  #         # cat("2")
+  #         dados_aux_filtrados()
+  #         # }
+  #       # }
+  #       # Opções da Data Table
+  #     },options = list(
+  #       paging = TRUE,
+  #       searching = FALSE,
+  #       rownames = FALSE,
+  #       columnDefs = list(
+  #         list(className = 'dt-center', targets = "_all")
+  #       )
+  #     ),
+  #     class = "cell-border stripe hover",
+  #     selection = "single"
+  #     )
+  #   # }
+  # })
+  # output$tabelaAdm <- renderUI({
+  #   conteudo_tabela_adm()
+  # })
 
 # Distribuição de Comprimentos --------------------------------------------
   
