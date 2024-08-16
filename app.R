@@ -10,39 +10,8 @@ pacman::p_load(
   DBI, RSQLite
 )
 
-# # Ativa o modo de desenvolvimento do Shiny, desativando cache e 
-# # facilitando o debug.
-# options(shiny.devmode = TRUE)
-# 
 # Habilita o recarregamento automático do aplicativo ao detectar mudanças.
 options(shiny.autoreload = TRUE)
-
-# # Define o intervalo de 0,5 segundos entre as verificações de mudanças 
-# # no código para o recarregamento automático.
-# options(shiny.autoreload.interval = 0.5)
-# 
-# # Desativa a minificação de arquivos CSS e JavaScript, útil para depuração.
-# options(shiny.minified = FALSE)
-# 
-# # Define que, ao ocorrer um erro, o R entra no modo de navegação
-# # de erro (browser) para facilitar o debug.
-# # options(shiny.error = browser)
-# 
-# # Desativa a sanitização das mensagens de erro, permitindo que detalhes 
-# # completos sejam exibidos.
-# options(shiny.sanitize.errors = FALSE)
-# 
-# # Exibe a stack trace completa quando um erro ocorre, ajudando na 
-# # identificação do ponto exato do problema.
-# options(shiny.fullstacktrace = TRUE)
-# 
-# # Habilita o log de reatividade, permitindo a visualização das 
-# # interações entre valores reativos no Shiny.
-# options(shiny.reactlog = TRUE)
-# 
-# # Ativa o modo de teste do Shiny, que pode desabilitar certas 
-# # funcionalidades não necessárias para desenvolvimento ou testes.
-# options(shiny.testmode = TRUE)
 
 db <- dbConnect(SQLite(), "dados_brutos/database.sqlite")
 on.exit(dbDisconnect(db))
@@ -51,61 +20,7 @@ dados <- dbReadTable(db, "Dados")
 notificacoes <- dbReadTable(db, "Notificacoes")
 dados_falsos <- dbReadTable(db, "Dados_falsos")
 
-# dbWriteTable(
-#   db,
-#   "Notificacoes",
-#   data.frame(
-#     id = c(10, 11, 12),
-#     Titulo = c("Embarcação de Prego", "Embarcação de Tubarão Azul", 
-#     "Embarcação de Peixes"),
-#     Local = c("Itajaí","Itajaí","Itajaí"),
-#     Data = format(as.Date(c("2024-08-27", "2024-08-28", "2024-08-29")), "%Y-%m-%d"),
-#     Hora = c("14", "15", "15"),
-#     Minuto = c("30", "30", "45"),
-#     Link = c(NA, NA, NA),
-#     TextoOpcional = c(NA, NA, NA)
-#   ),
-#   append = TRUE,
-#   row.names = FALSE
-#   )
-# 
-# dbExecute(db, "DELETE FROM Notificacoes WHERE id IN (10, 11, 12)")
-
-# # Carregando os Dados de um Arquivo csv
-# dados <- read.table(
-#   "dados_brutos/dados_17_24_Outros.csv", header = TRUE, sep = ",", dec = "."
-# )
-# Ajuste nos nomes das CATEGORIAS
-# dados_ajustados <- dados %>% 
-#   mutate(
-#     CATEGORIA = case_when(
-#       CATEGORIA == "Albacora-bandolim" ~ "Albacora_bandolim",
-#       CATEGORIA == "Albacora-branca" ~ "Albacora_branca",
-#       CATEGORIA == "Albacora-lage" ~ "Albacora_lage",
-#       CATEGORIA == "Cacao-anequim" ~ "Cacao_anequim",
-#       CATEGORIA == "Cacao-azul" ~ "Cacao_azul",
-#       CATEGORIA == "Meca" ~ CATEGORIA,
-#       CATEGORIA == "Outros" ~ CATEGORIA,
-#       CATEGORIA == "Prego" ~ CATEGORIA, 
-#       TRUE ~ CATEGORIA
-#     )
-#   )
-
-# user_base <- tibble(
-#   user = c("admin", "user"),
-#   password = c("password", "password"),
-#   permissions = c("Administrador", "Padrão"),
-#   name = c("User One", "User Two")
-# )
-
-# user_base <- tibble(
-#   user = c("admin"),
-#   password = c("password"),
-#   permissions = c("Administrador"),
-#   name = c("User One")
-# )
-
-# in your app code, read in the user base rds file
+# Le arquivos rds
 user_base <- readRDS("dados_brutos/user_base.rds")
 
 # Dicionário para substituição de categorias
@@ -120,14 +35,7 @@ categoria_substituicoes <- c(
 dados_ajustados <- dados %>%
   mutate(CATEGORIA = recode(CATEGORIA, !!!categoria_substituicoes))
 
-# dados_falsos <- read.table(
-#   "dados_falsos.csv", header = TRUE, sep = ",", dec = "."
-# )
-
-# notificacoes <- read_excel("dados_brutos/Notificacoes.xlsx")
-
 notificacoes <- notificacoes %>%
-  # mutate(Data = format(as.Date(Data), "%Y-%m-%d")) %>%
   mutate(Horário = sprintf("%02d:%02d", Hora, Minuto)) %>%
   plotly::select(-c(Hora, Minuto))
 
@@ -137,18 +45,6 @@ verifica_coluna <- function(df, coluna) {
   }
   return(any(names(df) == coluna))
 }
-
-check_password <- function(input_password, filename) {
-  if (!file.exists(filename)) {
-    stop("Arquivo de senha não encontrado.")
-  }
-
-  hashed_password <- readLines(filename)
-  input_hash <- digest(input_password, algo = "sha256", serialize = FALSE)
-
-  identical(input_hash, hashed_password)
-}
-
 
 # Interface do Usuário ----------------------------------------------------
 
@@ -198,10 +94,19 @@ ui <- dashboardPage(
           title = "Login",
           user_title = "Nome do usuário",
           pass_title = "Senha",
-          error_message = "Usuário ou senha incorretos"
+          error_message = "Usuário ou senha incorretos",
+          login_title = "Entrar"
+        )
+      ),
+      div(
+        class = "pull-right",
+        logoutUI(
+          id = "logout",
+          icon = icon("right-from-bracket")
         )
       )
-    )
+    ),
+    userOutput("user")
   ),
   
   # Sidebar -----------------------------------------------------------------
@@ -367,6 +272,10 @@ ui <- dashboardPage(
     #   # font-size: 15px;
     #   # Tentar alinhar o título, mas ver o que é melhor
     # }
+    
+    #loginDropdown .dropdown-menu {
+      background-color: rgba(255, 255, 255, 0.6) !important;
+    }
                               ')
                          )
               ),
@@ -741,7 +650,7 @@ ui <- dashboardPage(
               width = 12,
               box(
                 # title = "Gráfico de Área Relativa",
-                title = 'Média Mensal de Captura por Viagem ao Longo do Período',
+                title ='Média Mensal de Captura por Viagem ao Longo do Período',
                 width = 12,
                 collapsible = TRUE,
                 solidHeader = TRUE,
@@ -994,32 +903,32 @@ ui <- dashboardPage(
           )
         )
       ),
-      tabItem(
-        tabName = "tab7header",
-        fluidRow(
-          column(
-            width = 12,
-            box(
-              width = 12,
-              solidHeader = T,
-              title = "Mapa de Capturas",
-              status = "primary",
-              div(
-                class = "mapa",
-                # Saída do Gráfico do Mapa de Calor
-                leafletOutput("MapaComprimento",height = "100%")
-              ),
-              sidebar = boxSidebar(
-                id = "boxsidebar12",
-                icon = icon("circle-info"),
-                width = 30,
-                background = "#A6ACAFEF",
-                p("")
-              )
-            )
-          )
-        )
-      ),
+      # tabItem(
+      #   tabName = "tab7header",
+      #   fluidRow(
+      #     column(
+      #       width = 12,
+      #       box(
+      #         width = 12,
+      #         solidHeader = T,
+      #         title = "Mapa de Capturas",
+      #         status = "primary",
+      #         div(
+      #           class = "mapa",
+      #           # Saída do Gráfico do Mapa de Calor
+      #           leafletOutput("MapaComprimento",height = "100%")
+      #         ),
+      #         sidebar = boxSidebar(
+      #           id = "boxsidebar12",
+      #           icon = icon("circle-info"),
+      #           width = 30,
+      #           background = "#A6ACAFEF",
+      #           p("")
+      #         )
+      #       )
+      #     )
+      #   )
+      # ),
       tabItem(
         tabName = "tab8header",
         fluidRow(
@@ -1042,7 +951,7 @@ ui <- dashboardPage(
         box(
           width = 6,
           solidHeader = T,
-          title = "Qual é o Mês com que tem mais capturas Médias por Viagem (KG)?",
+          title = "Qual é o Mês com mais capturas Médias por Viagem (KG)?",
           status = "primary",
           plotlyOutput("BarrasKGMediaMes")
         ),
@@ -1093,7 +1002,6 @@ ui <- dashboardPage(
           h3(strong("Instituições Executoras"))
         ),
         column(
-          # width = 3,
           width = 2,
           tags$a(
             href = "http://www.univali.br", target = "_blank",
@@ -1161,12 +1069,6 @@ ui <- dashboardPage(
       controlbarItem(
         title = "Opções",
         icon = icon("gear"),
-        div(
-          class = "pull-right",
-          logoutUI(
-            id = "logout"
-          )
-        ),
         # Entrada do controle deslizante
         sliderInput(
           inputId = "intervalo_anos",    # Identificador do controle deslizante
@@ -1188,12 +1090,14 @@ ui <- dashboardPage(
         checkboxGroupInput(
           inputId = "species",
           label = "Seletor de Espécies:",
-          choiceValues = c("Albacora_bandolim", "Albacora_branca",
-                           "Albacora_lage", "Cacao_anequim", "Meca",
-                           "Outros", "Prego"),
-          choiceNames = c("Albacora bandolim", "Albacora branca", 
-                          "Albacora lage", "Cação Anequim", "Meca",
-                          "Outros", "Prego"),
+          choiceValues = c(
+            "Albacora_bandolim", "Albacora_branca","Albacora_lage",
+            "Cacao_anequim", "Meca", "Outros", "Prego"
+            ),
+          choiceNames = c(
+            "Albacora bandolim", "Albacora branca", "Albacora lage", 
+            "Cação Anequim", "Meca", "Outros", "Prego"
+            ),
           selected = dados_ajustados$CATEGORIA,
         ),
         actionButton(
@@ -1248,45 +1152,40 @@ server <- function(input, output, session) {
     "Outubro"="#A9A9A9","Novembro"="#F58231","Dezembro"="#E6194B"
   )
   
-  
-  
-  # Criando um Valores Reativos que vão Iniciar Nulo
-  conteudo_senha_adm <- reactiveVal(NULL)
-  conteudo_entrar_adm <- reactiveVal(NULL)
-  conteudo_tabela_adm <- reactiveVal(NULL)
-  
   # Filtro de Dados ---------------------------------------------------------
   
   # Filtrando os Dados Gerais Completos Reativamente
   dados_gerais_filtrados <- reactive({
     # Filtrando as Espécies
-    # dados_aux <- subset(dados_gerais, CATEGORIA %in% input$species)
     dados_aux <- subset(
       dados_gerais, CATEGORIA %in% union(input$species, "Cacao_azul"))
     # Filtrando o Intervalo de Anos
     dados_aux <- subset(
       dados_aux,
-      ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2])
+      ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2]
+      )
     data.frame(dados_aux)
   })
   
   dados_captura_filtrada <- reactive({
     dados_aux <- subset(
       dados_gerais,
-      ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2])
+      ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2]
+      )
     data.frame(dados_aux)
   })
   
   # Filtrando os Dados da Tabela Inicial
   dados_aux_filtrados <- reactive({
     # Filtrando as Espécies 
-    # dados_aux <- subset(dados_ajustados, CATEGORIA %in% input$species)
     dados_aux <- subset(
-      dados_ajustados, CATEGORIA %in% union(input$species, "Cacao_azul"))
+      dados_ajustados, CATEGORIA %in% union(input$species, "Cacao_azul")
+      )
     # Filtrando o Intervalo de Anos
     dados_aux <- subset(
       dados_aux,
-      ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2])
+      ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2]
+      )
     data.frame(dados_aux)
   })
   
@@ -1302,11 +1201,6 @@ server <- function(input, output, session) {
       mutate(Media_KG_por_Viagem = replace_na(Media_KG_por_Viagem, 0)) %>% 
       # Arredondando a Média de Toneladas para Duas Casas Decimais
       mutate(Media_KG_por_Viagem = round(Media_KG_por_Viagem, 2)) %>%
-      # Criação de Nome do Mês para Legenda
-      # mutate(mes_nome = nomes_meses[MES]) %>%
-      # # Formata a coluna mes_ano para o modelo aceitado pelo pacote Plotly
-      # # mutate(mes_ano = format(as.Date(paste0(ANO, "-", MES, "-01")), "%Y-%m"))
-      # mutate(mes_ano = as.yearmon(paste0(ANO, "-", sprintf("%02d", MES))))
       mutate(mes_ano_formatado = make_date(ANO, MES)) %>%
       mutate(mes_ano = as.yearmon(paste0(ANO, "-", sprintf("%02d", MES)))) %>%
       mutate(mes_ano_formatado = format(mes_ano_formatado, "%Y-%m")) 
@@ -1339,11 +1233,13 @@ server <- function(input, output, session) {
   
   # Filtrando dados Para o Mapa
   db_filtrado <- reactive({
-    dados_aux <- subset(dados_ajustados,
-                        CATEGORIA %in% union(input$species, "Cacao_azul"))
+    dados_aux <- subset(
+      dados_ajustados,CATEGORIA %in% union(input$species, "Cacao_azul")
+      )
     dados_aux <- subset(
       dados_aux,
-      ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2])
+      ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2]
+      )
     tab01 <- dados_aux %>%
       group_by(LON, LAT) %>%
       summarise(
@@ -1447,7 +1343,6 @@ server <- function(input, output, session) {
               )
             ),
           "%d/%m/%Y %H:%M:%S"
-          # "%Y-%m-%d %H:%M:%S"
           )
         notificationItem(
           icon = icon("bell"),
@@ -1495,50 +1390,13 @@ server <- function(input, output, session) {
     )
   })
   
-  user_authenticated <- reactiveVal(FALSE)
-
-  # output$bodyContent <- renderUI({
-  #   if(user_authenticated()) {
-  #     h2("Login Bem sucedido")
-  #   } else {
-  #     box(
-  #       title = "Login",
-  #       width = 12,
-  #       status = "primary",
-  #       solidHeader = TRUE,
-  #       textInput("username", "Usuário"),
-  #       passwordInput("password", "Senha"),
-  #       actionButton("loginBtn", "Entrar")
-  #     )
-  #   }
-  # })
-  
-  output$bodyContent <- renderUI({
-    # Define um div que preenche todo o espaço disponível
-      wellPanel(
-        h3("Login"),
-        textInput("username", "Usuário"),
-        passwordInput("password", "Senha"),
-        div(
-          style = "text-align: center;",
-          actionButton("loginBtn", "Entrar", style = "display: inline-block;"))
-      )
-  })
-  
-
-  observeEvent(input$loginBtn, {
-    # Aqui você pode adicionar sua lógica de autenticação
-    if (input$username == "admin" && input$password == "password") {
-      user_authenticated(TRUE)
-      # Redirecionar ou carregar a próxima página após o login
-    } else {
-      showModal(modalDialog(
-        title = "Erro",
-        "Usuário ou senha incorretos",
-        easyClose = TRUE,
-        footer = NULL
-      ))
-    }
+  output$user <- renderUser({
+    req(credentials()$user_auth) 
+    dashboardUser(
+      name = user_base$user,
+      title = "shinydashboardPlus",
+      image = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXZkyeTC33b_Pt2uAVgTX3165QIuSf73Vzlw&s"
+    )
   })
   
   # Sidebar -----------------------------------------------------------------
@@ -1563,12 +1421,9 @@ server <- function(input, output, session) {
     }
   })
   
-  
-  
   # Projeto -----------------------------------------------------------------
   
   output$LogoPTA <- renderImage({
-    # Sys.sleep(1)
     list(
       src = "dados_brutos/logo_tuba_azul_2.png", # Local do arquivo da Imagem
       height = "100%",                     # Altura da Imagem
@@ -1658,7 +1513,6 @@ server <- function(input, output, session) {
       )
     ) %>%
       layout(
-        # title = "Dados Registrados por Mês, Ano e Categoria",
         xaxis = list(
           title = "",
           tickvals = dados_TubMesAno()$mes_ano_formatado[seq(
@@ -1676,9 +1530,7 @@ server <- function(input, output, session) {
         barmode = "stack",
         showlegend = FALSE,
         hovermode = "x",
-        xaxis = list(
-          categoryorder = "category ascending"  
-        ),
+        xaxis = list(categoryorder = "category ascending"),
         margin = list(t = 10, b = 40, l = 20, r = 20)
       ) %>%
       config(displayModeBar = FALSE)
@@ -1706,8 +1558,6 @@ server <- function(input, output, session) {
       hoverinfo = 'text'
     ) %>%
       layout(
-        # title = "Comparação de Dados da Tubarão Azul para Outros",
-        # title = "Comparação de Dados Registrados",
         title = NULL,
         showlegend = FALSE,
         yaxis = list(
@@ -1745,7 +1595,6 @@ server <- function(input, output, session) {
       )
     ) %>%
       layout(
-        # title = "Comparação de Dados Registrados",
         title = NULL,
         xaxis = list(
           title = "Mês",
@@ -1769,7 +1618,6 @@ server <- function(input, output, session) {
           )
         ),
         showlegend = F,  # Desativa a legenda
-        # margin = list(t = 10, b = 40)
         margin = list(t = 10, b = 40, l = 20, r = 20)
       )
   })
@@ -1811,7 +1659,6 @@ server <- function(input, output, session) {
       )
     ) %>%
       layout(
-        # title = "Média Mensal de Captura por Viagem",
         xaxis = list(
           title = "Mês",
           tickvals = unique(dados_graficoCaptura()$MES),
@@ -1971,7 +1818,6 @@ server <- function(input, output, session) {
           showgrid = FALSE
         ),
         yaxis = list(
-          # title = "Porcentagem da Captura Média por Viagem",
           title = " ",
           showgrid = FALSE,
           ticksuffix = '%'
@@ -1999,7 +1845,6 @@ server <- function(input, output, session) {
       )
     ) %>%
       layout(
-        # title = "Média Mensal de Captura por Viagem",
         xaxis = list(
           title = "Mês",
           tickvals = unique(dados_PesoMes()$MES), 
@@ -2151,8 +1996,8 @@ server <- function(input, output, session) {
       # Definindo a adição dos Marcadores no Mapa
       addCircleMarkers(
         group = "Marcadores Circulares",
-        # group = tab01$prod2,      # Define os marcadores com base na soma dos KG
-        # radius = 12,             # Define o raio dos marcadores como 12 pixels
+        # group = tab01$prod2,   # Define os marcadores com base na soma dos KG
+        # radius = 12,           # Define o raio dos marcadores como 12 pixels
         radius = 7,
         lng = tab01$LON,         # Define tab01$LON como longitude
         lat = tab01$LAT,         # Define tab01$LAT como latitude
@@ -2284,7 +2129,7 @@ server <- function(input, output, session) {
     # Definindo uma cor fixa para todos os círculos
     fixedColor <- "#FF5733" # Escolha uma cor fixa, por exemplo, vermelho
 
-# Normalizando os valores de prod2 para o intervalo [0.1, 1] para usar na opacidade
+    # Normalizando os valores de prod2 para o intervalo [0.1, 1]
     minProd2 <- min(tab01$prod2, na.rm = TRUE)
     maxProd2 <- max(tab01$prod2, na.rm = TRUE)
     tab01 <- tab01 %>%
@@ -2307,13 +2152,13 @@ server <- function(input, output, session) {
       ) %>%
       # Definindo a adição dos Marcadores no Mapa
       addCircleMarkers(
-        group = "Capturas",      # Define o grupo dos marcadores
-        radius = 7,             # Define o raio dos marcadores como 7 pixels
-        lng = tab01$LON,         # Define tab01$LON como longitude
-        lat = tab01$LAT,         # Define tab01$LAT como latitude
-        stroke = FALSE,          # Define que não haverá borda dos marcadores
-        color = fixedColor,      # Define uma cor fixa para todos os marcadores
-        fillOpacity = tab01$opct, # Define a opacidade dos marcadores com base em prod2
+        group = "Capturas",       # Define o grupo dos marcadores
+        radius = 7,               # Define o raio dos marcadores como 7 pixels
+        lng = tab01$LON,          # Define tab01$LON como longitude
+        lat = tab01$LAT,          # Define tab01$LAT como latitude
+        stroke = FALSE,           # Define que não haverá borda dos marcadores
+        color = fixedColor,       # Define uma cor fixa para todos os marcadores
+        fillOpacity = tab01$opct, # Define a opacidade baseado em prod2
         label = paste0(
           "Captura: ", round(tab01$prod2, 0), " kg"
         )
@@ -2382,8 +2227,8 @@ server <- function(input, output, session) {
       ) %>%
       # Definindo a adição dos Marcadores no Mapa
       addCircleMarkers(
-        group = tab01$viagem,      # Define os marcadores com base na soma dos KG
-        # radius = 12,             # Define o raio dos marcadores como 12 pixels
+        group = tab01$viagem,    # Define os marcadores com base na soma dos KG
+        # radius = 12,           # Define o raio dos marcadores como 12 pixels
         radius = 7,
         lng = tab01$LON,         # Define tab01$LON como longitude
         lat = tab01$LAT,         # Define tab01$LAT como latitude
@@ -2472,16 +2317,7 @@ server <- function(input, output, session) {
   })
   
   # Administrador -----------------------------------------------------------
-  
-  # Configura o módulo de login
-  # credentials <- loginServer(
-  #   id = "login",
-  #   data = user_base,
-  #   user_col = user,
-  #   pwd_col = password,
-  #   log_out = reactive(logout_init())
-  # )
-  
+
   credentials <- loginServer(
     id = "login",
     data = user_base,
@@ -2499,7 +2335,8 @@ server <- function(input, output, session) {
   
   # Renderiza a box de informações do usuário após o login
   output$user_info_box <- renderUI({
-    req(credentials()$user_auth) # Só mostra a box se o usuário estiver autenticado
+    # Só mostra a box se o usuário estiver autenticado
+    req(credentials()$user_auth) 
     fluidRow(
       box(
         title = "Informações do Usuário",
@@ -2512,89 +2349,13 @@ server <- function(input, output, session) {
   
   # Renderiza a tabela de usuários
   output$user_table <- renderTable({
-    req(credentials()$user_auth) # Só renderiza se o usuário estiver autenticado
+    req(credentials()$user_auth) 
     credentials()$info
   })
-  
-  # # Valor Reativo Recebe a Entrada de Senha
-  # conteudo_senha_adm({
-  #   output$senhaOutput <- renderUI({
-  #     passwordInput(
-  #       inputId = "senha",
-  #       label = "Senha:",
-  #       value = ""
-  #     )
-  #   })
-  # })
-  # 
-  # # Valor Reativo Recebe um Botão
-  # conteudo_entrar_adm({
-  #   output$entrarOutput <- renderUI({
-  #     actionButton(
-  #       inputId = "entrar",
-  #       label = "Entrar"
-  #     )
-  #   })
-  # })
-  
-  # # Verificação do Pressionamento do Botão Entrar
-  # observeEvent(input$entrar, {
-  #   senha_correta <- check_password(input$senha, "senha_hash.txt")
-  #   if (senha_correta) {
-  #     conteudo_tabela_adm({
-  #       # Saída da Data Table, que Possuí a Tabela com os Dados
-  #       DTOutput("tabela_tub")
-  #     })
-  #     # Valores Reativos Recebem o Valor de Nulo
-  #     conteudo_senha_adm(NULL)
-  #     conteudo_entrar_adm(NULL)
-  #     # Renderizando a DataTable com os Dados Filtrados
-  #     output$tabela_tub <- renderDT({
-  #       if (!is.null(input$entrar) && input$entrar > 0) {
-  #         if (senha_correta) {
-  #           dados_aux_filtrados()
-  #         }
-  #       }
-  #       # Opções da Data Table
-  #     },options = list(
-  #       paging = TRUE,
-  #       searching = FALSE,
-  #       rownames = FALSE,
-  #       columnDefs = list(
-  #         list(className = 'dt-center', targets = "_all")
-  #         )
-  #       ),
-  #     class = "cell-border stripe hover",
-  #     selection = "single"
-  #     )
-  #   } else{
-  #     # Mensagem no Caso de Senha Incorreta
-  #     showModal(
-  #       modalDialog(
-  #         title = "Erro de login",
-  #         "Senha incorreta. Tente novamente.",
-  #         easyClose = TRUE
-  #       )
-  #     )
-  #     # Valor Reativo Recebe Valor Nulo
-  #     conteudo_tabela_adm(NULL)
-  #   }
-  # })
-  
-  # # Renderizando UI com Conteúdo dos Valores Reativos
-  # output$senhaAdm <- renderUI({
-  #   conteudo_senha_adm()
-  # })
-  # 
-  # output$entrarAdm <- renderUI({
-  #   conteudo_entrar_adm()
-  # })
-  
+
   output$TextoRestrito <- renderUI({
-    # if (user_authenticated() == FALSE) {
     req(!credentials()$user_auth)
     div(class = "centered-text", "ACESSO RESTRITO!")
-    # }
   })
   
   output$tabelaAdm <- renderDT({
@@ -2611,45 +2372,6 @@ server <- function(input, output, session) {
   class = "cell-border stripe hover",
   selection = "single"
   )
-  
-  # # Verificação do Pressionamento do Botão Entrar
-  # # observeEvent(input$entrar, {
-  # observeEvent(input$loginBtn, {
-  #   req(credentials()$user_auth)
-  #   # if (user_authenticated()==TRUE) {
-  #     # cat("1")
-  #     conteudo_tabela_adm({
-  #       # Saída da Data Table, que Possuí a Tabela com os Dados
-  #       DTOutput("tabela_tub")
-  #     })
-  #     # Valores Reativos Recebem o Valor de Nulo
-  #     # conteudo_senha_adm(NULL)
-  #     # conteudo_entrar_adm(NULL)
-  #     # Renderizando a DataTable com os Dados Filtrados
-  #     output$tabela_tub <- renderDT({
-  #       # if (!is.null(input$entrar) && input$entrar > 0) {
-  #         # if (senha_correta) {
-  #         # cat("2")
-  #         dados_aux_filtrados()
-  #         # }
-  #       # }
-  #       # Opções da Data Table
-  #     },options = list(
-  #       paging = TRUE,
-  #       searching = FALSE,
-  #       rownames = FALSE,
-  #       columnDefs = list(
-  #         list(className = 'dt-center', targets = "_all")
-  #       )
-  #     ),
-  #     class = "cell-border stripe hover",
-  #     selection = "single"
-  #     )
-  #   # }
-  # })
-  # output$tabelaAdm <- renderUI({
-  #   conteudo_tabela_adm()
-  # })
 
 # Distribuição de Comprimentos --------------------------------------------
   
