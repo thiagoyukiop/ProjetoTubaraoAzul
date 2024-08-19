@@ -6,7 +6,7 @@ pacman::p_load(
   leaflet, leaflet.extras,
   dplyr, tidyverse, scales, zoo, DT, tibble,
   plotly, shinyjs,
-  raster, readxl, digest,
+  raster, readxl, digest, sodium,
   DBI, RSQLite
 )
 
@@ -841,7 +841,8 @@ ui <- dashboardPage(
           column(
             width = 12,
             # Saída da Tabela com os dados para Interface do Usuário
-            DTOutput("tabelaAdm")
+            DTOutput("tabelaAdm"),
+            uiOutput("user_info_box")
           )
         )
       ),
@@ -1390,14 +1391,45 @@ server <- function(input, output, session) {
     )
   })
   
-  output$user <- renderUser({
-    req(credentials()$user_auth) 
+  output$user <- renderUI({
+    req(credentials()$user_auth)
+    
+    user_name <- credentials()$info$user
+    
+    user_permission <- credentials()$info$permissions
+    
+    user_image <- if(user_name == "admin") {
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXZkyeTC
+      33b_Pt2uAVgTX3165QIuSf73Vzlw&s"
+    } else {
+      "https://cdn-icons-png.freepik.com/512/6543/6543634.png"
+    }
+    
     dashboardUser(
-      name = user_base$user,
-      title = "shinydashboardPlus",
-      image = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXZkyeTC33b_Pt2uAVgTX3165QIuSf73Vzlw&s"
+      name = user_name,
+      title = paste("Usuário: ", user_permission),
+      image = user_image,
+      if(credentials()$user_auth && !credentials()$info$user == "user") {
+        fluidRow(
+          dashboardUserItem(
+            width = 6,
+            socialButton(
+              href = "https://github.com/thiagoyukiop",
+              icon = icon("square-github")
+            )
+          ),
+          dashboardUserItem(
+            width = 6,
+            socialButton(
+              href = "https://www.linkedin.com/in/thiago-yukio-horita-pacheco-451050236/",
+              icon = icon("linkedin-in")
+            )
+          )
+        )
+      }
     )
   })
+  
   
   # Sidebar -----------------------------------------------------------------
   
@@ -2336,7 +2368,7 @@ server <- function(input, output, session) {
   # Renderiza a box de informações do usuário após o login
   output$user_info_box <- renderUI({
     # Só mostra a box se o usuário estiver autenticado
-    req(credentials()$user_auth) 
+    req(credentials()$user_auth && !credentials()$info$user == "user")
     fluidRow(
       box(
         title = "Informações do Usuário",
@@ -2350,16 +2382,16 @@ server <- function(input, output, session) {
   # Renderiza a tabela de usuários
   output$user_table <- renderTable({
     req(credentials()$user_auth) 
-    credentials()$info
+    credentials()$info %>% dplyr::select(-password)
   })
 
   output$TextoRestrito <- renderUI({
-    req(!credentials()$user_auth)
-    div(class = "centered-text", "ACESSO RESTRITO!")
+    req(!credentials()$user_auth || credentials()$info$user == "user")
+    div(class = "centered-text", "ACESSO RESTRITO A ADMINISTRADORES!")
   })
   
   output$tabelaAdm <- renderDT({
-    req(credentials()$user_auth)
+    req(credentials()$user_auth && !credentials()$info$user == "user")
     dados_aux_filtrados()
   },options = list(
     paging = TRUE,
