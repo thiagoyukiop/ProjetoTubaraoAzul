@@ -13,9 +13,12 @@ pacman::p_load(
 # Habilita o recarregamento automático do aplicativo ao detectar mudanças.
 options(shiny.autoreload = TRUE)
 
+# Conecta ao banco de dados SQLite, que contém as tabelas
 db <- dbConnect(SQLite(), "dados_brutos/database.sqlite")
+# Fecha a conexão ao final da execução
 on.exit(dbDisconnect(db))
 
+# Lê as tabelas do banco de dados
 dados <- dbReadTable(db, "Dados")
 notificacoes <- dbReadTable(db, "Notificacoes")
 dados_falsos <- dbReadTable(db, "Dados_falsos")
@@ -32,19 +35,23 @@ categoria_substituicoes <- c(
   "Cacao-azul" = "Cacao_azul"
 )
 
+# Ajusta a coluna CATEGORIA em 'dados' com base em 'categoria_substituicoes'
 dados_ajustados <- dados %>%
   mutate(CATEGORIA = recode(CATEGORIA, !!!categoria_substituicoes))
 
+# Cria a coluna 'Horário' e remove as colunas 'Hora' e 'Minuto'
 notificacoes <- notificacoes %>%
   mutate(Horário = sprintf("%02d:%02d", Hora, Minuto)) %>%
-  plotly::select(-c(Hora, Minuto))
+dplyr::select(-c(Hora, Minuto))
 
+# Função para verificar se uma coluna existe no dataframe
 verifica_coluna <- function(df, coluna) {
   if (!any(names(df) == coluna)) {
     message(paste("Coluna", coluna, "não encontrada."))
   }
   return(any(names(df) == coluna))
 }
+
 
 # Interface do Usuário ----------------------------------------------------
 
@@ -84,6 +91,7 @@ ui <- dashboardPage(
     # Definição do Menu Suspenso
     dropdownMenuOutput("notification_menu"),
     leftUi = tagList(
+      # Dropdown para login com UI personalizada
       dropdownBlock(
         id = "loginDropdown",
         title = "Login",
@@ -106,6 +114,7 @@ ui <- dashboardPage(
         )
       )
     ),
+    # Renderiza o usuário autenticado
     userOutput("user")
   ),
   
@@ -199,13 +208,13 @@ ui <- dashboardPage(
         icon = icon("ship"),
         badgeLabel = nrow(notificacoes),
         badgeColor = "red"
-      ),
-      menuItem(
-        text = "Perguntas",
-        icon = icon("circle-question"),
-        badgeLabel = "new",
-        badgeColor = "aqua",
-        tabName = "tab9header"
+      # ),
+      # menuItem(
+      #   text = "Perguntas",
+      #   icon = icon("circle-question"),
+      #   badgeLabel = "new",
+      #   badgeColor = "aqua",
+      #   tabName = "tab9header"
         )
     )
   ),
@@ -492,7 +501,16 @@ ui <- dashboardPage(
                 p("Na aba “Administrador”, encontra-se uma tabela contendo os
                   dados utilizados nas visualizações de dados. O acesso a essa
                   tabela é restrito aos administradores, os quais devem 
-                  fornecer uma senha para visualizar essas informações."),
+                  efetuar login para visualizar essas informações."),
+                p("Na aba “Distribuição de comprimentos”, você encontrará as 
+                  composições de comprimentos dos indivíduos amostrados em cada
+                  ano para machos e fêmeas. Está disponível também a proporção 
+                  de sexos dos indivíduos capturados."),
+                p("Na aba “Tabela de embarcações” você encontrará uma tabela 
+                  que contém dados sobre as embarcações que já ocorreram e das
+                  embarcações que irão ocorrer, ao clicar na linha de uma 
+                  embarcação específica, é possível verificar mais informações
+                  sobre tal."),
                 p("Para a construção dos gráficos apresentados nesta plataforma
                   são utilizados dados atualizados anualmente."),
                 p("Para maiores informações, por favor, entre em contato através
@@ -1219,7 +1237,7 @@ server <- function(input, output, session) {
       # Média das Toneladas de Captura, de cada Mês, com Anos Agrupados
       summarise(MediaKG_Mes_Viagem = mean(Media_KG_por_Viagem)) %>%
       mutate(MediaKGMesViagem = round(MediaKG_Mes_Viagem, 2)) %>%
-      plotly::select(-MediaKG_Mes_Viagem) %>%
+      dplyr::select(-MediaKG_Mes_Viagem) %>%
       mutate(mes_nome = nomes_meses[MES])
   })
   
@@ -1252,6 +1270,7 @@ server <- function(input, output, session) {
     list(dados = dados_aux, tab01 = tab01)
   })
 
+  # Fazendo o cálculo da captura por mês
   dados_PesoMes <- reactive({ 
     dados_aux_filtrados() %>%
       mutate(KG_por_Viagem = (KG/DESCARGA)) %>%
@@ -1285,6 +1304,7 @@ server <- function(input, output, session) {
       mutate(mes_nome = nomes_meses[MES])
   }) 
   
+  # Dividindo os dados em duas categorias, e fazendo a proporção de dados
   dados_BarraTubOutros <- reactive({
     dados_aux_filtrados() %>%
       group_by(MES) %>% 
@@ -1409,7 +1429,7 @@ server <- function(input, output, session) {
       name = user_name,
       title = paste("Usuário: ", user_permission),
       image = user_image,
-      if(credentials()$user_auth && !credentials()$info$user == "user") {
+      if(credentials()$user_auth && credentials()$info$permissions == "admin") {
         fluidRow(
           dashboardUserItem(
             width = 6,
@@ -2368,7 +2388,7 @@ server <- function(input, output, session) {
   # Renderiza a box de informações do usuário após o login
   output$user_info_box <- renderUI({
     # Só mostra a box se o usuário estiver autenticado
-    req(credentials()$user_auth && !credentials()$info$user == "user")
+    req(credentials()$user_auth && !credentials()$info$permissions == "standard")
     fluidRow(
       box(
         title = "Informações do Usuário",
@@ -2386,12 +2406,12 @@ server <- function(input, output, session) {
   })
 
   output$TextoRestrito <- renderUI({
-    req(!credentials()$user_auth || credentials()$info$user == "user")
+    req(!credentials()$user_auth || credentials()$info$permissions == "standard")
     div(class = "centered-text", "ACESSO RESTRITO A ADMINISTRADORES!")
   })
   
   output$tabelaAdm <- renderDT({
-    req(credentials()$user_auth && !credentials()$info$user == "user")
+    req(credentials()$user_auth && !credentials()$info$permissions == "standard")
     dados_aux_filtrados()
   },options = list(
     paging = TRUE,
@@ -2565,6 +2585,13 @@ server <- function(input, output, session) {
           )
         )
       }
+      else{
+        tags$span(
+          paste(
+            "Não há texto adicional!"
+          )
+        )
+      }
       
       # Exibe o modal com o título e informações extras
       showModal(modalDialog(
@@ -2579,170 +2606,170 @@ server <- function(input, output, session) {
 
 # Perguntas ---------------------------------------------------------------
 
-  output$BarrasKGMes <- renderPlotly({
-    dados_auxiliares <- dados_ajustados %>% 
-      group_by(MES) %>% 
-      summarise(KG_Total = round(sum(KG),2)) %>% 
-      ungroup()
-    
-    plot_ly(
-      data = dados_auxiliares,
-      type = "bar",
-      x = ~MES,
-      y = ~KG_Total
-      ) %>% 
-      layout(
-        hovermode = "x",
-        xaxis = list(
-          title = "Mês",
-          tickvals = unique(dados_auxiliares$MES), 
-          ticktext = unique(dados_auxiliares$MES)
-        ),
-        yaxis = list(
-          title = "Quilos Totais",
-          ticksuffix = ' (Kg)'
-        )
-      )
-  })
-  
-  output$BarrasKGMediaMes <- renderPlotly({
-    dados_auxiliares9 <- dados_ajustados %>% 
-      group_by(MES) %>% 
-      summarise(KG_Media = round(sum(KG)/sum(DESCARGA), 2)) %>% 
-      ungroup()
-    
-    plot_ly(
-      data = dados_auxiliares9,
-      type = "bar",
-      x = ~MES,
-      y = ~KG_Media
-    ) %>% 
-      layout(
-        hovermode = "x",
-        xaxis = list(
-          title = "Mês",
-          tickvals = unique(dados_auxiliares9$MES), 
-          ticktext = unique(dados_auxiliares9$MES)
-        ),
-        yaxis = list(
-          title = "Quilos Totais",
-          ticksuffix = ' (Kg)'
-        )
-      )
-  })
-  
-  output$BarrasKGMesAno <- renderPlotly({
-    dados_auxiliares2 <- dados_ajustados %>% 
-      group_by(MES, ANO) %>% 
-      summarise(KG_Total = sum(KG)) %>% 
-      ungroup() %>% 
-      mutate(mes_ano = make_date(ANO, MES)) %>% 
-      mutate(mes_ano = format(mes_ano, "%Y-%m"))
-    
-    plot_ly(
-      data = dados_auxiliares2,
-      x = ~mes_ano,
-      y = ~KG_Total,
-      type = "bar"
-    ) %>% 
-      layout(
-        hovermode = "x",
-        yaxis = list(
-          title = "Quilos Totais",
-          ticksuffix = ' (Kg)'
-        )
-      )
-  })
-  
-  output$BarrasKGMesAnoMedia <- renderPlotly({
-    dados_auxiliares3 <- dados_ajustados %>% 
-      group_by(MES, ANO) %>% 
-      summarise(
-        KG_Total = sum(KG),
-        Descarga_total = sum(DESCARGA),
-        KG_Media = round(KG_Total/Descarga_total,2)
-      ) %>% 
-      ungroup() %>% 
-      mutate(mes_ano = make_date(ANO, MES)) %>% 
-      mutate(mes_ano = format(mes_ano, "%Y-%m"))
-    
-    plot_ly(
-      data = dados_auxiliares3,
-      x = ~mes_ano,
-      y = ~KG_Media,
-      hoverinfo = "text",
-      text = ~paste(
-        "Captura média por viagem: ", KG_Media, "Kg <br>",
-        "Viagens Totais: ", Descarga_total, "<br>"
-        ),
-      type = "bar"
-    ) %>% 
-      layout(
-        hovermode = "x",
-        yaxis = list(
-          title = "Quilos Totais",
-          ticksuffix = ' (Kg)'
-        )
-      )
-  })
-  
-  output$BarrasKGMediaPorEspecie <- renderPlotly({
-    dados_auxiliares4 <- dados_ajustados %>% 
-      group_by(MES, CATEGORIA) %>% 
-      summarise(KG_Total = round(sum(KG),2)) %>% 
-      ungroup()
-    
-    plot_ly(
-      data = dados_auxiliares4,
-      type = "bar",
-      x = ~MES,
-      y = ~KG_Total,
-      color = ~CATEGORIA,
-      colors = cores
-    ) %>% 
-      layout(
-        hovermode = "x",
-        xaxis = list(
-          title = "Mês",
-          tickvals = unique(dados_auxiliares4$MES), 
-          ticktext = unique(dados_auxiliares4$MES)
-        ),
-        yaxis = list(
-          title = "Quilos Totais",
-          ticksuffix = ' (Kg)'
-        ),
-        showlegend = F
-      )
-  })
-  
-  output$BarrasViagemPorMes <- renderPlotly({
-    dados_auxiliares5 <- dados_ajustados %>% 
-      group_by(MES, ANO) %>% 
-      summarise(
-        Descarga_total = sum(DESCARGA)
-      ) %>% 
-      ungroup() %>% 
-      mutate(mes_ano = make_date(ANO, MES)) %>% 
-      mutate(mes_ano = format(mes_ano, "%Y-%m"))
-    
-    plot_ly(
-      data = dados_auxiliares5,
-      x = ~mes_ano,
-      y = ~Descarga_total,
-      type = "bar"
-      # hoverinfo = "text",
-      # text = ~paste(
-      #   "Captura média por viagem: ", KG_Total, "Kg <br>",
-      #   "Viagens Totais: ", Descarga_total, "<br>"
-      # )
-    ) %>% 
-      layout(
-        hovermode = "x",
-        yaxis = list(
-          title = "Número de Viagens Totais"
-        )
-      )
-  })
+  # output$BarrasKGMes <- renderPlotly({
+  #   dados_auxiliares <- dados_ajustados %>% 
+  #     group_by(MES) %>% 
+  #     summarise(KG_Total = round(sum(KG),2)) %>% 
+  #     ungroup()
+  #   
+  #   plot_ly(
+  #     data = dados_auxiliares,
+  #     type = "bar",
+  #     x = ~MES,
+  #     y = ~KG_Total
+  #     ) %>% 
+  #     layout(
+  #       hovermode = "x",
+  #       xaxis = list(
+  #         title = "Mês",
+  #         tickvals = unique(dados_auxiliares$MES), 
+  #         ticktext = unique(dados_auxiliares$MES)
+  #       ),
+  #       yaxis = list(
+  #         title = "Quilos Totais",
+  #         ticksuffix = ' (Kg)'
+  #       )
+  #     )
+  # })
+  # 
+  # output$BarrasKGMediaMes <- renderPlotly({
+  #   dados_auxiliares9 <- dados_ajustados %>% 
+  #     group_by(MES) %>% 
+  #     summarise(KG_Media = round(sum(KG)/sum(DESCARGA), 2)) %>% 
+  #     ungroup()
+  #   
+  #   plot_ly(
+  #     data = dados_auxiliares9,
+  #     type = "bar",
+  #     x = ~MES,
+  #     y = ~KG_Media
+  #   ) %>% 
+  #     layout(
+  #       hovermode = "x",
+  #       xaxis = list(
+  #         title = "Mês",
+  #         tickvals = unique(dados_auxiliares9$MES), 
+  #         ticktext = unique(dados_auxiliares9$MES)
+  #       ),
+  #       yaxis = list(
+  #         title = "Quilos Totais",
+  #         ticksuffix = ' (Kg)'
+  #       )
+  #     )
+  # })
+  # 
+  # output$BarrasKGMesAno <- renderPlotly({
+  #   dados_auxiliares2 <- dados_ajustados %>% 
+  #     group_by(MES, ANO) %>% 
+  #     summarise(KG_Total = sum(KG)) %>% 
+  #     ungroup() %>% 
+  #     mutate(mes_ano = make_date(ANO, MES)) %>% 
+  #     mutate(mes_ano = format(mes_ano, "%Y-%m"))
+  #   
+  #   plot_ly(
+  #     data = dados_auxiliares2,
+  #     x = ~mes_ano,
+  #     y = ~KG_Total,
+  #     type = "bar"
+  #   ) %>% 
+  #     layout(
+  #       hovermode = "x",
+  #       yaxis = list(
+  #         title = "Quilos Totais",
+  #         ticksuffix = ' (Kg)'
+  #       )
+  #     )
+  # })
+  # 
+  # output$BarrasKGMesAnoMedia <- renderPlotly({
+  #   dados_auxiliares3 <- dados_ajustados %>% 
+  #     group_by(MES, ANO) %>% 
+  #     summarise(
+  #       KG_Total = sum(KG),
+  #       Descarga_total = sum(DESCARGA),
+  #       KG_Media = round(KG_Total/Descarga_total,2)
+  #     ) %>% 
+  #     ungroup() %>% 
+  #     mutate(mes_ano = make_date(ANO, MES)) %>% 
+  #     mutate(mes_ano = format(mes_ano, "%Y-%m"))
+  #   
+  #   plot_ly(
+  #     data = dados_auxiliares3,
+  #     x = ~mes_ano,
+  #     y = ~KG_Media,
+  #     hoverinfo = "text",
+  #     text = ~paste(
+  #       "Captura média por viagem: ", KG_Media, "Kg <br>",
+  #       "Viagens Totais: ", Descarga_total, "<br>"
+  #       ),
+  #     type = "bar"
+  #   ) %>% 
+  #     layout(
+  #       hovermode = "x",
+  #       yaxis = list(
+  #         title = "Quilos Totais",
+  #         ticksuffix = ' (Kg)'
+  #       )
+  #     )
+  # })
+  # 
+  # output$BarrasKGMediaPorEspecie <- renderPlotly({
+  #   dados_auxiliares4 <- dados_ajustados %>% 
+  #     group_by(MES, CATEGORIA) %>% 
+  #     summarise(KG_Total = round(sum(KG),2)) %>% 
+  #     ungroup()
+  #   
+  #   plot_ly(
+  #     data = dados_auxiliares4,
+  #     type = "bar",
+  #     x = ~MES,
+  #     y = ~KG_Total,
+  #     color = ~CATEGORIA,
+  #     colors = cores
+  #   ) %>% 
+  #     layout(
+  #       hovermode = "x",
+  #       xaxis = list(
+  #         title = "Mês",
+  #         tickvals = unique(dados_auxiliares4$MES), 
+  #         ticktext = unique(dados_auxiliares4$MES)
+  #       ),
+  #       yaxis = list(
+  #         title = "Quilos Totais",
+  #         ticksuffix = ' (Kg)'
+  #       ),
+  #       showlegend = F
+  #     )
+  # })
+  # 
+  # output$BarrasViagemPorMes <- renderPlotly({
+  #   dados_auxiliares5 <- dados_ajustados %>% 
+  #     group_by(MES, ANO) %>% 
+  #     summarise(
+  #       Descarga_total = sum(DESCARGA)
+  #     ) %>% 
+  #     ungroup() %>% 
+  #     mutate(mes_ano = make_date(ANO, MES)) %>% 
+  #     mutate(mes_ano = format(mes_ano, "%Y-%m"))
+  #   
+  #   plot_ly(
+  #     data = dados_auxiliares5,
+  #     x = ~mes_ano,
+  #     y = ~Descarga_total,
+  #     type = "bar"
+  #     # hoverinfo = "text",
+  #     # text = ~paste(
+  #     #   "Captura média por viagem: ", KG_Total, "Kg <br>",
+  #     #   "Viagens Totais: ", Descarga_total, "<br>"
+  #     # )
+  #   ) %>% 
+  #     layout(
+  #       hovermode = "x",
+  #       yaxis = list(
+  #         title = "Número de Viagens Totais"
+  #       )
+  #     )
+  # })
 
   # ControlBar --------------------------------------------------------------
   
