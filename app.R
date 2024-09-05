@@ -6,7 +6,7 @@ pacman::p_load(
   leaflet, leaflet.extras,
   dplyr, tidyverse, scales, zoo, DT, tibble,
   plotly, shinyjs,
-  raster, readxl, digest, sodium,
+  raster, digest, sodium,
   DBI, RSQLite
 )
 
@@ -20,8 +20,30 @@ on.exit(dbDisconnect(db))
 
 # Lê as tabelas do banco de dados
 dados <- dbReadTable(db, "Dados")
-notificacoes <- dbReadTable(db, "Notificacoes")
+# notificacoes <- dbReadTable(db, "Notificacoes")
 dados_falsos <- dbReadTable(db, "Dados_falsos")
+
+notificacoes <- read.csv("dados_brutos/NotificacoesTabela.csv", fileEncoding = "UTF-8")
+
+data_atual <- Sys.Date()
+
+NovaColuna <- ifelse(
+  notificacoes$Saída > data_atual, "Futuro", 
+  ifelse(
+    notificacoes$Saída < data_atual, "Passado",
+    "Hoje"
+    )
+  )
+
+notificacoesTabela <- cbind(Status = NovaColuna, notificacoes)
+
+notificacoesTabela$DiasRestantes <- ifelse(
+  notificacoes$Saída > data_atual, as.integer(notificacoes$Saída - data_atual), 
+  ifelse(
+    notificacoes$Saída == data_atual, "Hoje",
+    "Passou"
+  )
+  )
 
 # Le arquivos rds
 user_base <- readRDS("dados_brutos/user_base.rds")
@@ -39,19 +61,10 @@ categoria_substituicoes <- c(
 dados_ajustados <- dados %>%
   mutate(CATEGORIA = recode(CATEGORIA, !!!categoria_substituicoes))
 
-# Cria a coluna 'Horário' e remove as colunas 'Hora' e 'Minuto'
-notificacoes <- notificacoes %>%
-  mutate(Horário = sprintf("%02d:%02d", Hora, Minuto)) %>%
-dplyr::select(-c(Hora, Minuto))
-
-# Função para verificar se uma coluna existe no dataframe
-verifica_coluna <- function(df, coluna) {
-  if (!any(names(df) == coluna)) {
-    message(paste("Coluna", coluna, "não encontrada."))
-  }
-  return(any(names(df) == coluna))
-}
-
+# # Cria a coluna 'Horário' e remove as colunas 'Hora' e 'Minuto'
+# notificacoes <- notificacoes %>%
+#   mutate(Horário = sprintf("%02d:%02d", Hora, Minuto)) %>%
+# dplyr::select(-c(Hora, Minuto))
 
 # Interface do Usuário ----------------------------------------------------
 
@@ -75,7 +88,8 @@ ui <- dashboardPage(
   
   # Definindo a Header do Painel
   header = dashboardHeader(
-    titleWidth = 300,
+    # titleWidth = 300,
+    titleWidth = 250,
     # Definição do Título com Link da Header
     title = tags$a( # Cria uma tag que define um hyperlink
       href = "https://lrpdc.shinyapps.io/proj_tubarao_azul/", # Link URL
@@ -89,33 +103,33 @@ ui <- dashboardPage(
     ),
     controlbarIcon = icon("sliders"), # Definição do ícone da aba de Controle
     # Definição do Menu Suspenso
-    dropdownMenuOutput("notification_menu"),
-    leftUi = tagList(
-      # Dropdown para login com UI personalizada
-      dropdownBlock(
-        id = "loginDropdown",
-        title = "Login",
-        icon = icon("user"),
-        badgeStatus = NULL,
-        loginUI(
-          id = "login",
-          title = "Login",
-          user_title = "Nome do usuário",
-          pass_title = "Senha",
-          error_message = "Usuário ou senha incorretos",
-          login_title = "Entrar"
-        )
-      ),
-      div(
-        class = "pull-right",
-        logoutUI(
-          id = "logout",
-          icon = icon("right-from-bracket")
-        )
-      )
-    ),
-    # Renderiza o usuário autenticado
-    userOutput("user")
+    dropdownMenuOutput("notification_menu")#,
+    # leftUi = tagList(
+    #   # Dropdown para login com UI personalizada
+    #   dropdownBlock(
+    #     id = "loginDropdown",
+    #     title = "Login",
+    #     icon = icon("user"),
+    #     badgeStatus = NULL,
+    #     loginUI(
+    #       id = "login",
+    #       title = "Login",
+    #       user_title = "Nome do usuário",
+    #       pass_title = "Senha",
+    #       error_message = "Usuário ou senha incorretos",
+    #       login_title = "Entrar"
+    #     )
+    #   ),
+    #   div(
+    #     class = "pull-right",
+    #     logoutUI(
+    #       id = "logout",
+    #       icon = icon("right-from-bracket")
+    #     )
+    #   )
+    # ),
+    # # Renderiza o usuário autenticado
+    # userOutput("user")
   ),
   
   # Sidebar -----------------------------------------------------------------
@@ -128,95 +142,156 @@ ui <- dashboardPage(
       Shiny.addCustomMessageHandler('sidebarState', function(collapsed) {
         if (collapsed) {
           $('.treeview-menu').css('width', '126px');
+          # $('.treeview-menu').css('width', '150px');
         } else {
           $('.treeview-menu').css('width', 'auto');
         }
       });
                      ")
     ),
-    tags$head(tags$style(HTML(' 
-    .sidebar-mini:not(.sidebar-mini-expand-feature).sidebar-collapse 
+    tags$head(tags$style(HTML('
+    .sidebar-mini:not(.sidebar-mini-expand-feature).sidebar-collapse
     .sidebar-menu>li:hover>a>span:not(.pull-right) {
-      width: auto !important; 
+      width: 181px !important;
       padding-right: 2rem;
       padding-left: 2rem;
     }
                               ')
                          )
               ),
-    width = 300, # Definição da Largura em pixels
+    width = 250,
+    # width = 300, # Definição da Largura em pixels
     minified = TRUE,  # Se a aba lateral ao ser fechada deverá mostrar os ícones
-    collapsed = TRUE, # Se a aba lateral deve ser iniciada fechada
-    # Definindo do Menu Sidebar
+    collapsed = FALSE, # Se a aba lateral deve ser iniciada fechada
     sidebarMenu(
       id = "sidebarMenu",
-      # Definindo o item do Menu da Tela Inicial
       menuItem(
         text = "Apresentação",
         icon = icon("house"),
-        # Definindo o item do Sub-Menu do Projeto
         menuSubItem(
-          text = "Projeto", 
-          tabName = "tab1body", # Definição do nome do tab
+          text = "Projeto",
+          tabName = "projeto", 
           icon = icon("r-project")
         ),
-        # Definindo o item do Sub-Menu do Leia-me
         menuSubItem(
           text = "Leia-me",
-          tabName = "tab2body",
+          tabName = "leia_me",
           icon = icon("readme")
+        ),
+        menuSubItem(
+          text = "Sobre",
+          tabName = "sobre",
+          icon = icon("circle-info")
         )
       ),
-      # Definindo o item do Menu de Distribuição de Captura
       menuItem(
-        text = "Distribuição de captura",
-        tabName = "tab2header",
-        icon = icon("chart-pie")
+        text = "Distribuição",
+        icon = icon("chart-bar"),
+        menuSubItem(
+          text = "Captura",
+          tabName = "captura",
+          icon = icon("chart-pie")
+        ),
+        menuSubItem(
+          text = "Comprimento",
+          tabName = "comprimento",
+          icon = icon("chart-simple")
+        )
       ),
-      # Definindo o item do Menu de Desembarques
       menuItem(
-        text = "Desembarques",
-        tabName = "tab3header",
+        text = "Desembarque",
+        tabName = "desembarque",
         icon = icon("chart-area")
-        # icon = icon("ship")
-      ),
-      # Definindo o item do Menu da Distribuição espacial das capturas
-      menuItem(
-        text = "Distribuição espacial das capturas",
-        tabName = "tab4header",
-        icon = icon("earth-americas")
-      ),
-      # Definindo o item do Menu do Administrador
-      menuItem(
-        text = "Administrador",
-        tabName = "tab5header",
-        icon = icon("user-tie")
       ),
       menuItem(
-        text = "Distribuição de comprimentos",
-        tabName = "tab6header",
-        icon = icon("chart-simple")
+        text = "Distribuição espacial",
+        icon = icon("globe"),
+        menuSubItem(
+          text = "Captura",
+          tabName = "captura_espacial",
+          icon = icon("earth-americas")
+        ),
+        menuSubItem(
+          text = "Comprimento",
+          tabName = "comprimento_espacial"#,
+          # icon = icon("")
+        )
       ),
       # menuItem(
-      #   text = "Mapa de distribuição de comprimentos",
-      #   tabName = "tab7header",
-      #   icon = icon("map")
+      #   text = "Administrador",
+      #   tabName = "administrador",
+      #   icon = icon("user-tie")
       # ),
       menuItem(
         text = "Tabela de embarcações",
-        tabName = "tab8header",
-        icon = icon("ship"),
+        tabName = "tabela_embarcacoes",
+        icon = icon("table"),
         badgeLabel = nrow(notificacoes),
         badgeColor = "red"
-      # ),
-      # menuItem(
-      #   text = "Perguntas",
-      #   icon = icon("circle-question"),
-      #   badgeLabel = "new",
-      #   badgeColor = "aqua",
-      #   tabName = "tab9header"
-        )
+      )
     )
+    # # Definindo do Menu Sidebar
+    # sidebarMenu(
+    #   id = "sidebarMenu",
+    #   # Definindo o item do Menu da Tela Inicial
+    #   menuItem(
+    #     text = "Apresentação",
+    #     icon = icon("house"),
+    #     # Definindo o item do Sub-Menu do Projeto
+    #     menuSubItem(
+    #       text = "Projeto",
+    #       tabName = "tab1body", # Definição do nome do tab
+    #       icon = icon("r-project")
+    #     ),
+    #     # Definindo o item do Sub-Menu do Leia-me
+    #     menuSubItem(
+    #       text = "Leia-me",
+    #       tabName = "tab2body",
+    #       icon = icon("readme")
+    #     )
+    #   ),
+    #   # Definindo o item do Menu de Distribuição de Captura
+    #   menuItem(
+    #     text = "Distribuição de captura",
+    #     tabName = "tab2header",
+    #     icon = icon("chart-pie")
+    #   ),
+    #   # Definindo o item do Menu de Desembarques
+    #   menuItem(
+    #     text = "Desembarques",
+    #     tabName = "tab3header",
+    #     icon = icon("chart-area")
+    #   ),
+    #   # Definindo o item do Menu da Distribuição espacial das capturas
+    #   menuItem(
+    #     text = "Distribuição espacial das capturas",
+    #     tabName = "tab4header",
+    #     icon = icon("earth-americas")
+    #   ),
+    #   # Definindo o item do Menu do Administrador
+    #   menuItem(
+    #     text = "Administrador",
+    #     tabName = "tab5header",
+    #     icon = icon("user-tie")
+    #   ),
+    #   menuItem(
+    #     text = "Distribuição de comprimentos",
+    #     tabName = "tab6header",
+    #     icon = icon("chart-simple")
+    #   ),
+    #   # menuItem(
+    #   #   text = "Mapa de distribuição de comprimentos",
+    #   #   tabName = "tab7header",
+    #   #   icon = icon("map")
+    #   # ),
+    #   menuItem(
+    #     text = "Tabela de embarcações",
+    #     tabName = "tab8header",
+    #     icon = icon("ship"),
+    #     badgeLabel = nrow(notificacoes),
+    #     badgeColor = "red"
+    #   )
+    # )
   ),
   
   # Body --------------------------------------------------------------------
@@ -267,6 +342,11 @@ ui <- dashboardPage(
       z-index: 100 !important;
     }
     
+    .direct-chat-contacts p {
+      text-align: justify;
+      margin-right: 8px;
+    }
+    
     .content-wrapper {
       background-color: #FFFFFF; /* cor de fundo branca */
     }
@@ -285,93 +365,176 @@ ui <- dashboardPage(
     #loginDropdown .dropdown-menu {
       background-color: rgba(255, 255, 255, 0.6) !important;
     }
+    
+    .box-header {
+      padding-right: 25px;
+      text-align: center;
+    }
                               ')
                          )
               ),
     tabItems(
       # Definindo o conteúdo do Projeto
       tabItem(
-        tabName = "tab1body",
+        tabName = "projeto",
         # Cria uma página com layout fluido
         fluidPage(
           # Cria uma página com layout fixo
           fluidRow(
             # Cria uma coluna dentro de uma definição da Interface do Usuário
             column(
-              offset = 2, # Define o deslocamento de 2 colunas à esquerda
-              width = 9,  # Define a largura como 9 unidades de largura
-              # Criando um carrossel de infoBox
-              carousel(
+              offset = 1,
+              width = 5,
+              infoBox(
+                title = tags$div(
+                  p("Tubarões Medidos"),
+                  style = "display: block; text-align: center;"
+                ),
+                # title = "Tubarões Medidos",
+                fill = TRUE,          # Se a infoBox deve ser preenchida
+                width = 12,           # Definindo a largura da infoBox
+                color = "light-blue", # Definindo cor da infoBox
+                # Definindo Configurações do conteúdo da infoBox
+                value = tags$div(
+                  style = "display: block; text-align: center;",
+                  h1(strong("28954"), style = "margin: 0px;")
+                ),
+                icon = icon("fish")
+              )
+            ),
+            column(
+              # offset = 6,
+              width = 5,
+              infoBox(
+                title = tags$div(
+                  p("Entrevista de Desembarque"),
+                  style = "display: block; text-align: center;"
+                ),
+                # title = "Entrevista de Desembarque",
+                fill = TRUE,
                 width = 12,
-                id = "mycarousel",
-                indicators = FALSE,       # Se haverá setas para troca de item
-                # Item do Carrossel
-                carouselItem(
-                  # Caixa de Informações
-                  infoBox(
-                    title = "Tubarões Medidos",
-                    fill = TRUE,          # Se a infoBox deve ser preenchida
-                    width = 10,           # Definindo a largura da infoBox
-                    color = "light-blue", # Definindo cor da infoBox
-                    # Definindo Configurações do conteúdo da infoBox
-                    value = tags$div(
-                      style = "display: block; text-align: center;", 
-                      # Cria uma tag de cabeçalho HTML
-                      h1(
-                        # Cria uma tag que deixa o texto em negrito
-                        strong("28954")
-                      )
-                    ),
-                    icon = icon("fish"),
-                    # Cria uma tag que insere uma quebra de linha
-                    br()
-                  )
+                color = "light-blue",
+                value = tags$div(
+                  style = "display: block; text-align: center;",
+                  h1(strong("731"), style = "margin: 0px;")
                 ),
-                carouselItem(
-                  infoBox(
-                    title = "Entrevista de Desembarque",
-                    fill = TRUE,
-                    width = 10,
-                    color = "light-blue", 
-                    value = tags$div(
-                      style = "display: block; text-align: center;", 
-                      h1(strong("731"))
-                    ),
-                    icon = icon("paste"),
-                    br()
-                  )
-                ),
-                carouselItem(
-                  infoBox(
-                    title = "Cadernos de Bordo",
-                    fill = TRUE,
-                    width = 10,
-                    color = "light-blue",
-                    value = tags$div(
-                      style = "display: block; text-align: center;", 
-                      h1(strong("465"))
-                    ),
-                    icon = icon("book-open"),
-                    br()
-                  )
-                ),
-                carouselItem(
-                  infoBox(
-                    title = "Embarcações Monitoradas",
-                    fill = TRUE,
-                    width = 10,
-                    color = "light-blue",
-                    value = tags$div(
-                      style = "display: block; text-align: center;",
-                      h1(strong("92"))
-                    ),
-                    icon = icon("sailboat"),
-                    br()
-                  )
-                )
+                icon = icon("paste")
               )
             )
           ),
+          fluidRow(
+            column(
+              offset = 1,
+              width = 5,
+              infoBox(
+                title = tags$div(
+                  p("Cadernos de Bordo"),
+                  style = "display: block; text-align: center;"
+                ),
+                # title = "Cadernos de Bordo",
+                fill = TRUE,
+                width = 12,
+                color = "light-blue",
+                value = tags$div(
+                  style = "display: block; text-align: center;",
+                  h1(strong("465"), style = "margin: 0px;")
+                ),
+                icon = icon("book-open")
+              )
+            ),
+            column(
+              # offset = 6,
+              width = 5,
+              infoBox(
+                title = tags$div(
+                  p("Embarcações Monitoradas"),
+                  style = "display: block; text-align: center;"
+                ),
+                fill = TRUE,
+                width = 12,
+                color = "light-blue",
+                value = tags$div(
+                  style = "display: block; text-align: center;",
+                  h1(strong("92"), style = "margin: 0px;")
+                ),
+                icon = icon("ship")
+              )
+            )
+          ),
+              # offset = 2, # Define o deslocamento de 2 colunas à esquerda
+              # width = 9,  # Define a largura como 9 unidades de largura
+              # # Criando um carrossel de infoBox
+              # carousel(
+              #   width = 12,
+              #   id = "mycarousel",
+              #   indicators = FALSE,       # Se haverá setas para troca de item
+              #   # Item do Carrossel
+              #   carouselItem(
+              #     # Caixa de Informações
+              #     infoBox(
+              #       title = "Tubarões Medidos",
+              #       fill = TRUE,          # Se a infoBox deve ser preenchida
+              #       width = 10,           # Definindo a largura da infoBox
+              #       color = "light-blue", # Definindo cor da infoBox
+              #       # Definindo Configurações do conteúdo da infoBox
+              #       value = tags$div(
+              #         style = "display: block; text-align: center;", 
+              #         # Cria uma tag de cabeçalho HTML
+              #         h1(
+              #           # Cria uma tag que deixa o texto em negrito
+              #           strong("28954")
+              #         )
+              #       ),
+              #       icon = icon("fish"),
+              #       # Cria uma tag que insere uma quebra de linha
+              #       br()
+              #     )
+              #   ),
+              #   carouselItem(
+              #     infoBox(
+              #       title = "Entrevista de Desembarque",
+              #       fill = TRUE,
+              #       width = 10,
+              #       color = "light-blue", 
+              #       value = tags$div(
+              #         style = "display: block; text-align: center;", 
+              #         h1(strong("731"))
+              #       ),
+              #       icon = icon("paste"),
+              #       br()
+              #     )
+              #   ),
+              #   carouselItem(
+              #     infoBox(
+              #       title = "Cadernos de Bordo",
+              #       fill = TRUE,
+              #       width = 10,
+              #       color = "light-blue",
+              #       value = tags$div(
+              #         style = "display: block; text-align: center;", 
+              #         h1(strong("465"))
+              #       ),
+              #       icon = icon("book-open"),
+              #       br()
+              #     )
+              #   ),
+              #   carouselItem(
+              #     infoBox(
+              #       title = "Embarcações Monitoradas",
+              #       fill = TRUE,
+              #       width = 10,
+              #       color = "light-blue",
+              #       value = tags$div(
+              #         style = "display: block; text-align: center;",
+              #         h1(strong("92"))
+              #       ),
+              #       icon = icon("sailboat"),
+              #       br()
+              #     )
+              #   )
+              # )
+          #   )
+          # ),
           fluidRow(
             column(
               width = 8,
@@ -391,51 +554,66 @@ ui <- dashboardPage(
               width = 8,
               offset = 2, # Definindo Deslocamento da Coluna
               # Definindo Texto do Projeto
-              h2("Geração de subsídios e elaboração do Plano de gestão da
+              tags$div(
+                h3("Geração de subsídios e elaboração do Plano de gestão da
                    pesca do Tubarão Azul, e monitoramento da atividade no 
                    Estado do Rio Grande do Sul"),
+                style = "text-align:center;"
+              ),
               br(),
-              h3("Como surgiu o Projeto Tubarão Azul?"),
+              tags$div(
+                style = "text-align:center;",
+                h4("Como surgiu o Projeto Tubarão Azul?")
+              ),
+              # h4("Como surgiu o Projeto Tubarão Azul?")
               # Cria uma tag que define um parágrafo de texto 
-              p("O tubarão-azul ",
-                # Cria uma tag que enfatiza o texto
-                tags$em("Prionace glauca", .noWS = "after"),
-                " é um dos Tubarões mais abundantes e de mais ampla 
+              tags$div(
+                style = "text-align:justify;",
+                p("O tubarão-azul ",
+                  # Cria uma tag que enfatiza o texto
+                  tags$em("Prionace glauca", .noWS = "after"),
+                  " é um dos Tubarões mais abundantes e de mais ampla 
                 distribuição nos oceanos do planeta, sendo a espécie mais
                 frequente nas capturas da frota de espinhel e superfície no
                 Oceano Atlântico Sul."),
-              p("Em 2014 o tubarão-azul foi classificado como Vulnerável à
+                p("Em 2014 o tubarão-azul foi classificado como Vulnerável à
                   extinção a nível estadual (Decreto Estadual 51.797/2014).
                   Tal classificação impõe, por meio de leis federais, 
                   restrição à captura, desembarque e comercialização da 
                   espécie no estado do Rio Grande do Sul."),
-              p("Em 2016, 17 especialistas de diferentes instituições 
+                p("Em 2016, 17 especialistas de diferentes instituições 
                   concordaram com a classificação da espécie como vulnerável. 
                   Avaliaram, no entanto, que a proibição pontual da pesca do 
                   tubarão-azul em águas gaúchas não seria uma medida adequada 
                   para a sua conservação, devido aos seguintes motivos:"),
-              p(strong("1) Por ser fauna acompanhante de outras espécies
+                p(strong("1) Por ser fauna acompanhante de outras espécies
                          comerciais, Tubarões azuis continuariam sendo 
                          capturados em quantidades expressivas.")),
-              p(strong("2) O procedimento de liberação dos exemplares 
+                p(strong("2) O procedimento de liberação dos exemplares 
                          capturados poderia inviabilizar economicamente a 
                          frota de espinhel pelágico.")),
-              p(strong("3) A pesca clandestina e a descarga em locais fora
+                p(strong("3) A pesca clandestina e a descarga em locais fora
                          do Rio Grande do Sul continuariam ocorrendo.")),
-              p(strong("4) Perder-se-ia a pesca regularizada e 
+                p(strong("4) Perder-se-ia a pesca regularizada e 
                          sistematicamente acompanhada como fonte de dados 
                          para o monitoramento do estoque.")),
-              p("Como parte do processo, foi criado um Grupo Técnico para a
+                p("Como parte do processo, foi criado um Grupo Técnico para a
                   elaboração de um Plano de Gestão da Pesca do Tubarão-azul no
                   Rio Grande do Sul, surgindo daí o Projeto Tubarão Azul."),
-              br(),
-              h3("Legal, mas o que é um Plano de Gestão da Pesca?"),
-              p("Trata-se de um documento que estabelece as orientações para
+                br()#,
+              ),
+              tags$div(
+                style = "text-align:center;",
+                h4("Legal, mas o que é um Plano de Gestão da Pesca?")
+              ),
+              tags$div(
+                style = "text-align:justify;",
+                p("Trata-se de um documento que estabelece as orientações para
                   o uso sustentável dos recursos pesqueiros e tem como objetivo 
                   assegurar a sustentabilidade tanto da pesca quanto do 
                   ambiente natural, levando em conta os aspectos sociais, 
                   econômicos e ecológicos das pescarias."),
-              p("A equipe técnica vem realizando levantamento de informações 
+                p("A equipe técnica vem realizando levantamento de informações 
                   através de ações de monitoramento e coleta de amostras 
                   biológicas na descarga das embarcações de espinhel e da 
                   realização de embarque de observadores de bordo - 
@@ -443,13 +621,17 @@ ui <- dashboardPage(
                   coletando amostra e informações, com vistas a avaliação do 
                   estoque e proposição/adoção de medidas para os órgãos de 
                   manejo responsáveis, conforme o fluxograma."),
-              br(),
-              h3("Fluxograma do Plano de Gestão da pesca de Tubarão azul 
-                   no Rio Grande do Sul"),
+                br()
+              ),
+              tags$div(
+                style = "text-align:center;",
+                h4("Fluxograma do Plano de Gestão da pesca de Tubarão azul 
+                   no Rio Grande do Sul")
+              ),
               div(
                 style = "text-align: center;",
                 # Saída da Imagem do Fluxograma do Projeto
-                imageOutput("FluxogramaTubAzul")
+                imageOutput("FluxogramaTubAzul", height = "100%")
               )
             )
           )
@@ -457,7 +639,7 @@ ui <- dashboardPage(
       ),
       # Definindo o conteúdo do Leia-me
       tabItem(
-        tabName = "tab2body",
+        tabName = "leia_me",
         fluidPage(
           fluidRow(
             column(
@@ -478,58 +660,64 @@ ui <- dashboardPage(
                 headerBorder = FALSE, 
                 background = "gray", # Define a cor do fundo
                 # Definindo o texto do Leia-me
-                p("Prezado Usuário,"),
-                p("Esta plataforma foi desenvolvida para disponibilizar 
+                tags$div(
+                  style = "text-align:justify;",
+                  p("Prezado Usuário,"),
+                  p("Esta plataforma foi desenvolvida para disponibilizar 
                   informações atualizadas sobre as capturas de Tubarão azul e 
                   da frota de espinhel pelágico que vêm sendo coletadas pela 
                   equipe do projeto Tubarão Azul. Os dados são referentes à 
                   desembarques realizados pela frota no porto de Rio Grande,
                   RS."),
-                p("A espécie Tubarão azul, por ser o foco do dashboard, estará
+                  p("A espécie Tubarão azul, por ser o foco do dashboard, estará
                   sempre selecionada."),
-                p("Na aba “Distribuição de captura”, você encontrará gráficos
+                  p("Na aba “Distribuição de captura”, você encontrará gráficos
                   que mostram a quantidade de dados registrados de Tubarão azul
                   em comparação com outras espécies e a distribuição de dados
                   de Tubarão azul por mês."),
-                p("Na aba “Desembarques”, serão visualizadas as capturas
+                  p("Na aba “Desembarques”, serão visualizadas as capturas
                   mensais médias por viagem para todas as espécies,
                   discriminadas também por espécie, e a distribuição do peso 
                   total capturado por mês."),
-                p("Na aba “Distribuição espacial das capturas”, você encontrará 
+                  p("Na aba “Distribuição espacial das capturas”, você encontrará 
                   os lances de pesca realizados distribuídos espacialmente para 
                   todas as espécies, discriminados também por espécie."),
-                p("Na aba “Administrador”, encontra-se uma tabela contendo os
+                  p("Na aba “Administrador”, encontra-se uma tabela contendo os
                   dados utilizados nas visualizações de dados. O acesso a essa
                   tabela é restrito aos administradores, os quais devem 
                   efetuar login para visualizar essas informações."),
-                p("Na aba “Distribuição de comprimentos”, você encontrará as 
+                  p("Na aba “Distribuição de comprimentos”, você encontrará as 
                   composições de comprimentos dos indivíduos amostrados em cada
                   ano para machos e fêmeas. Está disponível também a proporção 
                   de sexos dos indivíduos capturados."),
-                p("Na aba “Tabela de embarcações” você encontrará uma tabela 
+                  p("Na aba “Tabela de embarcações” você encontrará uma tabela 
                   que contém dados sobre as embarcações que já ocorreram e das
                   embarcações que irão ocorrer, ao clicar na linha de uma 
                   embarcação específica, é possível verificar mais informações
                   sobre tal."),
-                p("Para a construção dos gráficos apresentados nesta plataforma
+                  p("Para a construção dos gráficos apresentados nesta plataforma
                   são utilizados dados atualizados anualmente."),
-                p("Para maiores informações, por favor, entre em contato através
+                  p("Para maiores informações, por favor, entre em contato através
                   do e-mail ",strong("proj.tubaraoazul.furg@gmail.com."))
+                )
               )
             )
           )
         )
       ),
+      tabItem(
+        tabName = "sobre",
+        
+      ),
       # Definindo o conteúdo da Distribuição de Captura
       tabItem(
-        tabName = "tab2header",
+        tabName = "captura",
         fluidPage(
           fluidRow(
             column(
               width = 12,
               # Definindo Caixa com conteúdo da Distribuição de Captura
               box(
-                # title = "Gráfico de Área Relativa",
                 title = "Dados Registrados por Mês, Ano e Categoria",
                 width = 12,
                 solidHeader = TRUE, # Se a Header é sólida
@@ -545,12 +733,12 @@ ui <- dashboardPage(
                   background = "#A6ACAFEF",
                   width = 30,
                   p("Este gráfico de área relativa, apresenta a quantidade 
-                    de dados registrados por mês/ano, divididos por categoria 
-                    de pesca. Cada barra representa um mês/ano, com segmentos 
-                    empilhados que correspondem às diferentes categorias de 
-                    pesca. Isso permite uma comparação direta entre as 
-                    categorias ao longo do tempo, destacando as variações 
-                    mensais/ano na distribuição dos dados de pesca.")
+                  de dados registrados por mês/ano, divididos por categoria 
+                  de pesca. Cada barra representa um mês/ano, com segmentos 
+                  empilhados que correspondem às diferentes categorias de 
+                  pesca. Isso permite uma comparação direta entre as 
+                  categorias ao longo do tempo, destacando as variações 
+                  mensais/ano na distribuição dos dados de pesca.")
                 )
               )
             )
@@ -559,7 +747,6 @@ ui <- dashboardPage(
             column(
               width = 6,
               box(
-                # title = "Gráfico de Barras",
                 title = "Comparação de Dados Registrados por Mês",
                 width = 12,
                 solidHeader = TRUE,
@@ -608,13 +795,12 @@ ui <- dashboardPage(
       ),
       # Definindo o conteúdo de Desembarques
       tabItem(
-        tabName = "tab3header",
+        tabName = "desembarque",
         fluidPage(
           fluidRow(
             column(
               width = 6,
               box(
-                # title = "Gráfico de Linhas",
                 title = "Média Mensal de Captura por Viagem",
                 width = 12,
                 solidHeader = TRUE, 
@@ -697,7 +883,7 @@ ui <- dashboardPage(
       ),
       # Definindo o conteúdo da Distribuição Espacial das Capturas
       tabItem(
-        tabName = "tab4header",
+        tabName = "captura_espacial",
         fluidPage(
           fluidRow(
             column(
@@ -711,7 +897,7 @@ ui <- dashboardPage(
                 div(
                   class = "mapa",
                   # Saída do Gráfico do Mapa de Calor
-                  leafletOutput("MapaCaptura",height = "100%")
+                  leafletOutput("MapaCaptura", height = "100%")
                 ),
                 sidebar = boxSidebar(
                   id = "boxsidebar9",
@@ -742,7 +928,7 @@ ui <- dashboardPage(
                 div(
                   class = "mapa",
                   # Saída do Gráfico do Mapa de Calor
-                  leafletOutput("MapaCapturaPorViagem",height = "100%")
+                  leafletOutput("MapaCapturaPorViagem", height = "100%")
                 ),
                 sidebar = boxSidebar(
                   id = "boxsidebar91",
@@ -831,41 +1017,37 @@ ui <- dashboardPage(
           )
         )
       ),
-      # Definindo o conteúdo do Administrador
+      # # Definindo o conteúdo do Administrador
+      # tabItem(
+      #   tabName = "administrador",
+      #   fluidRow(
+      #     column(
+      #       width = 4,
+      #       offset = 4,
+      #       tags$head(
+      #         tags$style(HTML("
+      #           .centered-text {
+      #             text-align: center;  /* Centraliza o texto */
+      #             font-size: 36px;     /* Define o tamanho da fonte */
+      #             # color: #007bff;      /* Define a cor do texto */
+      #             margin-top: 50px;    /* Adiciona margem superior */
+      #           }
+      #         "))
+      #       ),
+      #       uiOutput("TextoRestrito")
+      #     )
+      #   ),
+      #   fluidRow(
+      #     column(
+      #       width = 12,
+      #       # Saída da Tabela com os dados para Interface do Usuário
+      #       DTOutput("tabelaAdm"),
+      #       uiOutput("user_info_box")
+      #     )
+      #   )
+      # ),
       tabItem(
-        tabName = "tab5header",
-        fluidRow(
-          column(
-            width = 4,
-            offset = 4,
-            tags$head(
-              tags$style(HTML("
-                .centered-text {
-                  text-align: center;  /* Centraliza o texto */
-                  font-size: 36px;     /* Define o tamanho da fonte */
-                  # color: #007bff;      /* Define a cor do texto */
-                  margin-top: 50px;    /* Adiciona margem superior */
-                }
-              "))
-            ),
-            uiOutput("TextoRestrito")
-            # # Saída do PasswordInput para a Interface do Usuário
-            # uiOutput("senhaAdm"),
-            # # Saída do ActionButton para a Interface do Usuário
-            # uiOutput("entrarAdm")
-          )
-        ),
-        fluidRow(
-          column(
-            width = 12,
-            # Saída da Tabela com os dados para Interface do Usuário
-            DTOutput("tabelaAdm"),
-            uiOutput("user_info_box")
-          )
-        )
-      ),
-      tabItem(
-        tabName = "tab6header",
+        tabName = "comprimento",
         fluidRow(
           box(
             title = "Dados Falsos"
@@ -923,7 +1105,7 @@ ui <- dashboardPage(
         )
       ),
       # tabItem(
-      #   tabName = "tab7header",
+      #   tabName = "comprimento_espacial",
       #   fluidRow(
       #     column(
       #       width = 12,
@@ -949,64 +1131,12 @@ ui <- dashboardPage(
       #   )
       # ),
       tabItem(
-        tabName = "tab8header",
+        tabName = "tabela_embarcacoes",
         fluidRow(
           column(
             width = 12,
-            # uiOutput("lista_embarcacoes")
             DTOutput("tabela_embarcacoes")
           )
-        )
-      ),
-      tabItem(
-        tabName = "tab9header",
-        box(
-          width = 6,
-          solidHeader = T,
-          title = "Qual é o Mês com que tem mais capturas Totais (KG)?",
-          status = "primary",
-          plotlyOutput("BarrasKGMes")
-        ),
-        box(
-          width = 6,
-          solidHeader = T,
-          title = "Qual é o Mês com mais capturas Médias por Viagem (KG)?",
-          status = "primary",
-          plotlyOutput("BarrasKGMediaMes")
-        ),
-        # box(
-        #   width = 6,
-        #   solidHeader = T,
-        #   # title = "Qual é o Mês com que tem mais capturas Totais (KG)?",
-        #   status = "primary"
-        # ),
-        box(
-          width = 12,
-          solidHeader = T,
-          title = "Quilos Totais por Mês",
-          status = "primary",
-          plotlyOutput("BarrasKGMesAno")
-        ),
-        box(
-          width = 12,
-          solidHeader = T,
-          title = "Quilos por Viagem, por Mês",
-          status = "primary",
-          plotlyOutput("BarrasKGMesAnoMedia")
-        ),
-        box(
-          width = 12,
-          solidHeader = T,
-          title = "Média de Quilos por Espécie, por Mês",
-          status = "primary",
-          plotlyOutput("BarrasKGMediaPorEspecie")
-        ),
-        box(
-          width = 12,
-          solidHeader = T,
-          title = "Viagens por Mês",
-          status = "primary",
-          plotlyOutput("BarrasViagemPorMes")
         )
       )
     )
@@ -1018,7 +1148,7 @@ ui <- dashboardPage(
           style = "margin-left: 20px;
           margin-top: -15px;
           margin-bottom: -10px;", 
-          h3(strong("Instituições Executoras"))
+          h4("Instituições Executoras")
         ),
         column(
           width = 2,
@@ -1044,7 +1174,7 @@ ui <- dashboardPage(
             href = "http://www.furg.br", target = "_blank",
             tags$img(
               # Saída do Logo da FURG
-              imageOutput("Logo_FURG",height = "100%",width = "100%")
+              imageOutput("Logo_FURG",height = "100%", width = "100%")
             )
           )
         )
@@ -1054,7 +1184,8 @@ ui <- dashboardPage(
       fluidRow(
         tags$div(
           style = "margin-left: 50px; margin-top: -15px; margin-bottom: -10px;",
-          h3(strong("Apoio"))
+          h4("Apoio"),
+          br()
         ),
         column(
           offset = 1,
@@ -1064,7 +1195,7 @@ ui <- dashboardPage(
             tags$a(
               href = "https://www.gov.br/mpa/pt-br", target = "_blank",
               # Saída do Logo do MAPA
-              imageOutput("Logo_MAPA",height = "100%",width = "100%")
+              imageOutput("Logo_MAPA",height = "100%", width = "100%")
             )
           )
         )
@@ -1077,10 +1208,11 @@ ui <- dashboardPage(
   # Definindo o Controlbar do Painel
   controlbar = dashboardControlbar(
     overlay = FALSE, # Se vai sobrepor o conteúdo
-    collapsed = TRUE,
+    collapsed = FALSE,
     skin = "dark",
     id = "controlbar",
-    width = 300,
+    # width = 300,
+    width = 250,
     # Definindo controlbar Menu
     controlbarMenu(
       id = "controlbarMenu",
@@ -1340,67 +1472,160 @@ server <- function(input, output, session) {
   
   # Header ------------------------------------------------------------------
   
+  # output$notification_menu <- renderMenu({
+  #   notification_items <- lapply(1:nrow(notificacoes), function(i) {
+  #     current_date <- Sys.Date()
+  #     current_time <- format(Sys.time(), "%H:%M")
+  # 
+  #     notification_status <- "primary"
+  # 
+  #     if (notificacoes$Data[i] == current_date) {
+  #       if (notificacoes$Horário[i] <= current_time) {
+  #         notification_status <- "danger"
+  #       } else {
+  #         notification_status <- "warning"
+  #       }
+  #     }
+  # 
+  #     if (notificacoes$Data[i] >= current_date) {
+  #       notification_time <- format(
+  #         as.POSIXct(
+  #           paste(
+  #             notificacoes$Data[i], 
+  #             notificacoes$Horário[i]
+  #             )
+  #           ),
+  #         "%d/%m/%Y %H:%M:%S"
+  #         )
+  #       notificationItem(
+  #         icon = icon("bell"),
+  #         status = notification_status,
+  #         href = notificacoes$Link[i],
+  #         tags$div(
+  #           tags$span(
+  #             paste(
+  #               notificacoes$Titulo[i]
+  #             ),
+  #             style = "font-weight: bold;"
+  #           ),
+  #           br(),
+  #           tags$span(
+  #             paste(
+  #               "Local:",
+  #               notificacoes$Local[i]
+  #             ),
+  #             style = "font-weight: bold;"
+  #           ),
+  #           br(),
+  #           tags$span(
+  #             paste(
+  #               "Ocorrerá em ",
+  #               "dias"
+  #             )
+  #           )
+  #           # tags$span(
+  #           #   paste(
+  #           #     "Hora exata:",
+  #           #     notification_time
+  #           #   ),
+  #           #   style = "font-weight: bold;"
+  #           # )
+  #         )
+  #       )
+  #     }
+  #   })
+  # 
+  #   # Remover itens NULL da lista
+  #   notification_items <- notification_items[!sapply(notification_items, 
+  #                                                    is.null)]
+  # 
+  #   dropdownMenu(
+  #     type = "notifications",
+  #     headerText = paste(
+  #       "Você tem ", length(notification_items), "notificações"
+  #     ),
+  #     icon = icon("bell"),
+  #     .list = notification_items
+  #   )
+  # })
+  
   output$notification_menu <- renderMenu({
-    notification_items <- lapply(1:nrow(notificacoes), function(i) {
+    notification_items <- lapply(1:nrow(notificacoesTabela), function(i) {
       current_date <- Sys.Date()
-      current_time <- format(Sys.time(), "%H:%M")
-
+      # current_time <- format(Sys.time(), "%H:%M")
+      
       notification_status <- "primary"
-
-      if (notificacoes$Data[i] == current_date) {
-        if (notificacoes$Horário[i] <= current_time) {
-          notification_status <- "danger"
-        } else {
-          notification_status <- "warning"
-        }
+      
+      if (notificacoesTabela$Saída[i] == current_date) {
+        notification_status <- "warning"
       }
-
-      if (notificacoes$Data[i] >= current_date) {
+      
+      if (notificacoesTabela$Saída[i] >= current_date) {
         notification_time <- format(
           as.POSIXct(
             paste(
-              notificacoes$Data[i], 
-              notificacoes$Horário[i]
-              )
-            ),
-          "%d/%m/%Y %H:%M:%S"
-          )
+              notificacoesTabela$Saída[i]
+            )
+          ),
+          "%d/%m/%Y"
+        )
         notificationItem(
           icon = icon("bell"),
           status = notification_status,
-          href = notificacoes$Link[i],
+          # href = notificacoes$Link[i],
           tags$div(
             tags$span(
               paste(
-                notificacoes$Titulo[i]
+                notificacoesTabela$Embarcação[i]
               ),
               style = "font-weight: bold;"
             ),
             br(),
-            tags$span(
-              paste(
-                "Local:",
-                notificacoes$Local[i]
-              ),
-              style = "font-weight: bold;"
-            ),
+            # tags$span(
+            #   paste(
+            #     "Local:",
+            #     notificacoesTabela$Local[i]
+            #   ),
+            #   style = "font-weight: bold;"
+            # ),
             br(),
-            tags$span(
-              paste(
-                "Hora exata:",
-                notification_time
-              ),
-              style = "font-weight: bold;"
-            )
+            if (notificacoesTabela$Saída[i] == current_date) {
+              tags$span(
+                paste(
+                  "Ocorrerá/Ocorreu Hoje"
+                )
+              )
+            }
+            else{
+              tags$span(
+                paste(
+                  "Ocorrerá em ",
+                  notificacoesTabela$DiasRestantes[i],
+                  "dias"
+                )
+              )
+            }
+            # tags$span(
+            #   paste(
+            #     
+            #   )
+            # )
+            # tags$span(
+            #   paste(
+            #     "Hora exata:",
+            #     notification_time
+            #   ),
+            #   style = "font-weight: bold;"
+            # )
           )
         )
       }
     })
-
+    
     # Remover itens NULL da lista
     notification_items <- notification_items[!sapply(notification_items, 
                                                      is.null)]
-
+    
     dropdownMenu(
       type = "notifications",
       headerText = paste(
@@ -1411,44 +1636,45 @@ server <- function(input, output, session) {
     )
   })
   
-  output$user <- renderUI({
-    req(credentials()$user_auth)
-    
-    user_name <- credentials()$info$user
-    
-    user_permission <- credentials()$info$permissions
-    
-    user_image <- if(user_name == "admin") {
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXZkyeTC
-      33b_Pt2uAVgTX3165QIuSf73Vzlw&s"
-    } else {
-      "https://cdn-icons-png.freepik.com/512/6543/6543634.png"
-    }
-    
-    dashboardUser(
-      name = user_name,
-      title = paste("Usuário: ", user_permission),
-      image = user_image,
-      if(credentials()$user_auth && credentials()$info$permissions == "admin") {
-        fluidRow(
-          dashboardUserItem(
-            width = 6,
-            socialButton(
-              href = "https://github.com/thiagoyukiop",
-              icon = icon("square-github")
-            )
-          ),
-          dashboardUserItem(
-            width = 6,
-            socialButton(
-              href = "https://www.linkedin.com/in/thiago-yukio-horita-pacheco-451050236/",
-              icon = icon("linkedin-in")
-            )
-          )
-        )
-      }
-    )
-  })
+#   output$user <- renderUI({
+#     req(credentials()$user_auth)
+#     
+#     user_name <- credentials()$info$user
+#     
+#     user_permission <- credentials()$info$permissions
+#     
+#     user_image <- if(user_name == "admin") {
+#       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXZkyeTC
+#       33b_Pt2uAVgTX3165QIuSf73Vzlw&s"
+#     } else {
+#       "https://cdn-icons-png.freepik.com/512/6543/6543634.png"
+#     }
+#     
+#     dashboardUser(
+#       name = user_name,
+#       title = paste("Usuário: ", user_permission),
+#       image = user_image,
+#       if(credentials()$user_auth && credentials()$info$permissions == "admin") {
+#         fluidRow(
+#           dashboardUserItem(
+#             width = 6,
+#             socialButton(
+#               href = "https://github.com/thiagoyukiop",
+#               icon = icon("square-github")
+#             )
+#           ),
+#           dashboardUserItem(
+#             width = 6,
+#             socialButton(
+#               href = "https://www.linkedin.com/in/thiago-yukio-horita-pacheco-
+# 451050236/",
+#               icon = icon("linkedin-in")
+#             )
+#           )
+#         )
+#       }
+#     )
+#   })
   
   
   # Sidebar -----------------------------------------------------------------
@@ -1489,8 +1715,8 @@ server <- function(input, output, session) {
   output$FluxogramaTubAzul <- renderImage({
     list(
       src = "dados_brutos/Fluxograma_ajustado.png", # Local do arquivo da Imagem
-      height = "100%",                     # Altura da Imagem
-      # width = "100%",                      # Largura da Imagem
+      height = "auto",                     # Altura da Imagem
+      width = "100%",                      # Largura da Imagem
       contentType = "image/png"            # Tipo do Conteúdo da Imagem
     )
   }, deleteFile = FALSE)                   # Não Deleta o Arquivo após o Uso
@@ -1539,8 +1765,6 @@ server <- function(input, output, session) {
       x = ~mes_ano_formatado,
       y = ~percentage,
       color = ~CATEGORIA,
-      # colors = cores,
-      # type = "bar",
       type = 'scatter',
       stackgroup = 'one',
       groupnorm = 'percent',
@@ -1767,7 +1991,7 @@ server <- function(input, output, session) {
         "Média de KG: ", Cacao_azul, "<br>"
       )
     )
-    if (verifica_coluna(data_wide_filtrado, "Albacora_bandolim")) {
+    if(any(names(data_wide_filtrado) == "Albacora_bandolim")) {
       plot_data <- plot_data %>% 
         add_trace(
           y = ~Albacora_bandolim,
@@ -1780,7 +2004,7 @@ server <- function(input, output, session) {
           )
         )
     }
-    if (verifica_coluna(data_wide_filtrado, "Albacora_branca")) {
+    if(any(names(data_wide_filtrado) == "Albacora_branca")) {
       plot_data <- plot_data %>% 
         add_trace(
           y = ~Albacora_branca,
@@ -1793,7 +2017,7 @@ server <- function(input, output, session) {
           )
         )
     }
-    if(verifica_coluna(data_wide_filtrado, "Albacora_lage")){
+    if(any(names(data_wide_filtrado) == "Albacora_lage")) {
       plot_data <- plot_data %>% 
         add_trace(
           y = ~Albacora_lage,
@@ -1806,7 +2030,7 @@ server <- function(input, output, session) {
           )
         )
     }
-    if(verifica_coluna(data_wide_filtrado, "Cacao_anequim")){
+    if(any(names(data_wide_filtrado) == "Cacao_anequim")) {
       plot_data <- plot_data %>% 
         add_trace(
           y = ~Cacao_anequim,
@@ -1819,7 +2043,7 @@ server <- function(input, output, session) {
           )
         )
     }
-    if(verifica_coluna(data_wide_filtrado, "Meca")){
+    if(any(names(data_wide_filtrado) == "Meca")) {
       plot_data <- plot_data %>% 
         add_trace(
           y = ~Meca,
@@ -1832,7 +2056,7 @@ server <- function(input, output, session) {
           )
         )
     }
-    if(verifica_coluna(data_wide_filtrado, "Outros")){
+    if(any(names(data_wide_filtrado) == "Outros")) {
       plot_data <- plot_data %>% 
         add_trace(
           y = ~Outros,
@@ -1845,7 +2069,7 @@ server <- function(input, output, session) {
           )
         )
     }
-    if(verifica_coluna(data_wide_filtrado, "Prego")){
+    if(any(names(data_wide_filtrado) == "Prego")) {
       plot_data <- plot_data %>% 
         add_trace(
           y = ~Prego,
@@ -2545,11 +2769,12 @@ server <- function(input, output, session) {
   
   output$tabela_embarcacoes <- renderDT({
     datatable(
-      notificacoes[, !names(notificacoes) %in% c("TextoOpcional", "Link")],
+      # notificacoes[, !names(notificacoes) %in% c("TextoOpcional", "Link")],
+      notificacoesTabela[, !names(notificacoesTabela) %in% "DiasRestantes"],
       rownames = FALSE,
       filter = "none",
       options = list(
-        paging = FALSE,
+        paging = T,
         searching = FALSE,
         pageLength = 10,
         columnDefs = list(
@@ -2578,7 +2803,6 @@ server <- function(input, output, session) {
           paste(
             "Texto:"
           ),
-          # style = "font-weight: bold;",
           br(),
           paste(
             notificacoes$TextoOpcional[i]
@@ -2602,174 +2826,6 @@ server <- function(input, output, session) {
       ))
     }
   })
-  
-
-# Perguntas ---------------------------------------------------------------
-
-  # output$BarrasKGMes <- renderPlotly({
-  #   dados_auxiliares <- dados_ajustados %>% 
-  #     group_by(MES) %>% 
-  #     summarise(KG_Total = round(sum(KG),2)) %>% 
-  #     ungroup()
-  #   
-  #   plot_ly(
-  #     data = dados_auxiliares,
-  #     type = "bar",
-  #     x = ~MES,
-  #     y = ~KG_Total
-  #     ) %>% 
-  #     layout(
-  #       hovermode = "x",
-  #       xaxis = list(
-  #         title = "Mês",
-  #         tickvals = unique(dados_auxiliares$MES), 
-  #         ticktext = unique(dados_auxiliares$MES)
-  #       ),
-  #       yaxis = list(
-  #         title = "Quilos Totais",
-  #         ticksuffix = ' (Kg)'
-  #       )
-  #     )
-  # })
-  # 
-  # output$BarrasKGMediaMes <- renderPlotly({
-  #   dados_auxiliares9 <- dados_ajustados %>% 
-  #     group_by(MES) %>% 
-  #     summarise(KG_Media = round(sum(KG)/sum(DESCARGA), 2)) %>% 
-  #     ungroup()
-  #   
-  #   plot_ly(
-  #     data = dados_auxiliares9,
-  #     type = "bar",
-  #     x = ~MES,
-  #     y = ~KG_Media
-  #   ) %>% 
-  #     layout(
-  #       hovermode = "x",
-  #       xaxis = list(
-  #         title = "Mês",
-  #         tickvals = unique(dados_auxiliares9$MES), 
-  #         ticktext = unique(dados_auxiliares9$MES)
-  #       ),
-  #       yaxis = list(
-  #         title = "Quilos Totais",
-  #         ticksuffix = ' (Kg)'
-  #       )
-  #     )
-  # })
-  # 
-  # output$BarrasKGMesAno <- renderPlotly({
-  #   dados_auxiliares2 <- dados_ajustados %>% 
-  #     group_by(MES, ANO) %>% 
-  #     summarise(KG_Total = sum(KG)) %>% 
-  #     ungroup() %>% 
-  #     mutate(mes_ano = make_date(ANO, MES)) %>% 
-  #     mutate(mes_ano = format(mes_ano, "%Y-%m"))
-  #   
-  #   plot_ly(
-  #     data = dados_auxiliares2,
-  #     x = ~mes_ano,
-  #     y = ~KG_Total,
-  #     type = "bar"
-  #   ) %>% 
-  #     layout(
-  #       hovermode = "x",
-  #       yaxis = list(
-  #         title = "Quilos Totais",
-  #         ticksuffix = ' (Kg)'
-  #       )
-  #     )
-  # })
-  # 
-  # output$BarrasKGMesAnoMedia <- renderPlotly({
-  #   dados_auxiliares3 <- dados_ajustados %>% 
-  #     group_by(MES, ANO) %>% 
-  #     summarise(
-  #       KG_Total = sum(KG),
-  #       Descarga_total = sum(DESCARGA),
-  #       KG_Media = round(KG_Total/Descarga_total,2)
-  #     ) %>% 
-  #     ungroup() %>% 
-  #     mutate(mes_ano = make_date(ANO, MES)) %>% 
-  #     mutate(mes_ano = format(mes_ano, "%Y-%m"))
-  #   
-  #   plot_ly(
-  #     data = dados_auxiliares3,
-  #     x = ~mes_ano,
-  #     y = ~KG_Media,
-  #     hoverinfo = "text",
-  #     text = ~paste(
-  #       "Captura média por viagem: ", KG_Media, "Kg <br>",
-  #       "Viagens Totais: ", Descarga_total, "<br>"
-  #       ),
-  #     type = "bar"
-  #   ) %>% 
-  #     layout(
-  #       hovermode = "x",
-  #       yaxis = list(
-  #         title = "Quilos Totais",
-  #         ticksuffix = ' (Kg)'
-  #       )
-  #     )
-  # })
-  # 
-  # output$BarrasKGMediaPorEspecie <- renderPlotly({
-  #   dados_auxiliares4 <- dados_ajustados %>% 
-  #     group_by(MES, CATEGORIA) %>% 
-  #     summarise(KG_Total = round(sum(KG),2)) %>% 
-  #     ungroup()
-  #   
-  #   plot_ly(
-  #     data = dados_auxiliares4,
-  #     type = "bar",
-  #     x = ~MES,
-  #     y = ~KG_Total,
-  #     color = ~CATEGORIA,
-  #     colors = cores
-  #   ) %>% 
-  #     layout(
-  #       hovermode = "x",
-  #       xaxis = list(
-  #         title = "Mês",
-  #         tickvals = unique(dados_auxiliares4$MES), 
-  #         ticktext = unique(dados_auxiliares4$MES)
-  #       ),
-  #       yaxis = list(
-  #         title = "Quilos Totais",
-  #         ticksuffix = ' (Kg)'
-  #       ),
-  #       showlegend = F
-  #     )
-  # })
-  # 
-  # output$BarrasViagemPorMes <- renderPlotly({
-  #   dados_auxiliares5 <- dados_ajustados %>% 
-  #     group_by(MES, ANO) %>% 
-  #     summarise(
-  #       Descarga_total = sum(DESCARGA)
-  #     ) %>% 
-  #     ungroup() %>% 
-  #     mutate(mes_ano = make_date(ANO, MES)) %>% 
-  #     mutate(mes_ano = format(mes_ano, "%Y-%m"))
-  #   
-  #   plot_ly(
-  #     data = dados_auxiliares5,
-  #     x = ~mes_ano,
-  #     y = ~Descarga_total,
-  #     type = "bar"
-  #     # hoverinfo = "text",
-  #     # text = ~paste(
-  #     #   "Captura média por viagem: ", KG_Total, "Kg <br>",
-  #     #   "Viagens Totais: ", Descarga_total, "<br>"
-  #     # )
-  #   ) %>% 
-  #     layout(
-  #       hovermode = "x",
-  #       yaxis = list(
-  #         title = "Número de Viagens Totais"
-  #       )
-  #     )
-  # })
 
   # ControlBar --------------------------------------------------------------
   
