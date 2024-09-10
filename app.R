@@ -25,6 +25,26 @@ dados_falsos <- dbReadTable(db, "Dados_falsos")
 
 notificacoes <- read.csv("dados_brutos/NotificacoesTabela.csv", fileEncoding = "UTF-8")
 
+notificacoes$AvisoDeDesembarque <- as.Date(notificacoes$AvisoDeDesembarque)
+notificacoes$DataDoDesembarque <- as.Date(notificacoes$DataDoDesembarque)
+notificacoes$Saída <- as.Date(notificacoes$Saída)
+notificacoes$Chegada <- as.Date(notificacoes$Chegada)
+
+novas_linhas <- data.frame(
+  Embarcação = c("Nova Embarcação 1", "Nova Embarcação 2"),
+  AvisoDeDesembarque = as.Date(c("2024-09-10", "2024-09-15")),
+  DataDoDesembarque = as.Date(c("2024-09-11", "2024-09-16")),
+  Saída = as.Date(c("2024-09-06", "2024-09-12")),
+  Chegada = as.Date(c("2024-09-11", "2024-09-16")),
+  IndivíduosMedidosDeTubarãoAzul = c(150, 75),
+  IndivíduosMedidosDeTubarãoAnequim = c(0, 0)
+)
+
+# TESTE
+# Adicionar as novas linhas à tabela existente
+notificacoes <- rbind(notificacoes, novas_linhas)
+
+
 data_atual <- Sys.Date()
 
 NovaColuna <- ifelse(
@@ -79,11 +99,34 @@ ui <- dashboardPage(
       .main-header .logo {
       padding: 0 1px;
       }
+      
+      .fixed-box {
+        position: fixed;
+        width: 20vw;
+        height: calc(100vh - 98px);
+        top: 65px; /* Ajuste conforme necessário */
+        right: 0;
+        background-color: #f0f0f0; /* Cor de fundo para visibilidade */
+        border: 1px solid #ddd; /* Borda para visibilidade */
+        padding: 15px; /* Espaçamento interno */
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Sombra opcional */
+      }
+      
+      # .main-footer {
+      # position: fixed;
+      # bottom: 0;
+      # width: 100vw;
+      # z-index: 1000;
+      # }
+      # .content-wrapper, .right-side {
+      #   padding-bottom: 50px; /* Espaço para o footer */
+      # }
            ')
     )
   ),
   skin = "blue", # Definindo a cor do tema do Painel
   scrollToTop = TRUE,
+  
   # Header ------------------------------------------------------------------
   
   # Definindo a Header do Painel
@@ -338,6 +381,28 @@ ui <- dashboardPage(
     z-index: 100;
     }
     
+    .boxSliders {
+      height: calc(100vh - 98px);
+      position: fixed;
+      width: 18vw;
+    }
+
+    # .boxSliders {
+    #   height: calc(100vh - 20px);  /* Ajusta a altura para ocupar quase toda a tela */
+    #   # width: 300px;                /* Define uma largura fixa para a box */
+    #   width: auto;
+    #   position: fixed;
+    #   top: 10vh;                   /* Distância do topo da tela */
+    #   right: 10px;                 /* Distância da direita da tela */
+    #   # padding: 5px;
+    #   padding-top: 5px;
+    #   padding-right: 10px;
+    #   padding-left: 5px;
+    #   z-index: 1000;
+    #   overflow-y: auto;            /* Adiciona barra de rolagem se o conteúdo for muito alto */
+    # }
+
+    
     .direct-chat-contacts {
       z-index: 100 !important;
     }
@@ -370,6 +435,10 @@ ui <- dashboardPage(
       padding-right: 25px;
       text-align: center;
     }
+    .box {
+      overflow-x: auto; /* Impede que o conteúdo transborde horizontalmente */
+    }
+    
                               ')
                          )
               ),
@@ -649,6 +718,8 @@ ui <- dashboardPage(
                 tags$style(HTML("
                   #boxWithoutHeader .box-header {
                     display: none;
+                    # width: auto;
+                    # height: calc(100vh-98px);
                   }
                 "))
               ),
@@ -706,205 +777,431 @@ ui <- dashboardPage(
         )
       ),
       tabItem(
-        tabName = "sobre",
+        tabName = "sobre"#,
         
       ),
       # Definindo o conteúdo da Distribuição de Captura
       tabItem(
         tabName = "captura",
-        fluidPage(
-          fluidRow(
-            column(
-              width = 12,
-              # Definindo Caixa com conteúdo da Distribuição de Captura
-              box(
-                title = "Dados Registrados por Mês, Ano e Categoria",
+        fluidRow(
+          column(
+            width = 9,
+            fluidRow(
+              column(
                 width = 12,
-                solidHeader = TRUE, # Se a Header é sólida
-                status = "primary",
-                div(
-                  class = "graficos",
-                  # Saída do Gráfico de Barras Empilhadas de dados Registrados
-                  plotlyOutput("TubMesAno", height = "100%")
-                ),
-                sidebar = boxSidebar(
-                  id = "boxsidebar2",
-                  icon = icon("circle-info"),
-                  background = "#A6ACAFEF",
-                  width = 30,
-                  p("Este gráfico de área relativa, apresenta a quantidade 
-                  de dados registrados por mês/ano, divididos por categoria 
-                  de pesca. Cada barra representa um mês/ano, com segmentos 
-                  empilhados que correspondem às diferentes categorias de 
-                  pesca. Isso permite uma comparação direta entre as 
-                  categorias ao longo do tempo, destacando as variações 
-                  mensais/ano na distribuição dos dados de pesca.")
+                # Definindo Caixa com conteúdo da Distribuição de Captura
+                box(
+                  title = "Dados Registrados por Mês, Ano e Categoria",
+                  width = 12,
+                  solidHeader = TRUE, # Se a Header é sólida
+                  status = "primary",
+                  div(
+                    class = "graficos",
+                    # Saída do Gráfico de Barras Empilhadas de dados Registrados
+                    plotlyOutput("TubMesAno", height = "100%")
+                  ),
+                  sidebar = boxSidebar(
+                    id = "boxsidebar2",
+                    icon = icon("circle-info"),
+                    background = "#A6ACAFEF",
+                    width = 30,
+                    p("Este gráfico de área relativa, apresenta a quantidade
+                de dados registrados por mês/ano, divididos por categoria
+                de pesca. Cada barra representa um mês/ano, com segmentos
+                empilhados que correspondem às diferentes categorias de
+                pesca. Isso permite uma comparação direta entre as
+                categorias ao longo do tempo, destacando as variações
+                mensais/ano na distribuição dos dados de pesca.")
+                  )
+                )
+              )
+            ),
+            fluidRow(
+              column(
+                width = 6,
+                box(
+                  title = "Comparação de Dados Registrados por Mês",
+                  width = 12,
+                  solidHeader = TRUE,
+                  status = "primary",
+                  div(
+                    class = "graficos",
+                    plotlyOutput("BarraTubOutros", height = "100%")
+                  ),
+                  sidebar = boxSidebar(
+                    id = "boxsidebar3",
+                    icon = icon("circle-info"),
+                    background = "#A6ACAFEF",
+                    p("Este gráfico de barra, compara a presença de Tubarão azul
+                  com a categoria 'Outros', que representa dados de todas as
+                  outras espécies de pesca. Ele mostra a proporção de dados de
+                  Tubarão azul comparada com as demais categorias, por mês")
+                  )
+                )
+              ),
+              column(
+                width = 6,
+                box(
+                  title = "Comparação de Dados Registrados por Mês/Ano",
+                  width = 12,
+                  solidHeader = TRUE,
+                  status = "primary",
+                  div(
+                    class = "graficos",
+                    # Saída do Mapa de Calor que compara os dados por mês
+                    plotlyOutput("ComparaDadosTub", height = "100%")
+                  ),
+                  sidebar = boxSidebar(
+                    id = "boxsidebar4",
+                    icon = icon("circle-info"),
+                    background = "#A6ACAFEF",
+                    p("Este mapa de calor compara os dados de Tubarão Azul obtidos
+                  em cada mês e ano. Cada quadrado representa um mês de um ano
+                  específico, mostrando a distribuição proporcional dos dados
+                  ao longo do período analisado, permitindo visualizar
+                  variações sazionais ou tendências.")
+                  )
                 )
               )
             )
           ),
-          fluidRow(
-            column(
-              width = 6,
-              box(
-                title = "Comparação de Dados Registrados por Mês",
-                width = 12,
-                solidHeader = TRUE,
-                status = "primary",
-                div(
-                  class = "graficos",
-                  plotlyOutput("BarraTubOutros", height = "100%")
+          column(
+            width = 3,
+            box(
+              title = "Opções",
+              id = "boxWithoutHeader",
+              background = "gray",
+              width = 12,
+              class = "fixed-box",
+              div(
+                class = "boxSliders",
+                sliderInput(
+                  inputId = "anos_captura",    # Identificador do controle deslizante
+                  label = "Intervalo de Anos:",  # Rótulo do controle deslizante
+                  min = min(dados_ajustados$ANO),# Valor Mínimo do controle deslizante
+                  max = max(dados_ajustados$ANO),# Valor Máximo do controle deslizante
+                  value = c(                     # Valor Inicial do controle deslizante
+                    min(dados_ajustados$ANO),
+                    max(dados_ajustados$ANO)
+                  ),
+                  step = 1,        # Intervalo entre os valores do controle deslizante
+                  # Opções das animações
+                  animate = animationOptions(
+                    interval = 1700,
+                    playButton = icon("play"),
+                    pauseButton = icon("pause")
+                  ),
+                  sep = NULL
                 ),
-                sidebar = boxSidebar(
-                  id = "boxsidebar3",
-                  icon = icon("circle-info"),
-                  background = "#A6ACAFEF",
-                  p("Este gráfico de barra, compara a presença de Tubarão azul
-                    com a categoria 'Outros', que representa dados de todas as
-                    outras espécies de pesca. Ele mostra a proporção de dados de
-                    Tubarão azul comparada com as demais categorias, por mês")
-                )
-              )
-            ),
-            column(
-              width = 6,
-              box(
-                title = "Comparação de Dados Registrados por Mês/Ano",
-                width = 12,
-                solidHeader = TRUE,
-                status = "primary",
-                div(
-                  class = "graficos",
-                  # Saída do Mapa de Calor que compara os dados por mês
-                  plotlyOutput("ComparaDadosTub", height = "100%")
-                ),
-                sidebar = boxSidebar(
-                  id = "boxsidebar4",
-                  icon = icon("circle-info"),
-                  background = "#A6ACAFEF",
-                  p("Este mapa de calor compara os dados de Tubarão Azul obtidos
-                    em cada mês e ano. Cada quadrado representa um mês de um ano
-                    específico, mostrando a distribuição proporcional dos dados
-                    ao longo do período analisado, permitindo visualizar 
-                    variações sazionais ou tendências.")
+                checkboxGroupInput(
+                  inputId = "especies_captura",
+                  label = "Seletor de Espécies:",
+                  choiceValues = c(
+                    "Albacora_bandolim", "Albacora_branca","Albacora_lage",
+                    "Cacao_anequim", "Meca", "Outros", "Prego"
+                  ),
+                  choiceNames = c(
+                    "Albacora bandolim", "Albacora branca", "Albacora lage",
+                    "Cação Anequim", "Meca", "Outros", "Prego"
+                  ),
+                  selected = dados_ajustados$CATEGORIA
                 )
               )
             )
           )
         )
+        # fluidPage(
+        #   fluidRow(
+        #     column(
+        #       width = 8,
+        #       # Definindo Caixa com conteúdo da Distribuição de Captura
+        #       box(
+        #         title = "Dados Registrados por Mês, Ano e Categoria",
+        #         width = 12,
+        #         solidHeader = TRUE, # Se a Header é sólida
+        #         status = "primary",
+        #         div(
+        #           class = "graficos",
+        #           # Saída do Gráfico de Barras Empilhadas de dados Registrados
+        #           plotlyOutput("TubMesAno", height = "100%")
+        #         ),
+        #         sidebar = boxSidebar(
+        #           id = "boxsidebar2",
+        #           icon = icon("circle-info"),
+        #           background = "#A6ACAFEF",
+        #           width = 30,
+        #           p("Este gráfico de área relativa, apresenta a quantidade 
+        #           de dados registrados por mês/ano, divididos por categoria 
+        #           de pesca. Cada barra representa um mês/ano, com segmentos 
+        #           empilhados que correspondem às diferentes categorias de 
+        #           pesca. Isso permite uma comparação direta entre as 
+        #           categorias ao longo do tempo, destacando as variações 
+        #           mensais/ano na distribuição dos dados de pesca.")
+        #         )
+        #       )
+        #     ),
+        #     column(
+        #       width = 4,
+        #       box(
+        #         title = "Opções",
+        #         width = 12,
+        #         solidHeader = TRUE,
+        #         status = "primary",
+        #         checkboxGroupInput(
+        #           inputId = "especies_captura",
+        #           label = "Seletor de Espécies:",
+        #           choiceValues = c(
+        #             "Albacora_bandolim", "Albacora_branca","Albacora_lage",
+        #             "Cacao_anequim", "Meca", "Outros", "Prego"
+        #           ),
+        #           choiceNames = c(
+        #             "Albacora bandolim", "Albacora branca", "Albacora lage", 
+        #             "Cação Anequim", "Meca", "Outros", "Prego"
+        #           ),
+        #           selected = dados_ajustados$CATEGORIA,
+        #         )
+        #       )
+        #     )
+        #   ),
+        #   fluidRow(
+        #     column(
+        #       width = 4,
+        #       box(
+        #         title = "Comparação de Dados Registrados por Mês",
+        #         width = 12,
+        #         solidHeader = TRUE,
+        #         status = "primary",
+        #         div(
+        #           class = "graficos",
+        #           plotlyOutput("BarraTubOutros", height = "100%")
+        #         ),
+        #         sidebar = boxSidebar(
+        #           id = "boxsidebar3",
+        #           icon = icon("circle-info"),
+        #           background = "#A6ACAFEF",
+        #           p("Este gráfico de barra, compara a presença de Tubarão azul
+        #             com a categoria 'Outros', que representa dados de todas as
+        #             outras espécies de pesca. Ele mostra a proporção de dados de
+        #             Tubarão azul comparada com as demais categorias, por mês")
+        #         )
+        #       )
+        #     ),
+        #     column(
+        #       width = 4,
+        #       box(
+        #         title = "Comparação de Dados Registrados por Mês/Ano",
+        #         width = 12,
+        #         solidHeader = TRUE,
+        #         status = "primary",
+        #         div(
+        #           class = "graficos",
+        #           # Saída do Mapa de Calor que compara os dados por mês
+        #           plotlyOutput("ComparaDadosTub", height = "100%")
+        #         ),
+        #         sidebar = boxSidebar(
+        #           id = "boxsidebar4",
+        #           icon = icon("circle-info"),
+        #           background = "#A6ACAFEF",
+        #           p("Este mapa de calor compara os dados de Tubarão Azul obtidos
+        #             em cada mês e ano. Cada quadrado representa um mês de um ano
+        #             específico, mostrando a distribuição proporcional dos dados
+        #             ao longo do período analisado, permitindo visualizar 
+        #             variações sazionais ou tendências.")
+        #         )
+        #       )
+        #     ),
+        #     column(
+        #       width = 4,
+        #       box(
+        #         title = "Opções",
+        #         width = 12,
+        #         solidHeader = TRUE,
+        #         status = "primary",
+        #         sliderInput(
+        #           inputId = "anos_captura",    # Identificador do controle deslizante
+        #           label = "Intervalo de Anos:",  # Rótulo do controle deslizante
+        #           min = min(dados_ajustados$ANO),# Valor Mínimo do controle deslizante
+        #           max = max(dados_ajustados$ANO),# Valor Máximo do controle deslizante
+        #           value = c(                     # Valor Inicial do controle deslizante
+        #             min(dados_ajustados$ANO),
+        #             max(dados_ajustados$ANO)
+        #           ),
+        #           step = 1,        # Intervalo entre os valores do controle deslizante
+        #           # Opções das animações
+        #           animate = animationOptions(
+        #             interval = 1700,
+        #             playButton = icon("play"),
+        #             pauseButton = icon("pause")
+        #           )
+        #         )
+        #       )
+        #     )
+        #   )
+        # )
       ),
       # Definindo o conteúdo de Desembarques
       tabItem(
         tabName = "desembarque",
-        fluidPage(
-          fluidRow(
-            column(
-              width = 6,
-              box(
-                title = "Média Mensal de Captura por Viagem",
-                width = 12,
-                solidHeader = TRUE, 
-                collapsible = TRUE,
-                status = "primary",
-                div(
-                  class = "graficos",
-                  # Saída do Gráfico de Linha de Captura 
-                  plotlyOutput("graficoCaptura", height = "100%")
-                ),
-                sidebar = boxSidebar(
-                  id = "boxsidebar6",
-                  icon = icon("circle-info"),
-                  background = "#A6ACAFEF",
-                  p("Este gráfico de linha mostra a captura média em quilos por
+        # fluidPage(
+        fluidRow(
+          column(
+            width = 9,
+            fluidRow(
+              column(
+                width = 6,
+                box(
+                  title = "Média Mensal de Captura por Viagem",
+                  width = 12,
+                  solidHeader = TRUE, 
+                  collapsible = TRUE,
+                  status = "primary",
+                  div(
+                    class = "graficos",
+                    # Saída do Gráfico de Linha de Captura 
+                    plotlyOutput("graficoCaptura", height = "100%")
+                  ),
+                  sidebar = boxSidebar(
+                    id = "boxsidebar6",
+                    icon = icon("circle-info"),
+                    background = "#A6ACAFEF",
+                    p("Este gráfico de linha mostra a captura média em quilos por
                     viagem, distribuída por mês e categorizada por tipo de 
                     peixe. Cada barra representa a média mensal de capturas,
                     destacando a variação ao longo do tempo e entre diferentes 
                     categorias de pesca.")
+                  )
                 )
-              )
-            ),
-            column(
-              width = 6,
-              box(
-                title = "Média Mensal de Captura por Viagem",
-                width = 12,
-                collapsible = TRUE,
-                solidHeader = TRUE,
-                status = "primary",
-                div(
-                  class = "graficos",
-                  # Saída do Mapa de Calor do Peso das Espécies
-                  plotlyOutput("pesoMes", height = "100%")
-                ),
-                sidebar = boxSidebar(
-                  id = "boxsidebar7",
-                  icon = icon("circle-info"),
-                  background = "#A6ACAFEF",
-                  p("Este mapa de calor ilustra a composição de espécies 
+              ),
+              column(
+                width = 6,
+                box(
+                  title = "Média Mensal de Captura por Viagem",
+                  width = 12,
+                  collapsible = TRUE,
+                  solidHeader = TRUE,
+                  status = "primary",
+                  div(
+                    class = "graficos",
+                    # Saída do Mapa de Calor do Peso das Espécies
+                    plotlyOutput("pesoMes", height = "100%")
+                  ),
+                  sidebar = boxSidebar(
+                    id = "boxsidebar7",
+                    icon = icon("circle-info"),
+                    background = "#A6ACAFEF",
+                    p("Este mapa de calor ilustra a composição de espécies 
                     presente nos dados de pesca, indicando a porcentagem de 
                     cada espécie em relação ao total. Cada linha do mapa 
                     representa uma espécie, facilitando a visualização das 
                     diferenças da captura média por espécie.")
+                  )
                 )
-              )
-            ) 
-          ),
-          fluidRow(
-            column(
-              width = 12,
-              box(
-                # title = "Gráfico de Área Relativa",
-                title ='Média Mensal de Captura por Viagem ao Longo do Período',
+              ) 
+            ),
+            fluidRow(
+              column(
                 width = 12,
-                collapsible = TRUE,
-                solidHeader = TRUE,
-                status = "primary",
-                div(
-                  class = "graficosMaiores",
-                  # Saída do Gráfico Plotly do Desembarque
-                  plotlyOutput("graficoAreaDesembarque", height = "100%")
-                ),
-                sidebar = boxSidebar(
-                  id = "boxsidebar82",
-                  icon = icon("circle-info"),
-                  width = 30,
-                  background = "#A6ACAFEF",
-                  p("Este gráfico de área relativa, apresenta a captura média 
+                box(
+                  # title = "Gráfico de Área Relativa",
+                  title ='Média Mensal de Captura por Viagem ao Longo do Período',
+                  width = 12,
+                  collapsible = TRUE,
+                  solidHeader = TRUE,
+                  status = "primary",
+                  div(
+                    class = "graficosMaiores",
+                    # Saída do Gráfico Plotly do Desembarque
+                    plotlyOutput("graficoAreaDesembarque", height = "100%")
+                  ),
+                  sidebar = boxSidebar(
+                    id = "boxsidebar82",
+                    icon = icon("circle-info"),
+                    width = 30,
+                    background = "#A6ACAFEF",
+                    p("Este gráfico de área relativa, apresenta a captura média 
                     em quilos por viagem, categorizada por tipo de peixe, para
                     cada mês/ano no período analisado. As diferentes cores
                     representam distintas categorias de pesca, permitindo uma 
                     comparação clara e imediata entre os meses e anos, bem como 
                     entre as categorias de peixe.")
+                  )
                 )
               )
             )
+          ),
+          column(
+            width = 3,
+            # box(
+            #   title = "Opções",
+            #   id = "boxWithoutHeader",
+            #   background = "gray",
+            #   width = 12,
+              div(
+                class = "boxSliders",
+                sliderInput(
+                  inputId = "anos_desembarque",    # Identificador do controle deslizante
+                  label = "Intervalo de Anos:",  # Rótulo do controle deslizante
+                  min = min(dados_ajustados$ANO),# Valor Mínimo do controle deslizante
+                  max = max(dados_ajustados$ANO),# Valor Máximo do controle deslizante
+                  value = c(                     # Valor Inicial do controle deslizante
+                    min(dados_ajustados$ANO),
+                    max(dados_ajustados$ANO)
+                  ),
+                  step = 1,        # Intervalo entre os valores do controle deslizante
+                  # Opções das animações
+                  animate = animationOptions(
+                    interval = 1700,
+                    playButton = icon("play"),
+                    pauseButton = icon("pause")
+                  ),
+                  sep = NULL
+                ),
+                checkboxGroupInput(
+                  inputId = "especies_desembarque",
+                  label = "Seletor de Espécies:",
+                  choiceValues = c(
+                    "Albacora_bandolim", "Albacora_branca","Albacora_lage",
+                    "Cacao_anequim", "Meca", "Outros", "Prego"
+                  ),
+                  choiceNames = c(
+                    "Albacora bandolim", "Albacora branca", "Albacora lage",
+                    "Cação Anequim", "Meca", "Outros", "Prego"
+                  ),
+                  selected = dados_ajustados$CATEGORIA
+                )
+              )
+            # )
           )
         )
+        # )
       ),
       # Definindo o conteúdo da Distribuição Espacial das Capturas
       tabItem(
         tabName = "captura_espacial",
-        fluidPage(
-          fluidRow(
-            column(
-              width = 12,
-              box(
+        # fluidPage(
+        fluidRow(
+          column(
+            width = 9,
+            fluidRow(
+              column(
                 width = 12,
-                title = "Mapa de Capturas (KG Total)",
-                solidHeader = TRUE,
-                status = "primary",
-                closable = T,
-                div(
-                  class = "mapa",
-                  # Saída do Gráfico do Mapa de Calor
-                  leafletOutput("MapaCaptura", height = "100%")
-                ),
-                sidebar = boxSidebar(
-                  id = "boxsidebar9",
-                  icon = icon("circle-info"),
-                  width = 30,
-                  background = "#A6ACAFEF",
-                  p("Este mapa de calor mostra a localização das capturas, com o
+                box(
+                  width = 12,
+                  title = "Mapa de Capturas (KG Total)",
+                  solidHeader = TRUE,
+                  status = "primary",
+                  closable = T,
+                  div(
+                    class = "mapa",
+                    # Saída do Gráfico do Mapa de Calor
+                    leafletOutput("MapaCaptura", height = "100%")
+                  ),
+                  sidebar = boxSidebar(
+                    id = "boxsidebar9",
+                    icon = icon("circle-info"),
+                    width = 30,
+                    background = "#A6ACAFEF",
+                    p("Este mapa de calor mostra a localização das capturas, com o
                     valor total de Quilos capturados, onde a cor dos círculos
                     varia de verde a roxo, indicando a porcentagem de capturas
                     em cada área. As áreas com uma porcentagem menor de capturas
@@ -912,110 +1209,158 @@ ui <- dashboardPage(
                     áreas com uma porcentagem maior são exibidas em tons mais
                     escuros de roxo. Isso permite visualizar facilmente as
                     áreas com maior e menor concentração de capturas.")
+                  )
                 )
               )
-            )
-          ),
-          fluidRow(
-            column(
-              width = 12,
-              box(
+            ),
+            fluidRow(
+              column(
                 width = 12,
-                title = "Mapa de Capturas (Kg por Viagem)",
-                solidHeader = TRUE,
-                status = "primary",
-                closable = T,
-                div(
-                  class = "mapa",
-                  # Saída do Gráfico do Mapa de Calor
-                  leafletOutput("MapaCapturaPorViagem", height = "100%")
-                ),
-                sidebar = boxSidebar(
-                  id = "boxsidebar91",
-                  icon = icon("circle-info"),
-                  width = 30,
-                  background = "#A6ACAFEF",
-                  p("Este mapa de calor mostra a localização das capturas,com o
+                box(
+                  width = 12,
+                  title = "Mapa de Capturas (Kg por Viagem)",
+                  solidHeader = TRUE,
+                  status = "primary",
+                  closable = T,
+                  div(
+                    class = "mapa",
+                    # Saída do Gráfico do Mapa de Calor
+                    leafletOutput("MapaCapturaPorViagem", height = "100%")
+                  ),
+                  sidebar = boxSidebar(
+                    id = "boxsidebar91",
+                    icon = icon("circle-info"),
+                    width = 30,
+                    background = "#A6ACAFEF",
+                    p("Este mapa de calor mostra a localização das capturas,com o
                     valor em Quilos por Viagem, onde a cor dos círculos varia de
-                    verde a roxo, indicando a porcentagem de capturas em cada 
-                    área. As áreas com uma porcentagem menor de capturas são 
-                    representadas em tons mais claros de verde, enquanto áreas 
-                    com uma porcentagem maior são exibidas em tons mais escuros 
-                    de roxo. Isso permite visualizar facilmente as áreas com 
+                    verde a roxo, indicando a porcentagem de capturas em cada
+                    área. As áreas com uma porcentagem menor de capturas são
+                    representadas em tons mais claros de verde, enquanto áreas
+                    com uma porcentagem maior são exibidas em tons mais escuros
+                    de roxo. Isso permite visualizar facilmente as áreas com
                     maior e menor concentração de capturas.")
+                  )
+                )
+              )
+            ),
+            fluidRow(
+              column(
+                width = 12,
+                box(
+                  width = 12,
+                  title = "Mapa de Capturas (Kg por Viagem)",
+                  solidHeader = TRUE,
+                  status = "primary",
+                  closable = T,
+                  div(
+                    class = "mapa",
+                    # Saída do Gráfico do Mapa de Calor
+                    leafletOutput("MapaCapturaPorViagem2", height = "100%")
+                  ),
+                  sidebar = boxSidebar(
+                    id = "boxsidebar92",
+                    icon = icon("circle-info"),
+                    width = 30,
+                    background = "#A6ACAFEF"
+                  )
+                )
+              )
+            ),
+            fluidRow(
+              column(
+                width = 12,
+                box(
+                  width = 12,
+                  title = "Mapa de Capturas (Kg por Viagem)",
+                  solidHeader = TRUE,
+                  status = "primary",
+                  closable = T,
+                  div(
+                    class = "mapa",
+                    # Saída do Gráfico do Mapa de Calor
+                    leafletOutput("MapaCapturaPorViagem3", height = "100%")
+                  ),
+                  sidebar = boxSidebar(
+                    id = "boxsidebar93",
+                    icon = icon("circle-info"),
+                    width = 30,
+                    background = "#A6ACAFEF"
+                  )
+                )
+              )
+            ),
+            fluidRow(
+              column(
+                width = 12,
+                box(
+                  width = 12,
+                  title = "Mapa de Viagens",
+                  solidHeader = TRUE,
+                  status = "primary",
+                  div(
+                    class = "mapa",
+                    # Saída do Gráfico do Mapa de Calor
+                    leafletOutput("MapaViagens", height = "100%")
+                  ),
+                  sidebar = boxSidebar(
+                    id = "boxsidebar94",
+                    icon = icon("circle-info"),
+                    width = 30,
+                    background = "#A6ACAFEF"
+                  )
                 )
               )
             )
           ),
-          fluidRow(
-            column(
-              width = 12,
-              box(
-                width = 12,
-                title = "Mapa de Capturas (Kg por Viagem)",
-                solidHeader = TRUE,
-                status = "primary",
-                closable = T,
-                div(
-                  class = "mapa",
-                  # Saída do Gráfico do Mapa de Calor
-                  leafletOutput("MapaCapturaPorViagem2", height = "100%")
+          column(
+            width = 3,
+            # box(
+            #   title = "Opções",
+            #   id = "boxWithoutHeader",
+            #   background = "gray",
+            #   width = 12,
+            #   # solidHeader = TRUE,
+            #   # status = "info",
+              div(
+                class = "boxSliders",
+                sliderInput(
+                  inputId = "anos_captura",    # Identificador do controle deslizante
+                  label = "Intervalo de Anos:",  # Rótulo do controle deslizante
+                  min = min(dados_ajustados$ANO),# Valor Mínimo do controle deslizante
+                  max = max(dados_ajustados$ANO),# Valor Máximo do controle deslizante
+                  value = c(                     # Valor Inicial do controle deslizante
+                    min(dados_ajustados$ANO),
+                    max(dados_ajustados$ANO)
+                  ),
+                  step = 1,        # Intervalo entre os valores do controle deslizante
+                  # Opções das animações
+                  animate = animationOptions(
+                    interval = 1700,
+                    playButton = icon("play"),
+                    pauseButton = icon("pause")
+                  ),
+                  sep = NULL
                 ),
-                sidebar = boxSidebar(
-                  id = "boxsidebar92",
-                  icon = icon("circle-info"),
-                  width = 30,
-                  background = "#A6ACAFEF"
+                checkboxGroupInput(
+                  inputId = "especies_captura",
+                  label = "Seletor de Espécies:",
+                  choiceValues = c(
+                    "Albacora_bandolim", "Albacora_branca","Albacora_lage",
+                    "Cacao_anequim", "Meca", "Outros", "Prego"
+                  ),
+                  choiceNames = c(
+                    "Albacora bandolim", "Albacora branca", "Albacora lage",
+                    "Cação Anequim", "Meca", "Outros", "Prego"
+                  ),
+                  selected = dados_ajustados$CATEGORIA
                 )
               )
-            )
-          ),
-          fluidRow(
-            column(
-              width = 12,
-              box(
-                width = 12,
-                title = "Mapa de Capturas (Kg por Viagem)",
-                solidHeader = TRUE,
-                status = "primary",
-                closable = T,
-                div(
-                  class = "mapa",
-                  # Saída do Gráfico do Mapa de Calor
-                  leafletOutput("MapaCapturaPorViagem3", height = "100%")
-                ),
-                sidebar = boxSidebar(
-                  id = "boxsidebar93",
-                  icon = icon("circle-info"),
-                  width = 30,
-                  background = "#A6ACAFEF"
-                )
-              )
-            )
-          ),
-          fluidRow(
-            column(
-              width = 12,
-              box(
-                width = 12,
-                title = "Mapa de Viagens",
-                solidHeader = TRUE,
-                status = "primary",
-                div(
-                  class = "mapa",
-                  # Saída do Gráfico do Mapa de Calor
-                  leafletOutput("MapaViagens", height = "100%")
-                ),
-                sidebar = boxSidebar(
-                  id = "boxsidebar94",
-                  icon = icon("circle-info"),
-                  width = 30,
-                  background = "#A6ACAFEF"
-                )
-              )
-            )
+            # )
           )
         )
+
+        # )
       ),
       # # Definindo o conteúdo do Administrador
       # tabItem(
@@ -1048,59 +1393,86 @@ ui <- dashboardPage(
       # ),
       tabItem(
         tabName = "comprimento",
-        fluidRow(
-          box(
-            title = "Dados Falsos"
-          )
-        ),
+        # fluidRow(
+        #   box(
+        #     title = "Dados Falsos"
+        #   )
+        # ),
         fluidRow(
           column(
-            width = 6,
-            box(
-              width = 12,
-              solidHeader = T,
-              title = "Histograma de Comprimento",
-              status = "primary",
-              flipBox(
-                id = "teste",
-                width = 12,
-                front = plotlyOutput("histograma_comprimentoM"),
-                back = plotlyOutput("histograma_comprimentoF"),
-                trigger = "click"
+            width = 9,
+            fluidRow(
+              column(
+                width = 6,
+                box(
+                  width = 12,
+                  solidHeader = T,
+                  title = "Histograma de Comprimento",
+                  status = "primary",
+                  plotlyOutput("histograma_comprimento"),
+                  # flipBox(
+                  #   id = "teste",
+                  #   width = 12,
+                  #   front = plotlyOutput("histograma_comprimentoM"),
+                  #   back = plotlyOutput("histograma_comprimentoF"),
+                  #   trigger = "click"
+                  # ),
+                  sidebar = boxSidebar(
+                    id = "boxsidebar10",
+                    icon = icon("circle-info"),
+                    width = 50,
+                    background = "#A6ACAFEF"#,
+                  #   p("Esta é uma flipBox, que contém os histogramas do comprimento
+                  # de Tubarões azul machos e fêmeas. Que indica a distribuição de
+                  # comprimento por intervalos específicos, que estão em
+                  # centímetros. Para ver o outro histograma é necessário clicar
+                  # no gráfico.")
+                  )
+                )
               ),
-              sidebar = boxSidebar(
-                id = "boxsidebar10",
-                icon = icon("circle-info"),
-                width = 50,
-                background = "#A6ACAFEF",
-                p("Esta é uma flipBox, que contém os histogramas do comprimento
-                  de Tubarões azul machos e fêmeas. Que indica a distribuição de
-                  comprimento por intervalos específicos, que estão em 
-                  centímetros. Para ver o outro histograma é necessário clicar 
-                  no gráfico.")
+              column(
+                width = 6,
+                box(
+                  width = 12,
+                  solidHeader = T,
+                  title = "Distribuição de Comprimento de Tubarões azul",
+                  status = "primary",
+                  plotlyOutput("boxplot_comprimento"),
+                  sidebar = boxSidebar(
+                    id = "boxsidebar11",
+                    icon = icon("circle-info"),
+                    width = 50,
+                    background = "#A6ACAFEF",
+                    p("Esta é uma boxplot do comprimento de Tubarões azul machos e
+                  fêmeas. Ela indica 5 dados, o mínimo, o primeiro quartil (Q1),
+                  a mediana (Q2), o terceiro quartil (Q3), e o máximo. Os
+                  círculos fora da linha que se estendem a partir da caixa, são
+                  os outliers")
+                  )
+                )
               )
             )
           ),
           column(
-            width = 6,
-            box(
-              width = 12,
-              solidHeader = T,
-              title = "Diagrama de Caixa",
-              status = "primary",
-              plotlyOutput("boxplot_comprimento"),
-              sidebar = boxSidebar(
-                id = "boxsidebar11",
-                icon = icon("circle-info"),
-                width = 50,
-                background = "#A6ACAFEF",
-                p("Esta é uma boxplot do comprimento de Tubarões azul machos e
-                  fêmeas. Ela indica 5 dados, o mínimo, o primeiro quartil (Q1),
-                  a mediana (Q2), o terceiro quartil (Q3), e o máximo. Os 
-                  círculos fora da linha que se estendem a partir da caixa, são
-                  os outliers")
+            # width = 4,
+            width = 3,
+            # box(
+            #   title = "Opções",
+            #   id = "boxWithoutHeader",
+            #   background = "gray",
+            #   width = 12,
+              div(
+                class = "boxSliders",
+                checkboxGroupInput(
+                  inputId = "sexo_comprimento",
+                  label = "Seletor de Sexo:",
+                  # choices = c("Macho", "Femea"),
+                  choiceValues = c("M", "F"),
+                  choiceNames = c("Macho", "Femea"),
+                  selected = c(unique(dados_falsos$Sexo))
+                )
               )
-            )
+            # )
           )
         )
       ),
@@ -1134,8 +1506,79 @@ ui <- dashboardPage(
         tabName = "tabela_embarcacoes",
         fluidRow(
           column(
-            width = 12,
+            offset = 0,
+            width = 9,
             DTOutput("tabela_embarcacoes")
+            # box(
+            #   width = 12,
+            #   title = "Tabela de Embarcações",
+            #   solidHeader = T,
+            #   status = "primary",
+            #   DTOutput("tabela_embarcacoes")
+            # )
+          ),
+          column(
+            offset = 0,
+            width = 3,
+            # box(
+            #   title = "Opções",
+            #   id = "boxWithoutHeader",
+            #   background = "gray",
+            #   width = 12,
+            #   solidHeader = TRUE,
+            #   status = "info",
+            #   div(
+            #     class = "boxSliders",
+            #     sliderInput(
+            #       inputId = "anos_captura",    # Identificador do controle deslizante
+            #       label = "Intervalo de Anos:",  # Rótulo do controle deslizante
+            #       min = min(dados_ajustados$ANO),# Valor Mínimo do controle deslizante
+            #       max = max(dados_ajustados$ANO),# Valor Máximo do controle deslizante
+            #       value = c(                     # Valor Inicial do controle deslizante
+            #         min(dados_ajustados$ANO),
+            #         max(dados_ajustados$ANO)
+            #       ),
+            #       step = 1,        # Intervalo entre os valores do controle deslizante
+            #       # Opções das animações
+            #       animate = animationOptions(
+            #         interval = 1700,
+            #         playButton = icon("play"),
+            #         pauseButton = icon("pause")
+            #       ),
+            #       sep = NULL
+            #     ),
+            #     checkboxGroupInput(
+            #       inputId = "especies_captura",
+            #       label = "Seletor de Espécies:",
+            #       choiceValues = c(
+            #         "Albacora_bandolim", "Albacora_branca","Albacora_lage",
+            #         "Cacao_anequim", "Meca", "Outros", "Prego"
+            #       ),
+            #       choiceNames = c(
+            #         "Albacora bandolim", "Albacora branca", "Albacora lage",
+            #         "Cação Anequim", "Meca", "Outros", "Prego"
+            #       ),
+            #       selected = dados_ajustados$CATEGORIA
+            #     )
+            #   )
+            # )
+            # box(
+            #   title = "Filtro",
+            #   solidHeader = T,
+            #   id = "boxWithoutHeader",
+            #   background = "gray",
+            #   width = 12,
+              div(
+                class = "boxSliders",
+                radioButtons(
+                  inputId = "status_tabela",
+                  label = "Defina o Status das Embarcações",
+                  # choices = c(unique(notificacoesTabela$Status), "Todos"),
+                  choices = c("Todos", "Hoje", "Passado", "Futuro"),
+                  selected = "Todos"
+                )
+              )
+            # )
           )
         )
       )
@@ -1188,10 +1631,11 @@ ui <- dashboardPage(
           br()
         ),
         column(
-          offset = 1,
+          # offset = 2,
           width = 3,
           tags$div(
             style = "margin-right: 20px;",
+            # style = "margin-right: 220px;",
             tags$a(
               href = "https://www.gov.br/mpa/pt-br", target = "_blank",
               # Saída do Logo do MAPA
@@ -1207,8 +1651,8 @@ ui <- dashboardPage(
   
   # Definindo o Controlbar do Painel
   controlbar = dashboardControlbar(
-    overlay = FALSE, # Se vai sobrepor o conteúdo
-    collapsed = FALSE,
+      overlay = FALSE, # Se vai sobrepor o conteúdo
+    collapsed = TRUE,
     skin = "dark",
     id = "controlbar",
     # width = 300,
@@ -1373,14 +1817,14 @@ server <- function(input, output, session) {
       mutate(mes_nome = nomes_meses[MES])
   })
   
-  # Filtrando os Dados da Tabela Inicial com somente a CATEGORIA Cacao-azul
-  dadostub_aux_filtrados <- reactive({
-    dados_auxiliar <- subset(dados_ajustados, CATEGORIA == "Cacao_azul")
-    subset(
-      dados_auxiliar,
-      ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2]
-    )
-  })
+  # # Filtrando os Dados da Tabela Inicial com somente a CATEGORIA Cacao-azul
+  # dadostub_aux_filtrados <- reactive({
+  #   dados_auxiliar <- subset(dados_ajustados, CATEGORIA == "Cacao_azul")
+  #   subset(
+  #     dados_auxiliar,
+  #     ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2]
+  #   )
+  # })
   
   # Filtrando dados Para o Mapa
   db_filtrado <- reactive({
@@ -1426,15 +1870,15 @@ server <- function(input, output, session) {
       )
   })
   
-  # Fazendo o cálculo de Dados Totais Registrados por Mes de Cacao-azul
-  dados_ComparaDadosTub <- reactive({
-    dadostub_aux_filtrados() %>%
-      group_by(CATEGORIA, MES, ANO) %>%
-      summarise(Quantidade = n()) %>%
-      ungroup() %>%
-      complete(CATEGORIA, MES = 1:12, fill = list(Quantidade = 0)) %>% 
-      mutate(mes_nome = nomes_meses[MES])
-  }) 
+  # # Fazendo o cálculo de Dados Totais Registrados por Mes de Cacao-azul
+  # dados_ComparaDadosTub <- reactive({
+  #   dadostub_aux_filtrados() %>%
+  #     group_by(CATEGORIA, MES, ANO) %>%
+  #     summarise(Quantidade = n()) %>%
+  #     ungroup() %>%
+  #     complete(CATEGORIA, MES = 1:12, fill = list(Quantidade = 0)) %>% 
+  #     mutate(mes_nome = nomes_meses[MES])
+  # }) 
   
   # Dividindo os dados em duas categorias, e fazendo a proporção de dados
   dados_BarraTubOutros <- reactive({
@@ -1450,25 +1894,25 @@ server <- function(input, output, session) {
       mutate(media = round(n / 12, 2))
   })
   
-  # Dividindo os dados Registrados de Cacao-azul em Comparação ao Resto e 
-  # Completando os Mês/Ano sem registros, completando com Zero
-  dados_TubMesAno <- reactive({
-    dados_aux_filtrados() %>%
-      mutate(CATEGORIA=if_else(CATEGORIA!="Cacao_azul","Outros",CATEGORIA)) %>%
-      group_by(CATEGORIA, ANO, MES) %>%
-      summarise(Quantidade = n()) %>%
-      ungroup() %>%
-      complete(CATEGORIA, ANO, MES = 1:12, fill = list(Quantidade = 0)) %>%
-      filter(!(ANO == 2024 & MES >= 5)) %>%
-      mutate(mes_ano_formatado = make_date(ANO, MES)) %>%
-      mutate(mes_ano = as.yearmon(paste0(ANO, "-", sprintf("%02d", MES)))) %>%
-      mutate(mes_ano_formatado = format(mes_ano_formatado, "%Y-%m")) %>% 
-      group_by(mes_ano_formatado) %>%
-      mutate(total = sum(Quantidade)) %>%
-      ungroup() %>%
-      # Calcula a porcentagem para cada categoria
-      mutate(percentage = Quantidade / total*100)
-  }) 
+  # # Dividindo os dados Registrados de Cacao-azul em Comparação ao Resto e 
+  # # Completando os Mês/Ano sem registros, completando com Zero
+  # dados_TubMesAno <- reactive({
+  #   dados_aux_filtrados() %>%
+  #     mutate(CATEGORIA=if_else(CATEGORIA!="Cacao_azul","Outros",CATEGORIA)) %>%
+  #     group_by(CATEGORIA, ANO, MES) %>%
+  #     summarise(Quantidade = n()) %>%
+  #     ungroup() %>%
+  #     complete(CATEGORIA, ANO, MES = 1:12, fill = list(Quantidade = 0)) %>%
+  #     filter(!(ANO == 2024 & MES >= 5)) %>%
+  #     mutate(mes_ano_formatado = make_date(ANO, MES)) %>%
+  #     mutate(mes_ano = as.yearmon(paste0(ANO, "-", sprintf("%02d", MES)))) %>%
+  #     mutate(mes_ano_formatado = format(mes_ano_formatado, "%Y-%m")) %>% 
+  #     group_by(mes_ano_formatado) %>%
+  #     mutate(total = sum(Quantidade)) %>%
+  #     ungroup() %>%
+  #     # Calcula a porcentagem para cada categoria
+  #     mutate(percentage = Quantidade / total*100)
+  # }) 
   
   # Header ------------------------------------------------------------------
   
@@ -1580,7 +2024,7 @@ server <- function(input, output, session) {
               ),
               style = "font-weight: bold;"
             ),
-            br(),
+            # br(),
             # tags$span(
             #   paste(
             #     "Local:",
@@ -1759,6 +2203,40 @@ server <- function(input, output, session) {
   
   # Distribuição de Captura --------------------------------------------
   
+  # Filtrando os Dados da Tabela Inicial
+  dados_aux_filtrados <- reactive({
+    # Filtrando as Espécies 
+    dados_aux <- subset(
+      dados_ajustados, CATEGORIA %in% union(input$especies_captura, "Cacao_azul")
+    )
+    # Filtrando o Intervalo de Anos
+    dados_aux <- subset(
+      dados_aux,
+      ANO >= input$anos_captura[1] & ANO <= input$anos_captura[2]
+    )
+    data.frame(dados_aux)
+  })
+  
+  # Dividindo os dados Registrados de Cacao-azul em Comparação ao Resto e 
+  # Completando os Mês/Ano sem registros, completando com Zero
+  dados_TubMesAno <- reactive({
+    dados_aux_filtrados() %>%
+      mutate(CATEGORIA=if_else(CATEGORIA!="Cacao_azul","Outros",CATEGORIA)) %>%
+      group_by(CATEGORIA, ANO, MES) %>%
+      summarise(Quantidade = n()) %>%
+      ungroup() %>%
+      complete(CATEGORIA, ANO, MES = 1:12, fill = list(Quantidade = 0)) %>%
+      filter(!(ANO == 2024 & MES >= 5)) %>%
+      mutate(mes_ano_formatado = make_date(ANO, MES)) %>%
+      mutate(mes_ano = as.yearmon(paste0(ANO, "-", sprintf("%02d", MES)))) %>%
+      mutate(mes_ano_formatado = format(mes_ano_formatado, "%Y-%m")) %>% 
+      group_by(mes_ano_formatado) %>%
+      mutate(total = sum(Quantidade)) %>%
+      ungroup() %>%
+      # Calcula a porcentagem para cada categoria
+      mutate(percentage = Quantidade / total*100)
+  }) 
+  
   output$TubMesAno <- renderPlotly({
     plot_ly(
       data = dados_TubMesAno(),
@@ -1792,9 +2270,9 @@ server <- function(input, output, session) {
         xaxis = list(
           title = "",
           tickvals = dados_TubMesAno()$mes_ano_formatado[seq(
-            1, length(dados_TubMesAno()$mes_ano_formatado), by = 2)],
+            1, length(dados_TubMesAno()$mes_ano_formatado), by = 4)], # era 2
           ticktext = dados_TubMesAno()$mes_ano_formatado[seq(
-            1, length(dados_TubMesAno()$mes_ano_formatado), by = 2)], 
+            1, length(dados_TubMesAno()$mes_ano_formatado), by = 4)], # era 2
           showgrid = FALSE
         ),
         yaxis = list(
@@ -1854,6 +2332,24 @@ server <- function(input, output, session) {
         margin = list(t = 10, b = 40, l = 20, r = 20)
       )
   })
+  
+  # Filtrando os Dados da Tabela Inicial com somente a CATEGORIA Cacao-azul
+  dadostub_aux_filtrados <- reactive({
+    dados_auxiliar <- subset(dados_ajustados, CATEGORIA == "Cacao_azul")
+    subset(
+      dados_auxiliar,
+      ANO >= input$anos_captura[1] & ANO <= input$anos_captura[2]
+    )
+  })
+  
+  dados_ComparaDadosTub <- reactive({
+    dadostub_aux_filtrados() %>%
+      group_by(CATEGORIA, MES, ANO) %>%
+      summarise(Quantidade = n()) %>%
+      ungroup() %>%
+      complete(CATEGORIA, MES = 1:12, fill = list(Quantidade = 0)) %>% 
+      mutate(mes_nome = nomes_meses[MES])
+  }) 
   
   output$ComparaDadosTub <- renderPlotly({
     plot_ly(
@@ -2651,113 +3147,115 @@ server <- function(input, output, session) {
 
 # Distribuição de Comprimentos --------------------------------------------
   
+  
+  # dados_aux_filtrados <- reactive({
+  #   # Filtrando as Espécies 
+  #   dados_aux <- subset(
+  #     dados_ajustados, CATEGORIA %in% union(input$species, "Cacao_azul")
+  #   )
+  #   # Filtrando o Intervalo de Anos
+  #   dados_aux <- subset(
+  #     dados_aux,
+  #     ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2]
+  #   )
+  #   data.frame(dados_aux)
+  # })
+  
+  dados_falsos_filtro <- reactive({
+    subset(dados_falsos, Sexo %in% input$sexo_comprimento)
+  })
+  
+  
   output$histograma_comprimento <- renderPlotly({
-    histogramaM <- plot_ly(
-      data = dados_falsos %>% filter(Sexo == "M"),
-      x = ~IDL,
-      name = "Masculino",
-      type = 'histogram'
-      ) %>% 
-      layout(
-        xaxis = list(
-          title = ""
-        )
-      )
-    histogramaF <- plot_ly(
-      data = dados_falsos %>% filter(Sexo == "F"),
-      x = ~IDL,
-      name = "Feminino",
-      type = 'histogram'
-    ) %>% layout(
-      xaxis = list(
-        title = ""
+    plot_ly(
+    data = dados_falsos_filtro(),
+    x = ~IDL,
+    type = 'histogram',
+    marker = list(
+      line = list(
+        color = 'black',  # Cor do contorno
+        width = 1         # Espessura do contorno
       )
     )
-    subplot(
-      histogramaM, 
-      histogramaF,
-      nrows = 1,
-      shareX = TRUE,
-      shareY = TRUE
-      ) %>% 
+    ) %>% 
       layout(
-        title = "Histograma de Comprimento por Sexo",
+        title = NULL,
         yaxis = list(
           title = "Frequência Relativa",
           showgrid = FALSE,
           ticksuffix = '%'
         ),
         showlegend = FALSE
-        )
-  })
-  
-  output$histograma_comprimentoM <- renderPlotly({
-    plot_ly(
-      data = dados_falsos %>% filter(Sexo == "M"),
-      x = ~IDL,
-      name = "Masculino",
-      type = 'histogram',
-    marker = list(
-      line = list(
-        color = 'black',  # cor da borda
-        width = 1        # espessura da borda
-      )
-    )
-    ) %>% 
-      layout(
-        title = "Macho",
-        hovermode = "x",
-        xaxis = list(
-          title = "Comprimento (cm)",
-          showgrid = TRUE
-        ),
-        yaxis = list(
-          showgrid = TRUE,
-          ticksuffix = '%'
-        )
       )
   })
   
-  output$histograma_comprimentoF <- renderPlotly({
-    plot_ly(
-      data = dados_falsos %>% filter(Sexo == "F"),
-      x = ~IDL,
-      name = "Masculino",
-      type = 'histogram',
-      marker = list(
-        line = list(
-          color = 'black',  # cor da borda
-          width = 1        # espessura da borda
-        )
-      )
-    ) %>% 
-      layout(
-        title = "Fêmea",
-        hovermode = "x",
-        xaxis = list(
-          title = "Comprimento (cm)",
-          showgrid = TRUE
-        ),
-        yaxis = list(
-          showgrid = TRUE,
-          ticksuffix = '%'
-        )
-      )
-  })
+  # output$histograma_comprimentoM <- renderPlotly({
+  #   plot_ly(
+  #     data = dados_falsos %>% filter(Sexo == "M"),
+  #     x = ~IDL,
+  #     name = "Masculino",
+  #     type = 'histogram',
+  #   marker = list(
+  #     line = list(
+  #       color = 'black',  # cor da borda
+  #       width = 1        # espessura da borda
+  #     )
+  #   )
+  #   ) %>% 
+  #     layout(
+  #       title = "Macho",
+  #       hovermode = "x",
+  #       xaxis = list(
+  #         title = "Comprimento (cm)",
+  #         showgrid = TRUE
+  #       ),
+  #       yaxis = list(
+  #         showgrid = TRUE,
+  #         ticksuffix = '%'
+  #       )
+  #     )
+  # })
+  
+  # output$histograma_comprimentoF <- renderPlotly({
+  #   plot_ly(
+  #     data = dados_falsos %>% filter(Sexo == "F"),
+  #     x = ~IDL,
+  #     name = "Masculino",
+  #     type = 'histogram',
+  #     marker = list(
+  #       line = list(
+  #         color = 'black',  # cor da borda
+  #         width = 1        # espessura da borda
+  #       )
+  #     )
+  #   ) %>% 
+  #     layout(
+  #       title = "Fêmea",
+  #       hovermode = "x",
+  #       xaxis = list(
+  #         title = "Comprimento (cm)",
+  #         showgrid = TRUE
+  #       ),
+  #       yaxis = list(
+  #         showgrid = TRUE,
+  #         ticksuffix = '%'
+  #       )
+  #     )
+  # })
   
   output$boxplot_comprimento <- renderPlotly({
     plot_ly(
-      data = dados_falsos,
+      data = dados_falsos_filtro(),
       y = ~IDL,
-      x = ~Sexo,
+      # x = ~Sexo,
       type = "box",
       marker = list(color = "primary")
     ) %>% 
       layout(
-        title = "Distribuição de Comprimento de Tubarões azul",
+        title = NULL,
         hovermode = "x",
         xaxis = list(
-          title = ""
+          title = NULL
         ),
         yaxis = list(
           title = "Comprimento (cm)"
@@ -2767,65 +3265,91 @@ server <- function(input, output, session) {
   
 # Tabela de Embarcações ---------------------------------------------------
   
-  output$tabela_embarcacoes <- renderDT({
-    datatable(
-      # notificacoes[, !names(notificacoes) %in% c("TextoOpcional", "Link")],
-      notificacoesTabela[, !names(notificacoesTabela) %in% "DiasRestantes"],
-      rownames = FALSE,
-      filter = "none",
-      options = list(
-        paging = T,
-        searching = FALSE,
-        pageLength = 10,
-        columnDefs = list(
-          list(className = 'dt-center', targets = "_all")  # Centraliza o texto
-        )
-      ),
-      class = "cell-border stripe hover",
-      selection = "single"
-    )
-  })
+    output$tabela_embarcacoes <- renderDT({
   
-  observeEvent(input$tabela_embarcacoes_rows_selected, {
-    i <- input$tabela_embarcacoes_rows_selected
-    if (length(i) == 1) {
-      # Verifica se há link disponível e cria o título do modal
-      title_text <- paste("Detalhes da Embarcação", notificacoes$id[i])
-      title_text <- tags$a(
-        title_text,
-        href = notificacoes$Link[i],
-        target = "_blank"
-        )
+      colnames(notificacoesTabela) <- c(
+        "Status", "Embarcação", "Aviso de Desembarque",
+        "Data do Desembarque", "Saída", "Chegada",
+        "Indivíduos Medidos de Tubarão Azul",
+        "Indivíduos Medidos de Tubarão Anequim", "DiasRestantes"
+      )
       
-      # Verifica se há informações extras disponíveis
-      info_extra <- if(!is.na(notificacoes$TextoOpcional[i])){
-        tags$span(
-          paste(
-            "Texto:"
+      tabela_filtrada <- if (input$status_tabela == "Todos") {
+        notificacoesTabela
+      } else {
+        notificacoesTabela[notificacoesTabela$Status == input$status_tabela, ]
+      }
+      
+      datatable(
+        # notificacoes[, !names(notificacoes) %in% c("TextoOpcional", "Link")],
+        tabela_filtrada[, !names(tabela_filtrada) %in% c(
+          "DiasRestantes"#, "Data do Desembarque"
+          )],
+        rownames = FALSE,
+        filter = "none",
+        options = list(
+          paging = T,
+          searching = FALSE,
+          pageLength = 10,
+          columnDefs = list(
+            list(className = 'dt-center', targets = "_all")  # Centraliza o texto
           ),
-          br(),
-          paste(
-            notificacoes$TextoOpcional[i]
+          # order = list(list(4, 'desc'))
+          order = list(list(3, 'desc'))
+        ),
+        class = "cell-border stripe hover",
+        selection = "single"
+      ) %>%
+        formatDate(
+          c('Aviso de Desembarque',
+            'Data do Desembarque',
+            'Saída',
+            'Chegada'),
+          method = "toLocaleDateString",
+          params = list("pt-BR")
           )
-        )
-      }
-      else{
-        tags$span(
-          paste(
-            "Não há texto adicional!"
-          )
-        )
-      }
-      
-      # Exibe o modal com o título e informações extras
-      showModal(modalDialog(
-        title = title_text,
-        info_extra,
-        easyClose = TRUE,
-        footer = NULL
-      ))
-    }
-  })
+    })
+  
+  # observeEvent(input$tabela_embarcacoes_rows_selected, {
+  #   i <- input$tabela_embarcacoes_rows_selected
+  #   if (length(i) == 1) {
+  #     # Verifica se há link disponível e cria o título do modal
+  #     title_text <- paste("Detalhes da Embarcação", notificacoes$id[i])
+  #     title_text <- tags$a(
+  #       title_text,
+  #       href = notificacoes$Link[i],
+  #       target = "_blank"
+  #       )
+  #     
+  #     # Verifica se há informações extras disponíveis
+  #     info_extra <- if(!is.na(notificacoes$TextoOpcional[i])){
+  #       tags$span(
+  #         paste(
+  #           "Texto:"
+  #         ),
+  #         br(),
+  #         paste(
+  #           notificacoes$TextoOpcional[i]
+  #         )
+  #       )
+  #     }
+  #     else{
+  #       tags$span(
+  #         paste(
+  #           "Não há texto adicional!"
+  #         )
+  #       )
+  #     }
+  #     
+  #     # Exibe o modal com o título e informações extras
+  #     showModal(modalDialog(
+  #       title = title_text,
+  #       info_extra,
+  #       easyClose = TRUE,
+  #       footer = NULL
+  #     ))
+  #   }
+  # })
 
   # ControlBar --------------------------------------------------------------
   
