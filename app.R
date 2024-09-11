@@ -100,24 +100,14 @@ ui <- dashboardPage(
       padding: 0 1px;
       }
       
-      .fixed-box {
-        position: fixed;
-        width: 20vw;
-        height: calc(100vh - 98px);
-        top: 65px; /* Ajuste conforme necessário */
-        right: 0;
-        background-color: #f0f0f0; /* Cor de fundo para visibilidade */
-        border: 1px solid #ddd; /* Borda para visibilidade */
-        padding: 15px; /* Espaçamento interno */
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Sombra opcional */
-      }
-      
-      # .main-footer {
+      .main-footer {
+      height: 15vh;
       # position: fixed;
       # bottom: 0;
       # width: 100vw;
-      # z-index: 1000;
-      # }
+      z-index: 1000;
+      padding-bottom: 0px;
+      }
       # .content-wrapper, .right-side {
       #   padding-bottom: 50px; /* Espaço para o footer */
       # }
@@ -213,7 +203,7 @@ ui <- dashboardPage(
         icon = icon("house"),
         menuSubItem(
           text = "Projeto",
-          tabName = "projeto", 
+          tabName = "projeto",
           icon = icon("r-project")
         ),
         menuSubItem(
@@ -273,68 +263,6 @@ ui <- dashboardPage(
         badgeColor = "red"
       )
     )
-    # # Definindo do Menu Sidebar
-    # sidebarMenu(
-    #   id = "sidebarMenu",
-    #   # Definindo o item do Menu da Tela Inicial
-    #   menuItem(
-    #     text = "Apresentação",
-    #     icon = icon("house"),
-    #     # Definindo o item do Sub-Menu do Projeto
-    #     menuSubItem(
-    #       text = "Projeto",
-    #       tabName = "tab1body", # Definição do nome do tab
-    #       icon = icon("r-project")
-    #     ),
-    #     # Definindo o item do Sub-Menu do Leia-me
-    #     menuSubItem(
-    #       text = "Leia-me",
-    #       tabName = "tab2body",
-    #       icon = icon("readme")
-    #     )
-    #   ),
-    #   # Definindo o item do Menu de Distribuição de Captura
-    #   menuItem(
-    #     text = "Distribuição de captura",
-    #     tabName = "tab2header",
-    #     icon = icon("chart-pie")
-    #   ),
-    #   # Definindo o item do Menu de Desembarques
-    #   menuItem(
-    #     text = "Desembarques",
-    #     tabName = "tab3header",
-    #     icon = icon("chart-area")
-    #   ),
-    #   # Definindo o item do Menu da Distribuição espacial das capturas
-    #   menuItem(
-    #     text = "Distribuição espacial das capturas",
-    #     tabName = "tab4header",
-    #     icon = icon("earth-americas")
-    #   ),
-    #   # Definindo o item do Menu do Administrador
-    #   menuItem(
-    #     text = "Administrador",
-    #     tabName = "tab5header",
-    #     icon = icon("user-tie")
-    #   ),
-    #   menuItem(
-    #     text = "Distribuição de comprimentos",
-    #     tabName = "tab6header",
-    #     icon = icon("chart-simple")
-    #   ),
-    #   # menuItem(
-    #   #   text = "Mapa de distribuição de comprimentos",
-    #   #   tabName = "tab7header",
-    #   #   icon = icon("map")
-    #   # ),
-    #   menuItem(
-    #     text = "Tabela de embarcações",
-    #     tabName = "tab8header",
-    #     icon = icon("ship"),
-    #     badgeLabel = nrow(notificacoes),
-    #     badgeColor = "red"
-    #   )
-    # )
   ),
   
   # Body --------------------------------------------------------------------
@@ -352,8 +280,8 @@ ui <- dashboardPage(
     .mapa {
     display: flex;
     width: 100%;
-    # height: calc(86vh - 155px);
-    height: calc(100vh - 145px);
+    # height: calc(100vh - 145px);
+    height: 64vh;
     visibility: inherit;
     position: relative;
     z-index: 100;
@@ -373,36 +301,18 @@ ui <- dashboardPage(
     .graficosMaiores {
     display: flex;
     width: 100%;
-    # height: calc(43vh - 119px);
-    # height: calc(50vh - 120px);
-    height: calc(90vh - 120px);
+    # height: calc(70vh - 120px);
+    height: 70vh;
     visibility: inherit;
     position: relative;
     z-index: 100;
     }
-    
-    .boxSliders {
-      height: calc(100vh - 98px);
-      position: fixed;
-      width: 18vw;
-    }
 
     # .boxSliders {
-    #   height: calc(100vh - 20px);  /* Ajusta a altura para ocupar quase toda a tela */
-    #   # width: 300px;                /* Define uma largura fixa para a box */
-    #   width: auto;
-    #   position: fixed;
-    #   top: 10vh;                   /* Distância do topo da tela */
-    #   right: 10px;                 /* Distância da direita da tela */
-    #   # padding: 5px;
-    #   padding-top: 5px;
-    #   padding-right: 10px;
-    #   padding-left: 5px;
-    #   z-index: 1000;
-    #   overflow-y: auto;            /* Adiciona barra de rolagem se o conteúdo for muito alto */
+    #   min-height: calc(75vh - 20px);
+    #   height: 100%;
     # }
 
-    
     .direct-chat-contacts {
       z-index: 100 !important;
     }
@@ -437,6 +347,43 @@ ui <- dashboardPage(
     }
     .box {
       overflow-x: auto; /* Impede que o conteúdo transborde horizontalmente */
+    }
+    
+    # .col-sm-9 {
+    #   width: 75%;
+    #   height: 75vh; /* Ajustar se necessário */
+    #   overflow-y: auto;           /* Scroll apenas na coluna .col-sm-9 */
+    # }
+    
+    #Logo_FURG img {
+      width: 60%;        /* Define a largura como 80% */
+      height: auto;      /* Mantém a proporção */
+    }
+      
+    #Logo_UNIVALI img {
+      width: 70%;        /* Define a largura como 80% */
+      height: auto;      /* Mantém a proporção */
+    }
+    
+    #Logo_LEMA img {
+      width: 80%;        /* Define a largura como 80% */
+      height: auto;      /* Mantém a proporção */
+    }
+    
+    #Logo_MAPA img {
+      # width: 80%;        /* Define a largura como 80% */
+      # height: auto;      /* Mantém a proporção */
+    }
+    
+    # .col-sm-12 {
+    #   width: 75%;
+    #   height: 75vh; /* Ajustar se necessário */
+    #   overflow-y: auto;           /* Scroll apenas na coluna .col-sm-9 */
+    # }
+    
+    .content {
+      overflow: auto;
+      height: 76vh;
     }
     
                               ')
@@ -530,80 +477,6 @@ ui <- dashboardPage(
               )
             )
           ),
-              # offset = 2, # Define o deslocamento de 2 colunas à esquerda
-              # width = 9,  # Define a largura como 9 unidades de largura
-              # # Criando um carrossel de infoBox
-              # carousel(
-              #   width = 12,
-              #   id = "mycarousel",
-              #   indicators = FALSE,       # Se haverá setas para troca de item
-              #   # Item do Carrossel
-              #   carouselItem(
-              #     # Caixa de Informações
-              #     infoBox(
-              #       title = "Tubarões Medidos",
-              #       fill = TRUE,          # Se a infoBox deve ser preenchida
-              #       width = 10,           # Definindo a largura da infoBox
-              #       color = "light-blue", # Definindo cor da infoBox
-              #       # Definindo Configurações do conteúdo da infoBox
-              #       value = tags$div(
-              #         style = "display: block; text-align: center;", 
-              #         # Cria uma tag de cabeçalho HTML
-              #         h1(
-              #           # Cria uma tag que deixa o texto em negrito
-              #           strong("28954")
-              #         )
-              #       ),
-              #       icon = icon("fish"),
-              #       # Cria uma tag que insere uma quebra de linha
-              #       br()
-              #     )
-              #   ),
-              #   carouselItem(
-              #     infoBox(
-              #       title = "Entrevista de Desembarque",
-              #       fill = TRUE,
-              #       width = 10,
-              #       color = "light-blue", 
-              #       value = tags$div(
-              #         style = "display: block; text-align: center;", 
-              #         h1(strong("731"))
-              #       ),
-              #       icon = icon("paste"),
-              #       br()
-              #     )
-              #   ),
-              #   carouselItem(
-              #     infoBox(
-              #       title = "Cadernos de Bordo",
-              #       fill = TRUE,
-              #       width = 10,
-              #       color = "light-blue",
-              #       value = tags$div(
-              #         style = "display: block; text-align: center;", 
-              #         h1(strong("465"))
-              #       ),
-              #       icon = icon("book-open"),
-              #       br()
-              #     )
-              #   ),
-              #   carouselItem(
-              #     infoBox(
-              #       title = "Embarcações Monitoradas",
-              #       fill = TRUE,
-              #       width = 10,
-              #       color = "light-blue",
-              #       value = tags$div(
-              #         style = "display: block; text-align: center;",
-              #         h1(strong("92"))
-              #       ),
-              #       icon = icon("sailboat"),
-              #       br()
-              #     )
-              #   )
-              # )
-          #   )
-          # ),
           fluidRow(
             column(
               width = 8,
@@ -783,9 +656,9 @@ ui <- dashboardPage(
       # Definindo o conteúdo da Distribuição de Captura
       tabItem(
         tabName = "captura",
-        fluidRow(
-          column(
-            width = 9,
+        # fluidRow(
+          # column(
+            # width = 9,
             fluidRow(
               column(
                 width = 12,
@@ -864,188 +737,14 @@ ui <- dashboardPage(
                 )
               )
             )
-          ),
-          column(
-            width = 3,
-            box(
-              title = "Opções",
-              id = "boxWithoutHeader",
-              background = "gray",
-              width = 12,
-              class = "fixed-box",
-              div(
-                class = "boxSliders",
-                sliderInput(
-                  inputId = "anos_captura",    # Identificador do controle deslizante
-                  label = "Intervalo de Anos:",  # Rótulo do controle deslizante
-                  min = min(dados_ajustados$ANO),# Valor Mínimo do controle deslizante
-                  max = max(dados_ajustados$ANO),# Valor Máximo do controle deslizante
-                  value = c(                     # Valor Inicial do controle deslizante
-                    min(dados_ajustados$ANO),
-                    max(dados_ajustados$ANO)
-                  ),
-                  step = 1,        # Intervalo entre os valores do controle deslizante
-                  # Opções das animações
-                  animate = animationOptions(
-                    interval = 1700,
-                    playButton = icon("play"),
-                    pauseButton = icon("pause")
-                  ),
-                  sep = NULL
-                ),
-                checkboxGroupInput(
-                  inputId = "especies_captura",
-                  label = "Seletor de Espécies:",
-                  choiceValues = c(
-                    "Albacora_bandolim", "Albacora_branca","Albacora_lage",
-                    "Cacao_anequim", "Meca", "Outros", "Prego"
-                  ),
-                  choiceNames = c(
-                    "Albacora bandolim", "Albacora branca", "Albacora lage",
-                    "Cação Anequim", "Meca", "Outros", "Prego"
-                  ),
-                  selected = dados_ajustados$CATEGORIA
-                )
-              )
-            )
-          )
-        )
-        # fluidPage(
-        #   fluidRow(
-        #     column(
-        #       width = 8,
-        #       # Definindo Caixa com conteúdo da Distribuição de Captura
-        #       box(
-        #         title = "Dados Registrados por Mês, Ano e Categoria",
-        #         width = 12,
-        #         solidHeader = TRUE, # Se a Header é sólida
-        #         status = "primary",
-        #         div(
-        #           class = "graficos",
-        #           # Saída do Gráfico de Barras Empilhadas de dados Registrados
-        #           plotlyOutput("TubMesAno", height = "100%")
-        #         ),
-        #         sidebar = boxSidebar(
-        #           id = "boxsidebar2",
-        #           icon = icon("circle-info"),
-        #           background = "#A6ACAFEF",
-        #           width = 30,
-        #           p("Este gráfico de área relativa, apresenta a quantidade 
-        #           de dados registrados por mês/ano, divididos por categoria 
-        #           de pesca. Cada barra representa um mês/ano, com segmentos 
-        #           empilhados que correspondem às diferentes categorias de 
-        #           pesca. Isso permite uma comparação direta entre as 
-        #           categorias ao longo do tempo, destacando as variações 
-        #           mensais/ano na distribuição dos dados de pesca.")
-        #         )
-        #       )
-        #     ),
-        #     column(
-        #       width = 4,
-        #       box(
-        #         title = "Opções",
-        #         width = 12,
-        #         solidHeader = TRUE,
-        #         status = "primary",
-        #         checkboxGroupInput(
-        #           inputId = "especies_captura",
-        #           label = "Seletor de Espécies:",
-        #           choiceValues = c(
-        #             "Albacora_bandolim", "Albacora_branca","Albacora_lage",
-        #             "Cacao_anequim", "Meca", "Outros", "Prego"
-        #           ),
-        #           choiceNames = c(
-        #             "Albacora bandolim", "Albacora branca", "Albacora lage", 
-        #             "Cação Anequim", "Meca", "Outros", "Prego"
-        #           ),
-        #           selected = dados_ajustados$CATEGORIA,
-        #         )
-        #       )
-        #     )
-        #   ),
-        #   fluidRow(
-        #     column(
-        #       width = 4,
-        #       box(
-        #         title = "Comparação de Dados Registrados por Mês",
-        #         width = 12,
-        #         solidHeader = TRUE,
-        #         status = "primary",
-        #         div(
-        #           class = "graficos",
-        #           plotlyOutput("BarraTubOutros", height = "100%")
-        #         ),
-        #         sidebar = boxSidebar(
-        #           id = "boxsidebar3",
-        #           icon = icon("circle-info"),
-        #           background = "#A6ACAFEF",
-        #           p("Este gráfico de barra, compara a presença de Tubarão azul
-        #             com a categoria 'Outros', que representa dados de todas as
-        #             outras espécies de pesca. Ele mostra a proporção de dados de
-        #             Tubarão azul comparada com as demais categorias, por mês")
-        #         )
-        #       )
-        #     ),
-        #     column(
-        #       width = 4,
-        #       box(
-        #         title = "Comparação de Dados Registrados por Mês/Ano",
-        #         width = 12,
-        #         solidHeader = TRUE,
-        #         status = "primary",
-        #         div(
-        #           class = "graficos",
-        #           # Saída do Mapa de Calor que compara os dados por mês
-        #           plotlyOutput("ComparaDadosTub", height = "100%")
-        #         ),
-        #         sidebar = boxSidebar(
-        #           id = "boxsidebar4",
-        #           icon = icon("circle-info"),
-        #           background = "#A6ACAFEF",
-        #           p("Este mapa de calor compara os dados de Tubarão Azul obtidos
-        #             em cada mês e ano. Cada quadrado representa um mês de um ano
-        #             específico, mostrando a distribuição proporcional dos dados
-        #             ao longo do período analisado, permitindo visualizar 
-        #             variações sazionais ou tendências.")
-        #         )
-        #       )
-        #     ),
-        #     column(
-        #       width = 4,
-        #       box(
-        #         title = "Opções",
-        #         width = 12,
-        #         solidHeader = TRUE,
-        #         status = "primary",
-        #         sliderInput(
-        #           inputId = "anos_captura",    # Identificador do controle deslizante
-        #           label = "Intervalo de Anos:",  # Rótulo do controle deslizante
-        #           min = min(dados_ajustados$ANO),# Valor Mínimo do controle deslizante
-        #           max = max(dados_ajustados$ANO),# Valor Máximo do controle deslizante
-        #           value = c(                     # Valor Inicial do controle deslizante
-        #             min(dados_ajustados$ANO),
-        #             max(dados_ajustados$ANO)
-        #           ),
-        #           step = 1,        # Intervalo entre os valores do controle deslizante
-        #           # Opções das animações
-        #           animate = animationOptions(
-        #             interval = 1700,
-        #             playButton = icon("play"),
-        #             pauseButton = icon("pause")
-        #           )
-        #         )
-        #       )
-        #     )
-        #   )
-        # )
       ),
       # Definindo o conteúdo de Desembarques
       tabItem(
         tabName = "desembarque",
         # fluidPage(
-        fluidRow(
-          column(
-            width = 9,
+        # fluidRow(
+        #   column(
+        #     width = 9,
             fluidRow(
               column(
                 width = 6,
@@ -1128,60 +827,60 @@ ui <- dashboardPage(
                 )
               )
             )
-          ),
-          column(
-            width = 3,
-            # box(
-            #   title = "Opções",
-            #   id = "boxWithoutHeader",
-            #   background = "gray",
-            #   width = 12,
-              div(
-                class = "boxSliders",
-                sliderInput(
-                  inputId = "anos_desembarque",    # Identificador do controle deslizante
-                  label = "Intervalo de Anos:",  # Rótulo do controle deslizante
-                  min = min(dados_ajustados$ANO),# Valor Mínimo do controle deslizante
-                  max = max(dados_ajustados$ANO),# Valor Máximo do controle deslizante
-                  value = c(                     # Valor Inicial do controle deslizante
-                    min(dados_ajustados$ANO),
-                    max(dados_ajustados$ANO)
-                  ),
-                  step = 1,        # Intervalo entre os valores do controle deslizante
-                  # Opções das animações
-                  animate = animationOptions(
-                    interval = 1700,
-                    playButton = icon("play"),
-                    pauseButton = icon("pause")
-                  ),
-                  sep = NULL
-                ),
-                checkboxGroupInput(
-                  inputId = "especies_desembarque",
-                  label = "Seletor de Espécies:",
-                  choiceValues = c(
-                    "Albacora_bandolim", "Albacora_branca","Albacora_lage",
-                    "Cacao_anequim", "Meca", "Outros", "Prego"
-                  ),
-                  choiceNames = c(
-                    "Albacora bandolim", "Albacora branca", "Albacora lage",
-                    "Cação Anequim", "Meca", "Outros", "Prego"
-                  ),
-                  selected = dados_ajustados$CATEGORIA
-                )
-              )
-            # )
-          )
-        )
+          # )#,
+          # column(
+          #   width = 3,
+          #   box(
+          #     title = "Opções",
+          #     id = "boxWithoutHeader",
+          #     background = "gray",
+          #     width = 12,
+          #     div(
+          #       class = "boxSliders",
+          #       sliderInput(
+          #         inputId = "anos_desembarque",    # Identificador do controle deslizante
+          #         label = "Intervalo de Anos:",  # Rótulo do controle deslizante
+          #         min = min(dados_ajustados$ANO),# Valor Mínimo do controle deslizante
+          #         max = max(dados_ajustados$ANO),# Valor Máximo do controle deslizante
+          #         value = c(                     # Valor Inicial do controle deslizante
+          #           min(dados_ajustados$ANO),
+          #           max(dados_ajustados$ANO)
+          #         ),
+          #         step = 1,        # Intervalo entre os valores do controle deslizante
+          #         # Opções das animações
+          #         animate = animationOptions(
+          #           interval = 1700,
+          #           playButton = icon("play"),
+          #           pauseButton = icon("pause")
+          #         ),
+          #         sep = NULL
+          #       ),
+          #       checkboxGroupInput(
+          #         inputId = "especies_desembarque",
+          #         label = "Seletor de Espécies:",
+          #         choiceValues = c(
+          #           "Albacora_bandolim", "Albacora_branca","Albacora_lage",
+          #           "Cacao_anequim", "Meca", "Outros", "Prego"
+          #         ),
+          #         choiceNames = c(
+          #           "Albacora bandolim", "Albacora branca", "Albacora lage",
+          #           "Cação Anequim", "Meca", "Outros", "Prego"
+          #         ),
+          #         selected = dados_ajustados$CATEGORIA
+          #       )
+          #     )
+          #   )
+          # )
+        # )
         # )
       ),
       # Definindo o conteúdo da Distribuição Espacial das Capturas
       tabItem(
         tabName = "captura_espacial",
         # fluidPage(
-        fluidRow(
-          column(
-            width = 9,
+        # fluidRow(
+          # column(
+          #   width = 9,
             fluidRow(
               column(
                 width = 12,
@@ -1312,53 +1011,53 @@ ui <- dashboardPage(
                 )
               )
             )
-          ),
-          column(
-            width = 3,
-            # box(
-            #   title = "Opções",
-            #   id = "boxWithoutHeader",
-            #   background = "gray",
-            #   width = 12,
-            #   # solidHeader = TRUE,
-            #   # status = "info",
-              div(
-                class = "boxSliders",
-                sliderInput(
-                  inputId = "anos_captura",    # Identificador do controle deslizante
-                  label = "Intervalo de Anos:",  # Rótulo do controle deslizante
-                  min = min(dados_ajustados$ANO),# Valor Mínimo do controle deslizante
-                  max = max(dados_ajustados$ANO),# Valor Máximo do controle deslizante
-                  value = c(                     # Valor Inicial do controle deslizante
-                    min(dados_ajustados$ANO),
-                    max(dados_ajustados$ANO)
-                  ),
-                  step = 1,        # Intervalo entre os valores do controle deslizante
-                  # Opções das animações
-                  animate = animationOptions(
-                    interval = 1700,
-                    playButton = icon("play"),
-                    pauseButton = icon("pause")
-                  ),
-                  sep = NULL
-                ),
-                checkboxGroupInput(
-                  inputId = "especies_captura",
-                  label = "Seletor de Espécies:",
-                  choiceValues = c(
-                    "Albacora_bandolim", "Albacora_branca","Albacora_lage",
-                    "Cacao_anequim", "Meca", "Outros", "Prego"
-                  ),
-                  choiceNames = c(
-                    "Albacora bandolim", "Albacora branca", "Albacora lage",
-                    "Cação Anequim", "Meca", "Outros", "Prego"
-                  ),
-                  selected = dados_ajustados$CATEGORIA
-                )
-              )
-            # )
-          )
-        )
+          # ),
+          # column(
+          #   width = 3,
+          #   box(
+          #     title = "Opções",
+          #     id = "boxWithoutHeader",
+          #     background = "gray",
+          #     width = 12,
+          #     # solidHeader = TRUE,
+          #     # status = "info",
+          #     div(
+          #       class = "boxSliders",
+          #       sliderInput(
+          #         inputId = "anos_captura",    # Identificador do controle deslizante
+          #         label = "Intervalo de Anos:",  # Rótulo do controle deslizante
+          #         min = min(dados_ajustados$ANO),# Valor Mínimo do controle deslizante
+          #         max = max(dados_ajustados$ANO),# Valor Máximo do controle deslizante
+          #         value = c(                     # Valor Inicial do controle deslizante
+          #           min(dados_ajustados$ANO),
+          #           max(dados_ajustados$ANO)
+          #         ),
+          #         step = 1,        # Intervalo entre os valores do controle deslizante
+          #         # Opções das animações
+          #         animate = animationOptions(
+          #           interval = 1700,
+          #           playButton = icon("play"),
+          #           pauseButton = icon("pause")
+          #         ),
+          #         sep = NULL
+          #       ),
+          #       checkboxGroupInput(
+          #         inputId = "especies_captura",
+          #         label = "Seletor de Espécies:",
+          #         choiceValues = c(
+          #           "Albacora_bandolim", "Albacora_branca","Albacora_lage",
+          #           "Cacao_anequim", "Meca", "Outros", "Prego"
+          #         ),
+          #         choiceNames = c(
+          #           "Albacora bandolim", "Albacora branca", "Albacora lage",
+          #           "Cação Anequim", "Meca", "Outros", "Prego"
+          #         ),
+          #         selected = dados_ajustados$CATEGORIA
+          #       )
+          #     )
+          #   )
+          # )
+        # )
 
         # )
       ),
@@ -1398,9 +1097,9 @@ ui <- dashboardPage(
         #     title = "Dados Falsos"
         #   )
         # ),
-        fluidRow(
-          column(
-            width = 9,
+        # fluidRow(
+          # column(
+          #   width = 9,
             fluidRow(
               column(
                 width = 6,
@@ -1452,29 +1151,29 @@ ui <- dashboardPage(
                 )
               )
             )
-          ),
-          column(
-            # width = 4,
-            width = 3,
-            # box(
-            #   title = "Opções",
-            #   id = "boxWithoutHeader",
-            #   background = "gray",
-            #   width = 12,
-              div(
-                class = "boxSliders",
-                checkboxGroupInput(
-                  inputId = "sexo_comprimento",
-                  label = "Seletor de Sexo:",
-                  # choices = c("Macho", "Femea"),
-                  choiceValues = c("M", "F"),
-                  choiceNames = c("Macho", "Femea"),
-                  selected = c(unique(dados_falsos$Sexo))
-                )
-              )
-            # )
-          )
-        )
+          # ),
+          # column(
+          #   # width = 4,
+          #   width = 3,
+          #   box(
+          #     title = "Opções",
+          #     id = "boxWithoutHeader",
+          #     background = "gray",
+          #     width = 12,
+          #     div(
+          #       class = "boxSliders",
+          #       checkboxGroupInput(
+          #         inputId = "sexo_comprimento",
+          #         label = "Seletor de Sexo:",
+          #         # choices = c("Macho", "Femea"),
+          #         choiceValues = c("M", "F"),
+          #         choiceNames = c("Macho", "Femea"),
+          #         selected = c(unique(dados_falsos$Sexo))
+          #       )
+          #     )
+          #   )
+          # )
+        # )
       ),
       # tabItem(
       #   tabName = "comprimento_espacial",
@@ -1504,83 +1203,84 @@ ui <- dashboardPage(
       # ),
       tabItem(
         tabName = "tabela_embarcacoes",
-        fluidRow(
-          column(
-            offset = 0,
-            width = 9,
-            DTOutput("tabela_embarcacoes")
-            # box(
-            #   width = 12,
-            #   title = "Tabela de Embarcações",
-            #   solidHeader = T,
-            #   status = "primary",
-            #   DTOutput("tabela_embarcacoes")
-            # )
-          ),
-          column(
-            offset = 0,
-            width = 3,
-            # box(
-            #   title = "Opções",
-            #   id = "boxWithoutHeader",
-            #   background = "gray",
-            #   width = 12,
-            #   solidHeader = TRUE,
-            #   status = "info",
-            #   div(
-            #     class = "boxSliders",
-            #     sliderInput(
-            #       inputId = "anos_captura",    # Identificador do controle deslizante
-            #       label = "Intervalo de Anos:",  # Rótulo do controle deslizante
-            #       min = min(dados_ajustados$ANO),# Valor Mínimo do controle deslizante
-            #       max = max(dados_ajustados$ANO),# Valor Máximo do controle deslizante
-            #       value = c(                     # Valor Inicial do controle deslizante
-            #         min(dados_ajustados$ANO),
-            #         max(dados_ajustados$ANO)
-            #       ),
-            #       step = 1,        # Intervalo entre os valores do controle deslizante
-            #       # Opções das animações
-            #       animate = animationOptions(
-            #         interval = 1700,
-            #         playButton = icon("play"),
-            #         pauseButton = icon("pause")
-            #       ),
-            #       sep = NULL
-            #     ),
-            #     checkboxGroupInput(
-            #       inputId = "especies_captura",
-            #       label = "Seletor de Espécies:",
-            #       choiceValues = c(
-            #         "Albacora_bandolim", "Albacora_branca","Albacora_lage",
-            #         "Cacao_anequim", "Meca", "Outros", "Prego"
-            #       ),
-            #       choiceNames = c(
-            #         "Albacora bandolim", "Albacora branca", "Albacora lage",
-            #         "Cação Anequim", "Meca", "Outros", "Prego"
-            #       ),
-            #       selected = dados_ajustados$CATEGORIA
-            #     )
-            #   )
-            # )
-            # box(
-            #   title = "Filtro",
-            #   solidHeader = T,
-            #   id = "boxWithoutHeader",
-            #   background = "gray",
-            #   width = 12,
-              div(
-                class = "boxSliders",
-                radioButtons(
-                  inputId = "status_tabela",
-                  label = "Defina o Status das Embarcações",
-                  # choices = c(unique(notificacoesTabela$Status), "Todos"),
-                  choices = c("Todos", "Hoje", "Passado", "Futuro"),
-                  selected = "Todos"
-                )
-              )
-            # )
-          )
-        )
+        DTOutput("tabela_embarcacoes")
+        # fluidRow(
+        #   column(
+        #     offset = 0,
+        #     width = 9,
+        #     DTOutput("tabela_embarcacoes")
+        #     # box(
+        #     #   width = 12,
+        #     #   title = "Tabela de Embarcações",
+        #     #   solidHeader = T,
+        #     #   status = "primary",
+        #     #   DTOutput("tabela_embarcacoes")
+        #     # )
+        #   ),
+        #   column(
+        #     offset = 0,
+        #     width = 3,
+        #     # box(
+        #     #   title = "Opções",
+        #     #   id = "boxWithoutHeader",
+        #     #   background = "gray",
+        #     #   width = 12,
+        #     #   solidHeader = TRUE,
+        #     #   status = "info",
+        #     #   div(
+        #     #     class = "boxSliders",
+        #     #     sliderInput(
+        #     #       inputId = "anos_captura",    # Identificador do controle deslizante
+        #     #       label = "Intervalo de Anos:",  # Rótulo do controle deslizante
+        #     #       min = min(dados_ajustados$ANO),# Valor Mínimo do controle deslizante
+        #     #       max = max(dados_ajustados$ANO),# Valor Máximo do controle deslizante
+        #     #       value = c(                     # Valor Inicial do controle deslizante
+        #     #         min(dados_ajustados$ANO),
+        #     #         max(dados_ajustados$ANO)
+        #     #       ),
+        #     #       step = 1,        # Intervalo entre os valores do controle deslizante
+        #     #       # Opções das animações
+        #     #       animate = animationOptions(
+        #     #         interval = 1700,
+        #     #         playButton = icon("play"),
+        #     #         pauseButton = icon("pause")
+        #     #       ),
+        #     #       sep = NULL
+        #     #     ),
+        #     #     checkboxGroupInput(
+        #     #       inputId = "especies_captura",
+        #     #       label = "Seletor de Espécies:",
+        #     #       choiceValues = c(
+        #     #         "Albacora_bandolim", "Albacora_branca","Albacora_lage",
+        #     #         "Cacao_anequim", "Meca", "Outros", "Prego"
+        #     #       ),
+        #     #       choiceNames = c(
+        #     #         "Albacora bandolim", "Albacora branca", "Albacora lage",
+        #     #         "Cação Anequim", "Meca", "Outros", "Prego"
+        #     #       ),
+        #     #       selected = dados_ajustados$CATEGORIA
+        #     #     )
+        #     #   )
+        #     # )
+        #     box(
+        #       title = "Filtro",
+        #       solidHeader = T,
+        #       id = "boxWithoutHeader",
+        #       background = "gray",
+        #       width = 12,
+        #       div(
+        #         class = "boxSliders",
+        #         radioButtons(
+        #           inputId = "status_tabela",
+        #           label = "Defina o Status das Embarcações",
+        #           # choices = c(unique(notificacoesTabela$Status), "Todos"),
+        #           choices = c("Todos", "Hoje", "Passado", "Futuro"),
+        #           selected = "Todos"
+        #         )
+        #       )
+        #     )
+        #   )
+        # )
       )
     )
   ),
@@ -1590,7 +1290,7 @@ ui <- dashboardPage(
         tags$div(
           style = "margin-left: 20px;
           margin-top: -15px;
-          margin-bottom: -10px;", 
+          margin-bottom: -20px;", 
           h4("Instituições Executoras")
         ),
         column(
@@ -1620,21 +1320,18 @@ ui <- dashboardPage(
               imageOutput("Logo_FURG",height = "100%", width = "100%")
             )
           )
-        )
-      )
-    ),
-    right = list(
-      fluidRow(
-        tags$div(
-          style = "margin-left: 50px; margin-top: -15px; margin-bottom: -10px;",
-          h4("Apoio"),
-          br()
         ),
         column(
-          # offset = 2,
+          offset = 3,
           width = 3,
           tags$div(
-            style = "margin-right: 20px;",
+            style = "margin-left: 50px; margin-top: -15px; margin-bottom: -30px;
+          padding-right: 0px;",
+            h4("Apoio"),
+            br()
+          ),
+          tags$div(
+            style = "margin-right: 20px; padding-right: 0px;",
             # style = "margin-right: 220px;",
             tags$a(
               href = "https://www.gov.br/mpa/pt-br", target = "_blank",
@@ -1644,7 +1341,30 @@ ui <- dashboardPage(
           )
         )
       )
-    )
+    )#,
+    # right = list(
+    #   # fluidRow(
+    #   #   tags$div(
+    #   #     style = "margin-left: 50px; margin-top: -15px; margin-bottom: -30px;
+    #   #     padding-right: 0px;",
+    #   #     h4("Apoio"),
+    #   #     br()
+    #   #   ),
+    #   #   column(
+    #   #     # offset = 2,
+    #   #     width = 3,
+    #   #     tags$div(
+    #   #       style = "margin-right: 20px; padding-right: 0px;",
+    #   #       # style = "margin-right: 220px;",
+    #   #       tags$a(
+    #   #         href = "https://www.gov.br/mpa/pt-br", target = "_blank",
+    #   #         # Saída do Logo do MAPA
+    #   #         imageOutput("Logo_MAPA",height = "100%", width = "100%")
+    #   #       )
+    #   #     )
+    #   #   )
+    #   # )
+    # )
   ),
   
   # ControlBar --------------------------------------------------------------
@@ -1652,7 +1372,7 @@ ui <- dashboardPage(
   # Definindo o Controlbar do Painel
   controlbar = dashboardControlbar(
       overlay = FALSE, # Se vai sobrepor o conteúdo
-    collapsed = TRUE,
+    collapsed = FALSE,
     skin = "dark",
     id = "controlbar",
     # width = 300,
@@ -1660,50 +1380,118 @@ ui <- dashboardPage(
     # Definindo controlbar Menu
     controlbarMenu(
       id = "controlbarMenu",
-      # Definindo o Item Opções
       controlbarItem(
-        title = "Opções",
-        icon = icon("gear"),
-        # Entrada do controle deslizante
-        sliderInput(
-          inputId = "intervalo_anos",    # Identificador do controle deslizante
-          label = "Intervalo de Anos:",  # Rótulo do controle deslizante
-          min = min(dados_ajustados$ANO),# Valor Mínimo do controle deslizante
-          max = max(dados_ajustados$ANO),# Valor Máximo do controle deslizante
-          value = c(                     # Valor Inicial do controle deslizante
-            min(dados_ajustados$ANO),
-            max(dados_ajustados$ANO)
-          ), 
-          step = 1,        # Intervalo entre os valores do controle deslizante
-          # Opções das animações
-          animate = animationOptions(
-            interval = 1700,
-            playButton = icon("play"),
-            pauseButton = icon("pause")
+        title = "Filtros",
+        icon = icon("filter"),
+        conditionalPanel(
+          condition = "input.sidebarMenu == 'captura'",
+          sliderInput(
+            inputId = "anos_captura",
+            label = "Intervalo de Anos:",
+            min = min(dados_ajustados$ANO),
+            max = max(dados_ajustados$ANO),
+            value = c(min(dados_ajustados$ANO), max(dados_ajustados$ANO)),
+            step = 1,
+            animate = animationOptions(
+              interval = 1700,
+              playButton = icon("play"),
+              pauseButton = icon("pause")
+            )
+          ),
+          checkboxGroupInput(
+            inputId = "especies_captura",
+            label = "Seletor de Espécies:",
+            choiceValues = c("Albacora_bandolim", "Albacora_branca", "Albacora_lage",
+                             "Cacao_anequim", "Meca", "Outros", "Prego"),
+            choiceNames = c("Albacora bandolim", "Albacora branca", "Albacora lage",
+                            "Cação Anequim", "Meca", "Outros", "Prego"),
+            selected = dados_ajustados$CATEGORIA
+          )#,
+          # actionButton(
+          #   inputId = "selectAll_captura",
+          #   label = "Todos",
+          #   icon = icon("square-check")
+          # ),
+          # actionButton(
+          #   inputId = "deselectAll_captura",
+          #   label = "Nenhum",
+          #   icon = icon("square")
+          # )
+        ),
+        conditionalPanel(
+          condition = "input.sidebarMenu == 'comprimento'",
+          checkboxGroupInput(
+            inputId = "sexo_comprimento",
+            label = "Seletor de Sexo:",
+            # choices = c("Macho", "Femea"),
+            choiceValues = c("M", "F"),
+            choiceNames = c("Macho", "Femea"),
+            selected = c(unique(dados_falsos$Sexo))
           )
         ),
-        checkboxGroupInput(
-          inputId = "species",
-          label = "Seletor de Espécies:",
-          choiceValues = c(
-            "Albacora_bandolim", "Albacora_branca","Albacora_lage",
-            "Cacao_anequim", "Meca", "Outros", "Prego"
-            ),
-          choiceNames = c(
-            "Albacora bandolim", "Albacora branca", "Albacora lage", 
-            "Cação Anequim", "Meca", "Outros", "Prego"
-            ),
-          selected = dados_ajustados$CATEGORIA,
+        conditionalPanel(
+          condition = "input.sidebarMenu == 'desembarque'",
+          sliderInput(
+            inputId = "anos_desembarque",
+            label = "Intervalo de Anos:",
+            min = min(dados_ajustados$ANO),
+            max = max(dados_ajustados$ANO),
+            value = c(min(dados_ajustados$ANO), max(dados_ajustados$ANO)),
+            step = 1,
+            animate = animationOptions(
+              interval = 1700,
+              playButton = icon("play"),
+              pauseButton = icon("pause")
+            )
+          ),
+          checkboxGroupInput(
+            inputId = "especies_desembarque",
+            label = "Seletor de Espécies:",
+            choiceValues = c("Albacora_bandolim", "Albacora_branca", "Albacora_lage",
+                             "Cacao_anequim", "Meca", "Outros", "Prego"),
+            choiceNames = c("Albacora bandolim", "Albacora branca", "Albacora lage",
+                            "Cação Anequim", "Meca", "Outros", "Prego"),
+            selected = dados_ajustados$CATEGORIA
+          )
         ),
-        actionButton(
-          inputId = "selectAll",
-          label = "Todos",
-          icon = icon("square-check")
+        conditionalPanel(
+          condition = "input.sidebarMenu == 'captura_espacial'",
+          sliderInput(
+            inputId = "anos_cap_esp",
+            label = "Intervalo de Anos:",
+            min = min(dados_ajustados$ANO),
+            max = max(dados_ajustados$ANO),
+            value = c(min(dados_ajustados$ANO), max(dados_ajustados$ANO)),
+            step = 1,
+            animate = animationOptions(
+              interval = 1700,
+              playButton = icon("play"),
+              pauseButton = icon("pause")
+            )
+          ),
+          checkboxGroupInput(
+            inputId = "especies_cap_esp",
+            label = "Seletor de Espécies:",
+            choiceValues = c("Albacora_bandolim", "Albacora_branca", "Albacora_lage",
+                             "Cacao_anequim", "Meca", "Outros", "Prego"),
+            choiceNames = c("Albacora bandolim", "Albacora branca", "Albacora lage",
+                            "Cação Anequim", "Meca", "Outros", "Prego"),
+            selected = dados_ajustados$CATEGORIA
+          )
         ),
-        actionButton(
-          inputId = "deselectAll",
-          label = "Nenhum",
-          icon = icon("square")
+        conditionalPanel(
+          condition = "input.sidebarMenu == 'comprimento_espacial'",
+          
+        ),
+        conditionalPanel(
+          condition = "input.sidebarMenu == 'tabela_embarcacoes'",
+          radioButtons(
+            inputId = "status_tabela",
+            label = "Defina o Status das Embarcações",
+            # choices = c(unique(notificacoesTabela$Status), "Todos"),
+            choices = c("Todos", "Hoje", "Passado", "Futuro"),
+            selected = "Todos"
+          )
         )
       )
     )
@@ -1749,73 +1537,73 @@ server <- function(input, output, session) {
   
   # Filtro de Dados ---------------------------------------------------------
   
-  # Filtrando os Dados Gerais Completos Reativamente
-  dados_gerais_filtrados <- reactive({
-    # Filtrando as Espécies
-    dados_aux <- subset(
-      dados_gerais, CATEGORIA %in% union(input$species, "Cacao_azul"))
-    # Filtrando o Intervalo de Anos
-    dados_aux <- subset(
-      dados_aux,
-      ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2]
-      )
-    data.frame(dados_aux)
-  })
+  # # Filtrando os Dados Gerais Completos Reativamente
+  # dados_gerais_filtrados <- reactive({
+  #   # Filtrando as Espécies
+  #   dados_aux <- subset(
+  #     dados_gerais, CATEGORIA %in% union(input$species, "Cacao_azul"))
+  #   # Filtrando o Intervalo de Anos
+  #   dados_aux <- subset(
+  #     dados_aux,
+  #     ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2]
+  #     )
+  #   data.frame(dados_aux)
+  # })
   
-  dados_captura_filtrada <- reactive({
-    dados_aux <- subset(
-      dados_gerais,
-      ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2]
-      )
-    data.frame(dados_aux)
-  })
+  # dados_captura_filtrada <- reactive({
+  #   dados_aux <- subset(
+  #     dados_gerais,
+  #     ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2]
+  #     )
+  #   data.frame(dados_aux)
+  # })
   
-  # Filtrando os Dados da Tabela Inicial
-  dados_aux_filtrados <- reactive({
-    # Filtrando as Espécies 
-    dados_aux <- subset(
-      dados_ajustados, CATEGORIA %in% union(input$species, "Cacao_azul")
-      )
-    # Filtrando o Intervalo de Anos
-    dados_aux <- subset(
-      dados_aux,
-      ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2]
-      )
-    data.frame(dados_aux)
-  })
+  # # Filtrando os Dados da Tabela Inicial
+  # dados_aux_filtrados <- reactive({
+  #   # Filtrando as Espécies 
+  #   dados_aux <- subset(
+  #     dados_ajustados, CATEGORIA %in% union(input$species, "Cacao_azul")
+  #     )
+  #   # Filtrando o Intervalo de Anos
+  #   dados_aux <- subset(
+  #     dados_aux,
+  #     ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2]
+  #     )
+  #   data.frame(dados_aux)
+  # })
   
-  # Fazendo o cálculo da Média de Captura por Kg, por Viagem, por Mês/Ano
-  dados_graficoAreaDesembarque <- reactive({
-    dados_captura_filtrada() %>%
-      mutate(KG_por_Viagem = (KG/DESCARGA)) %>% 
-      # Agrupa os Dados por Colunas Selecionadas
-      group_by(CATEGORIA, ANO, MES) %>% 
-      # Média das Toneladas de Captura de Cada Grupo
-      summarise(Media_KG_por_Viagem = mean(KG_por_Viagem)) %>%
-      # Substituindo NAs por Zero
-      mutate(Media_KG_por_Viagem = replace_na(Media_KG_por_Viagem, 0)) %>% 
-      # Arredondando a Média de Toneladas para Duas Casas Decimais
-      mutate(Media_KG_por_Viagem = round(Media_KG_por_Viagem, 2)) %>%
-      mutate(mes_ano_formatado = make_date(ANO, MES)) %>%
-      mutate(mes_ano = as.yearmon(paste0(ANO, "-", sprintf("%02d", MES)))) %>%
-      mutate(mes_ano_formatado = format(mes_ano_formatado, "%Y-%m")) 
-  })
+  # # Fazendo o cálculo da Média de Captura por Kg, por Viagem, por Mês/Ano
+  # dados_graficoAreaDesembarque <- reactive({
+  #   dados_captura_filtrada() %>%
+  #     mutate(KG_por_Viagem = (KG/DESCARGA)) %>% 
+  #     # Agrupa os Dados por Colunas Selecionadas
+  #     group_by(CATEGORIA, ANO, MES) %>% 
+  #     # Média das Toneladas de Captura de Cada Grupo
+  #     summarise(Media_KG_por_Viagem = mean(KG_por_Viagem)) %>%
+  #     # Substituindo NAs por Zero
+  #     mutate(Media_KG_por_Viagem = replace_na(Media_KG_por_Viagem, 0)) %>% 
+  #     # Arredondando a Média de Toneladas para Duas Casas Decimais
+  #     mutate(Media_KG_por_Viagem = round(Media_KG_por_Viagem, 2)) %>%
+  #     mutate(mes_ano_formatado = make_date(ANO, MES)) %>%
+  #     mutate(mes_ano = as.yearmon(paste0(ANO, "-", sprintf("%02d", MES)))) %>%
+  #     mutate(mes_ano_formatado = format(mes_ano_formatado, "%Y-%m")) 
+  # })
   
-  # Filtrando Dados para o Gráfico de Captura
-  dados_graficoCaptura <- reactive({
-    dados_gerais_filtrados() %>%
-      mutate(KG_por_Viagem = (KG/DESCARGA)) %>%
-      group_by(CATEGORIA, ANO, MES) %>%
-      summarise(Media_KG_por_Viagem = mean(KG_por_Viagem)) %>%
-      # Substituindo NAs por Zero
-      mutate(Media_KG_por_Viagem = replace_na(Media_KG_por_Viagem, 0)) %>%
-      group_by(CATEGORIA, MES) %>%
-      # Média das Toneladas de Captura, de cada Mês, com Anos Agrupados
-      summarise(MediaKG_Mes_Viagem = mean(Media_KG_por_Viagem)) %>%
-      mutate(MediaKGMesViagem = round(MediaKG_Mes_Viagem, 2)) %>%
-      dplyr::select(-MediaKG_Mes_Viagem) %>%
-      mutate(mes_nome = nomes_meses[MES])
-  })
+  # # Filtrando Dados para o Gráfico de Captura
+  # dados_graficoCaptura <- reactive({
+  #   dados_gerais_filtrados() %>%
+  #     mutate(KG_por_Viagem = (KG/DESCARGA)) %>%
+  #     group_by(CATEGORIA, ANO, MES) %>%
+  #     summarise(Media_KG_por_Viagem = mean(KG_por_Viagem)) %>%
+  #     # Substituindo NAs por Zero
+  #     mutate(Media_KG_por_Viagem = replace_na(Media_KG_por_Viagem, 0)) %>%
+  #     group_by(CATEGORIA, MES) %>%
+  #     # Média das Toneladas de Captura, de cada Mês, com Anos Agrupados
+  #     summarise(MediaKG_Mes_Viagem = mean(Media_KG_por_Viagem)) %>%
+  #     mutate(MediaKGMesViagem = round(MediaKG_Mes_Viagem, 2)) %>%
+  #     dplyr::select(-MediaKG_Mes_Viagem) %>%
+  #     mutate(mes_nome = nomes_meses[MES])
+  # })
   
   # # Filtrando os Dados da Tabela Inicial com somente a CATEGORIA Cacao-azul
   # dadostub_aux_filtrados <- reactive({
@@ -1827,48 +1615,48 @@ server <- function(input, output, session) {
   # })
   
   # Filtrando dados Para o Mapa
-  db_filtrado <- reactive({
-    dados_aux <- subset(
-      dados_ajustados,CATEGORIA %in% union(input$species, "Cacao_azul")
-      )
-    dados_aux <- subset(
-      dados_aux,
-      ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2]
-      )
-    tab01 <- dados_aux %>%
-      group_by(LON, LAT) %>%
-      summarise(
-        prod = sum(KG),
-        prod2 = sum(KG)/sum(DESCARGA),
-        viagem = sum(DESCARGA)
-        ) %>%
-      ungroup()
-    list(dados = dados_aux, tab01 = tab01)
-  })
+  # db_filtrado <- reactive({
+  #   dados_aux <- subset(
+  #     dados_ajustados,CATEGORIA %in% union(input$species, "Cacao_azul")
+  #     )
+  #   dados_aux <- subset(
+  #     dados_aux,
+  #     ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2]
+  #     )
+  #   tab01 <- dados_aux %>%
+  #     group_by(LON, LAT) %>%
+  #     summarise(
+  #       prod = sum(KG),
+  #       prod2 = sum(KG)/sum(DESCARGA),
+  #       viagem = sum(DESCARGA)
+  #       ) %>%
+  #     ungroup()
+  #   list(dados = dados_aux, tab01 = tab01)
+  # })
 
-  # Fazendo o cálculo da captura por mês
-  dados_PesoMes <- reactive({ 
-    dados_aux_filtrados() %>%
-      mutate(KG_por_Viagem = (KG/DESCARGA)) %>%
-      complete(CATEGORIA, ANO, MES, fill = list(KG_por_Viagem = 0)) %>% 
-      group_by(CATEGORIA, ANO, MES) %>%
-      summarise(MedKGPorViagemMesAno = mean(KG_por_Viagem)) %>%
-      mutate(MedKGPorViagemMesAno = replace_na(MedKGPorViagemMesAno, 0)) %>% 
-      group_by(CATEGORIA, MES) %>%
-      summarise(Media_KG_por_Viagem = mean(MedKGPorViagemMesAno)) %>%
-      mutate(Media_KG = round(Media_KG_por_Viagem, 2)) %>%
-      mutate(mes_nome = nomes_meses[MES]) %>% 
-      mutate(
-        CATEGORIA = case_when(
-          CATEGORIA == "Albacora_bandolim" ~ "Albacora bandolim",
-          CATEGORIA == "Albacora_branca" ~ "Albacora branca",
-          CATEGORIA == "Albacora_lage" ~ "Albacora lage",
-          CATEGORIA == "Cacao_anequim" ~ "Cação anequim",
-          CATEGORIA == "Cacao_azul" ~ "Tubarão azul",
-          TRUE ~ CATEGORIA
-        )
-      )
-  })
+  # # Fazendo o cálculo da captura por mês
+  # dados_PesoMes <- reactive({ 
+  #   dados_aux_filtrados() %>%
+  #     mutate(KG_por_Viagem = (KG/DESCARGA)) %>%
+  #     complete(CATEGORIA, ANO, MES, fill = list(KG_por_Viagem = 0)) %>% 
+  #     group_by(CATEGORIA, ANO, MES) %>%
+  #     summarise(MedKGPorViagemMesAno = mean(KG_por_Viagem)) %>%
+  #     mutate(MedKGPorViagemMesAno = replace_na(MedKGPorViagemMesAno, 0)) %>% 
+  #     group_by(CATEGORIA, MES) %>%
+  #     summarise(Media_KG_por_Viagem = mean(MedKGPorViagemMesAno)) %>%
+  #     mutate(Media_KG = round(Media_KG_por_Viagem, 2)) %>%
+  #     mutate(mes_nome = nomes_meses[MES]) %>% 
+  #     mutate(
+  #       CATEGORIA = case_when(
+  #         CATEGORIA == "Albacora_bandolim" ~ "Albacora bandolim",
+  #         CATEGORIA == "Albacora_branca" ~ "Albacora branca",
+  #         CATEGORIA == "Albacora_lage" ~ "Albacora lage",
+  #         CATEGORIA == "Cacao_anequim" ~ "Cação anequim",
+  #         CATEGORIA == "Cacao_azul" ~ "Tubarão azul",
+  #         TRUE ~ CATEGORIA
+  #       )
+  #     )
+  # })
   
   # # Fazendo o cálculo de Dados Totais Registrados por Mes de Cacao-azul
   # dados_ComparaDadosTub <- reactive({
@@ -1879,6 +1667,19 @@ server <- function(input, output, session) {
   #     complete(CATEGORIA, MES = 1:12, fill = list(Quantidade = 0)) %>% 
   #     mutate(mes_nome = nomes_meses[MES])
   # }) 
+  
+  dados_aux_filtrados <- reactive({
+    # Filtrando as Espécies 
+    dados_aux <- subset(
+      dados_ajustados, CATEGORIA %in% union(input$species, "Cacao_azul")
+    )
+    # Filtrando o Intervalo de Anos
+    dados_aux <- subset(
+      dados_aux,
+      ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2]
+    )
+    data.frame(dados_aux)
+  })
   
   # Dividindo os dados em duas categorias, e fazendo a proporção de dados
   dados_BarraTubOutros <- reactive({
@@ -2168,8 +1969,10 @@ server <- function(input, output, session) {
   output$Logo_FURG <- renderImage({
     list(
       src = "dados_brutos/FURG_fundo.png",
-      height = "80px",
-      width = "55px",
+      # height = "80px",
+      # width = "55px",
+      height = "auto",
+      width = "100%",
       contentType = "image/png"
     )
   }, deleteFile = FALSE)
@@ -2177,8 +1980,10 @@ server <- function(input, output, session) {
   output$Logo_UNIVALI <- renderImage({
     list(
       src = "dados_brutos/Logo_univali2.png",
-      height = "80px",
-      width = "140px",
+      # height = "80px",
+      # width = "140px",
+      height = "auto",
+      width = "100%",
       contentType = "image/jpg"
     )
   }, deleteFile = FALSE)
@@ -2186,8 +1991,10 @@ server <- function(input, output, session) {
   output$Logo_LEMA <- renderImage({
     list(
       src = "dados_brutos/Logo_Lema3.png",
-      height = "80px",
-      width = "175px",
+      # height = "80px",
+      # width = "175px",
+      height = "auto",
+      width = "100%",
       contentType = "image/png"
     )
   }, deleteFile = FALSE)
@@ -2195,8 +2002,11 @@ server <- function(input, output, session) {
   output$Logo_MAPA <- renderImage({
     list(
       src = "dados_brutos/logo_MAPA2.png",
-      height = "80px",
-      width = "315px",
+      # height = "80px",
+      # width = "315px",
+      # width = "100vh",
+      height = "auto",
+      width = "100%",
       contentType = "image/png"
     )
   }, deleteFile = FALSE)
@@ -2396,6 +2206,38 @@ server <- function(input, output, session) {
   
   # Desembarques ------------------------------------------------------------
   
+  # Filtrando os Dados Gerais Completos Reativamente
+  dados_desembarque <- reactive({
+    # Filtrando as Espécies
+    dados_aux <- subset(
+      dados_gerais, CATEGORIA %in% union(input$especies_desembarque, "Cacao_azul"))
+    # Filtrando o Intervalo de Anos
+    dados_aux <- subset(
+      dados_aux,
+      ANO >= input$anos_desembarque[1] & ANO <= input$anos_desembarque[2]
+    )
+    data.frame(dados_aux)
+  })
+  
+  # Filtrando Dados para o Gráfico de Captura
+  dados_graficoCaptura <- reactive({
+    dados_desembarque() %>%
+      mutate(KG_por_Viagem = (KG/DESCARGA)) %>%
+      group_by(CATEGORIA, ANO, MES) %>%
+      summarise(Media_KG_por_Viagem = mean(KG_por_Viagem)) %>%
+      # Substituindo NAs por Zero
+      mutate(Media_KG_por_Viagem = replace_na(Media_KG_por_Viagem, 0)) %>%
+      group_by(CATEGORIA, MES) %>%
+      # Média das Toneladas de Captura, de cada Mês, com Anos Agrupados
+      summarise(MediaKG_Mes_Viagem = mean(Media_KG_por_Viagem)) %>%
+      mutate(MediaKGMesViagem = round(MediaKG_Mes_Viagem, 2)) %>%
+      dplyr::select(-MediaKG_Mes_Viagem) %>%
+      mutate(mes_nome = nomes_meses[MES])
+  })
+  
+  # anos_desembarque
+  # especies_desembarque
+  
   # Renderização do Gráfico Plotly da Média Mensal de Capturas (mes)
   output$graficoCaptura <- renderPlotly({
     plot_ly(
@@ -2447,6 +2289,31 @@ server <- function(input, output, session) {
       )
   })
   
+  dados_cap_desembarque <- reactive({
+    dados_aux <- subset(
+      dados_gerais,
+      ANO >= input$anos_desembarque[1] & ANO <= input$anos_desembarque[2]
+      )
+    data.frame(dados_aux)
+  })
+  
+  # Fazendo o cálculo da Média de Captura por Kg, por Viagem, por Mês/Ano
+  dados_graficoAreaDesembarque <- reactive({
+    dados_cap_desembarque() %>%
+      mutate(KG_por_Viagem = (KG/DESCARGA)) %>% 
+      # Agrupa os Dados por Colunas Selecionadas
+      group_by(CATEGORIA, ANO, MES) %>% 
+      # Média das Toneladas de Captura de Cada Grupo
+      summarise(Media_KG_por_Viagem = mean(KG_por_Viagem)) %>%
+      # Substituindo NAs por Zero
+      mutate(Media_KG_por_Viagem = replace_na(Media_KG_por_Viagem, 0)) %>% 
+      # Arredondando a Média de Toneladas para Duas Casas Decimais
+      mutate(Media_KG_por_Viagem = round(Media_KG_por_Viagem, 2)) %>%
+      mutate(mes_ano_formatado = make_date(ANO, MES)) %>%
+      mutate(mes_ano = as.yearmon(paste0(ANO, "-", sprintf("%02d", MES)))) %>%
+      mutate(mes_ano_formatado = format(mes_ano_formatado, "%Y-%m")) 
+  })
+  
   output$graficoAreaDesembarque <- renderPlotly({
     
     dados_captura <- dados_graficoAreaDesembarque()
@@ -2465,7 +2332,7 @@ server <- function(input, output, session) {
           "mes_ano",
           "mes_ano_formatado",
           "Cacao_azul",
-          input$species
+          input$especies_desembarque
         )
       )
     
@@ -2601,9 +2468,46 @@ server <- function(input, output, session) {
     plot_data
   })
   
+  dados_desembarque_calor <- reactive({
+    # Filtrando as Espécies 
+    dados_aux <- subset(
+      dados_ajustados, CATEGORIA %in% union(input$especies_desembarque, "Cacao_azul")
+    )
+    # Filtrando o Intervalo de Anos
+    dados_aux <- subset(
+      dados_aux,
+      ANO >= input$anos_desembarque[1] & ANO <= input$anos_desembarque[2]
+    )
+    data.frame(dados_aux)
+  })
+  
+  # Fazendo o cálculo da captura por mês
+  dados_PesoMes_desembarque <- reactive({ 
+    dados_desembarque_calor() %>%
+      mutate(KG_por_Viagem = (KG/DESCARGA)) %>%
+      complete(CATEGORIA, ANO, MES, fill = list(KG_por_Viagem = 0)) %>% 
+      group_by(CATEGORIA, ANO, MES) %>%
+      summarise(MedKGPorViagemMesAno = mean(KG_por_Viagem)) %>%
+      mutate(MedKGPorViagemMesAno = replace_na(MedKGPorViagemMesAno, 0)) %>% 
+      group_by(CATEGORIA, MES) %>%
+      summarise(Media_KG_por_Viagem = mean(MedKGPorViagemMesAno)) %>%
+      mutate(Media_KG = round(Media_KG_por_Viagem, 2)) %>%
+      mutate(mes_nome = nomes_meses[MES]) %>% 
+      mutate(
+        CATEGORIA = case_when(
+          CATEGORIA == "Albacora_bandolim" ~ "Albacora bandolim",
+          CATEGORIA == "Albacora_branca" ~ "Albacora branca",
+          CATEGORIA == "Albacora_lage" ~ "Albacora lage",
+          CATEGORIA == "Cacao_anequim" ~ "Cação anequim",
+          CATEGORIA == "Cacao_azul" ~ "Tubarão azul",
+          TRUE ~ CATEGORIA
+        )
+      )
+  })
+  
   output$pesoMes <- renderPlotly({
     plot_ly(
-      data = dados_PesoMes(),
+      data = dados_PesoMes_desembarque(),
       x = ~MES,
       y = ~CATEGORIA,
       z = ~Media_KG,
@@ -2619,8 +2523,8 @@ server <- function(input, output, session) {
       layout(
         xaxis = list(
           title = "Mês",
-          tickvals = unique(dados_PesoMes()$MES), 
-          ticktext = unique(dados_PesoMes()$MES)
+          tickvals = unique(dados_PesoMes_desembarque()$MES), 
+          ticktext = unique(dados_PesoMes_desembarque()$MES)
         ),
         yaxis = list(title = ""),
         legend = list(
@@ -2637,6 +2541,25 @@ server <- function(input, output, session) {
   })
   
   # Distribuição Espacial das Capturas --------------------------------------
+  
+  db_filtrado <- reactive({
+    dados_aux <- subset(
+      dados_ajustados,CATEGORIA %in% union(input$especies_cap_esp, "Cacao_azul")
+    )
+    dados_aux <- subset(
+      dados_aux,
+      ANO >= input$anos_cap_esp[1] & ANO <= input$anos_cap_esp[2]
+    )
+    tab01 <- dados_aux %>%
+      group_by(LON, LAT) %>%
+      summarise(
+        prod = sum(KG),
+        prod2 = sum(KG)/sum(DESCARGA),
+        viagem = sum(DESCARGA)
+      ) %>%
+      ungroup()
+    list(dados = dados_aux, tab01 = tab01)
+  })
   
   # Renderização do Mapa de Calor das Capturas de Todas as Categorias
   output$MapaCaptura <- renderLeaflet({
