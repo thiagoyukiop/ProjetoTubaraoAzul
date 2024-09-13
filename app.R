@@ -31,13 +31,13 @@ notificacoes$Saída <- as.Date(notificacoes$Saída)
 notificacoes$Chegada <- as.Date(notificacoes$Chegada)
 
 novas_linhas <- data.frame(
-  Embarcação = c("Nova Embarcação 1", "Nova Embarcação 2"),
-  AvisoDeDesembarque = as.Date(c("2024-09-10", "2024-09-15")),
-  DataDoDesembarque = as.Date(c("2024-09-11", "2024-09-16")),
-  Saída = as.Date(c("2024-09-06", "2024-09-12")),
-  Chegada = as.Date(c("2024-09-11", "2024-09-16")),
-  IndivíduosMedidosDeTubarãoAzul = c(150, 75),
-  IndivíduosMedidosDeTubarãoAnequim = c(0, 0)
+  Embarcação = c("Nova Embarcação 1", "Nova Embarcação 2", "Nova Embarcação 3"),
+  AvisoDeDesembarque = as.Date(c("2024-09-17", "2024-09-19", "2024-09-26")),
+  DataDoDesembarque = as.Date(c("2024-09-18", "2024-09-22", "2024-10-03")),
+  Saída = as.Date(c("2024-09-17", "2024-09-19", "2024-09-27")),
+  Chegada = as.Date(c("2024-09-18", "2024-09-18","2024-10-03")),
+  IndivíduosMedidosDeTubarãoAzul = c(150, 75, 97),
+  IndivíduosMedidosDeTubarãoAnequim = c(0, 0, 0)
 )
 
 # TESTE
@@ -102,15 +102,8 @@ ui <- dashboardPage(
       
       .main-footer {
       height: 15vh;
-      # position: fixed;
-      # bottom: 0;
-      # width: 100vw;
       z-index: 1000;
-      padding-bottom: 0px;
       }
-      # .content-wrapper, .right-side {
-      #   padding-bottom: 50px; /* Espaço para o footer */
-      # }
            ')
     )
   ),
@@ -122,18 +115,20 @@ ui <- dashboardPage(
   # Definindo a Header do Painel
   header = dashboardHeader(
     # titleWidth = 300,
-    titleWidth = 250,
+    # titleWidth = 250,
+    titleWidth = 230,
     # Definição do Título com Link da Header
-    title = tags$a( # Cria uma tag que define um hyperlink
-      href = "https://lrpdc.shinyapps.io/proj_tubarao_azul/", # Link URL
-      target = "_blank", # Abre o link em uma nova aba
-      # Cria uma tag que é um contêiner em linha usado para aplicar estilos
-      tags$span(
-        # Saída de Icon ou Título depende da situação do sidebar
-        uiOutput("textoHeader")
-      ),
-      class = "logo"
-    ),
+    # title = tags$a( # Cria uma tag que define um hyperlink
+    #   href = "https://lrpdc.shinyapps.io/proj_tubarao_azul/", # Link URL
+    #   target = "_blank", # Abre o link em uma nova aba
+    #   # Cria uma tag que é um contêiner em linha usado para aplicar estilos
+    #   tags$span(
+    #     # Saída de Icon ou Título depende da situação do sidebar
+    #     uiOutput("textoHeader")
+    #   ),
+    #   class = "logo"
+    # ),
+    title = uiOutput("textoHeader"),
     controlbarIcon = icon("sliders"), # Definição do ícone da aba de Controle
     # Definição do Menu Suspenso
     dropdownMenuOutput("notification_menu")#,
@@ -195,8 +190,8 @@ ui <- dashboardPage(
         padding-bottom: 0px;
       }
     '))),
-    
-    width = 250,
+    width = 230,
+    # width = 250,
     # width = 300, # Definição da Largura em pixels
     minified = TRUE,  # Se a aba lateral ao ser fechada deverá mostrar os ícones
     collapsed = FALSE, # Se a aba lateral deve ser iniciada fechada
@@ -279,6 +274,17 @@ ui <- dashboardPage(
       spinner_delay = 0,
       spinner_size = 100
     ),
+    # tags$script(HTML("
+    #   Shiny.addCustomMessageHandler('sidebarState', function(collapsed) {
+    #     if (collapsed) {
+    #       // Sidebar is closed
+    #       $('#Logo_FURG').css('width', '52%');
+    #     } else {
+    #       // Sidebar is open
+    #       $('#Logo_FURG').css('width', '80%');
+    #     }
+    #   });
+    # ")),
     # Ajustando Visualização de Mapa para que sempre fique com a altura ideal
     tags$head(tags$style(HTML(' 
     body {
@@ -298,9 +304,8 @@ ui <- dashboardPage(
     .graficos {
     display: flex;
     width: 100%;
-    # height: calc(43vh - 119px);
-    height: calc(50vh - 120px);
-    # height: calc(100vh - 120px);
+    # height: calc(50vh - 120px);
+    height: 40vh;
     visibility: inherit;
     position: relative;
     z-index: 100;
@@ -357,30 +362,8 @@ ui <- dashboardPage(
       overflow-x: auto; /* Impede que o conteúdo transborde horizontalmente */
     }
     
-    # .col-sm-9 {
-    #   width: 75%;
-    #   height: 75vh; /* Ajustar se necessário */
-    #   overflow-y: auto;           /* Scroll apenas na coluna .col-sm-9 */
-    # }
-    
-    #Logo_FURG img {
-      width: 52%;        /* Define a largura como 80% */
-      height: auto;      /* Mantém a proporção */
-      padding-top: 10px;
-    }
-      
-    #Logo_UNIVALI img {
-      width: 70%;        /* Define a largura como 80% */
-      height: auto;      /* Mantém a proporção */
-    }
-    
-    #Logo_LEMA img {
-      width: 75%;        /* Define a largura como 80% */
-      height: auto;      /* Mantém a proporção */
-    }
-    
-    #Logo_UNIVALI_LEMA img {
-      width: 75%;
+    #Logo_Instituicoes img {
+      width: 70%;
       height: auto;
     }
     
@@ -389,17 +372,21 @@ ui <- dashboardPage(
       # height: auto;      /* Mantém a proporção */
     }
     
-    # .col-sm-12 {
-    #   width: 75%;
-    #   height: 75vh; /* Ajustar se necessário */
-    #   overflow-y: auto;           /* Scroll apenas na coluna .col-sm-9 */
-    # }
-    
     .content {
       overflow: auto;
       height: 76vh;
     }
     
+    # .col-sm-6 {
+    #   width: 50%;
+    #   padding-right: 5px;
+    #   padding-left: 5px;
+    # }
+    # 
+    # .col-sm-12 {
+    #   padding-right: 5px;
+    #   padding-left: 5px;
+    # }
                               ')
                          )
               ),
@@ -497,12 +484,16 @@ ui <- dashboardPage(
               offset = 2,
               div(
                 style = "text-align: center;",
-                tags$a(
-                  href = "https://demersais.furg.br/projeto-tubarão-azul.html",
-                  target = "_blank",
-                  imageOutput("LogoPTA", width = "100%", height = "100%")
-                )
+                imageOutput("LogoPTA", width = "100%", height = "100%")
               )
+              # div(
+              #   style = "text-align: center;",
+              #   tags$a(
+              #     href = "https://demersais.furg.br/projeto-tubarão-azul.html",
+              #     target = "_blank",
+              #     imageOutput("LogoPTA", width = "100%", height = "100%")
+              #   )
+              # )
             )
           ),
           fluidRow(
@@ -670,223 +661,170 @@ ui <- dashboardPage(
       # Definindo o conteúdo da Distribuição de Captura
       tabItem(
         tabName = "captura",
-        # fluidRow(
-          # column(
-            # width = 9,
-            fluidRow(
-              column(
-                width = 12,
-                # Definindo Caixa com conteúdo da Distribuição de Captura
-                box(
-                  title = "Dados Registrados por Mês, Ano e Categoria",
-                  width = 12,
-                  solidHeader = TRUE, # Se a Header é sólida
-                  status = "primary",
-                  div(
-                    class = "graficos",
-                    # Saída do Gráfico de Barras Empilhadas de dados Registrados
-                    plotlyOutput("TubMesAno", height = "100%")
-                  ),
-                  sidebar = boxSidebar(
-                    id = "boxsidebar2",
-                    icon = icon("circle-info"),
-                    background = "#A6ACAFEF",
-                    width = 30,
-                    p("Este gráfico de área relativa, apresenta a quantidade
-                de dados registrados por mês/ano, divididos por categoria
-                de pesca. Cada barra representa um mês/ano, com segmentos
-                empilhados que correspondem às diferentes categorias de
-                pesca. Isso permite uma comparação direta entre as
-                categorias ao longo do tempo, destacando as variações
-                mensais/ano na distribuição dos dados de pesca.")
-                  )
-                )
-              )
-            ),
-            fluidRow(
-              column(
-                width = 6,
-                box(
-                  title = "Comparação de Dados Registrados por Mês",
-                  width = 12,
-                  solidHeader = TRUE,
-                  status = "primary",
-                  div(
-                    class = "graficos",
-                    plotlyOutput("BarraTubOutros", height = "100%")
-                  ),
-                  sidebar = boxSidebar(
-                    id = "boxsidebar3",
-                    icon = icon("circle-info"),
-                    background = "#A6ACAFEF",
-                    p("Este gráfico de barra, compara a presença de Tubarão azul
-                  com a categoria 'Outros', que representa dados de todas as
-                  outras espécies de pesca. Ele mostra a proporção de dados de
-                  Tubarão azul comparada com as demais categorias, por mês")
-                  )
-                )
+        fluidRow(
+          column(
+            width = 12,
+            # Definindo Caixa com conteúdo da Distribuição de Captura
+            box(
+              title = "Dados Registrados por Mês, Ano e Categoria",
+              width = 12,
+              solidHeader = TRUE, # Se a Header é sólida
+              status = "primary",
+              div(
+                class = "graficos",
+                # Saída do Gráfico de Barras Empilhadas de dados Registrados
+                plotlyOutput("TubMesAno", height = "100%")
               ),
-              column(
-                width = 6,
-                box(
-                  title = "Comparação de Dados Registrados por Mês/Ano",
-                  width = 12,
-                  solidHeader = TRUE,
-                  status = "primary",
-                  div(
-                    class = "graficos",
-                    # Saída do Mapa de Calor que compara os dados por mês
-                    plotlyOutput("ComparaDadosTub", height = "100%")
-                  ),
-                  sidebar = boxSidebar(
-                    id = "boxsidebar4",
-                    icon = icon("circle-info"),
-                    background = "#A6ACAFEF",
-                    p("Este mapa de calor compara os dados de Tubarão Azul obtidos
-                  em cada mês e ano. Cada quadrado representa um mês de um ano
-                  específico, mostrando a distribuição proporcional dos dados
-                  ao longo do período analisado, permitindo visualizar
-                  variações sazionais ou tendências.")
-                  )
-                )
+              sidebar = boxSidebar(
+                id = "boxsidebar2",
+                icon = icon("circle-info"),
+                background = "#A6ACAFEF",
+                width = 30,
+                p("Este gráfico de área relativa, apresenta a quantidade
+            de dados registrados por mês/ano, divididos por categoria
+            de pesca. Cada barra representa um mês/ano, com segmentos
+            empilhados que correspondem às diferentes categorias de
+            pesca. Isso permite uma comparação direta entre as
+            categorias ao longo do tempo, destacando as variações
+            mensais/ano na distribuição dos dados de pesca.")
               )
             )
+          )
+        ),
+        fluidRow(
+          column(
+            width = 6,
+            box(
+              title = "Comparação de Dados Registrados por Mês",
+              width = 12,
+              solidHeader = TRUE,
+              status = "primary",
+              div(
+                class = "graficos",
+                plotlyOutput("BarraTubOutros", height = "100%")
+              ),
+              sidebar = boxSidebar(
+                id = "boxsidebar3",
+                icon = icon("circle-info"),
+                background = "#A6ACAFEF",
+                p("Este gráfico de barra, compara a presença de Tubarão azul
+              com a categoria 'Outros', que representa dados de todas as
+              outras espécies de pesca. Ele mostra a proporção de dados de
+              Tubarão azul comparada com as demais categorias, por mês")
+              )
+            )
+          ),
+          column(
+            width = 6,
+            box(
+              title = "Comparação de Dados Registrados por Mês/Ano",
+              width = 12,
+              solidHeader = TRUE,
+              status = "primary",
+              div(
+                class = "graficos",
+                # Saída do Mapa de Calor que compara os dados por mês
+                plotlyOutput("ComparaDadosTub", height = "100%")
+              ),
+              sidebar = boxSidebar(
+                id = "boxsidebar4",
+                icon = icon("circle-info"),
+                background = "#A6ACAFEF",
+                p("Este mapa de calor compara os dados de Tubarão Azul obtidos
+              em cada mês e ano. Cada quadrado representa um mês de um ano
+              específico, mostrando a distribuição proporcional dos dados
+              ao longo do período analisado, permitindo visualizar
+              variações sazionais ou tendências.")
+              )
+            )
+          )
+        )
       ),
       # Definindo o conteúdo de Desembarques
       tabItem(
         tabName = "desembarque",
-        # fluidPage(
-        # fluidRow(
-        #   column(
-        #     width = 9,
-            fluidRow(
-              column(
-                width = 6,
-                box(
-                  title = "Média Mensal de Captura por Viagem",
-                  width = 12,
-                  solidHeader = TRUE, 
-                  collapsible = TRUE,
-                  status = "primary",
-                  div(
-                    class = "graficos",
-                    # Saída do Gráfico de Linha de Captura 
-                    plotlyOutput("graficoCaptura", height = "100%")
-                  ),
-                  sidebar = boxSidebar(
-                    id = "boxsidebar6",
-                    icon = icon("circle-info"),
-                    background = "#A6ACAFEF",
-                    p("Este gráfico de linha mostra a captura média em quilos por
-                    viagem, distribuída por mês e categorizada por tipo de 
-                    peixe. Cada barra representa a média mensal de capturas,
-                    destacando a variação ao longo do tempo e entre diferentes 
-                    categorias de pesca.")
-                  )
-                )
+        fluidRow(
+          column(
+            width = 6,
+            box(
+              title = "Média Mensal de Captura por Viagem",
+              width = 12,
+              solidHeader = TRUE, 
+              collapsible = TRUE,
+              status = "primary",
+              div(
+                class = "graficos",
+                # Saída do Gráfico de Linha de Captura 
+                plotlyOutput("graficoCaptura", height = "100%")
               ),
-              column(
-                width = 6,
-                box(
-                  title = "Média Mensal de Captura por Viagem",
-                  width = 12,
-                  collapsible = TRUE,
-                  solidHeader = TRUE,
-                  status = "primary",
-                  div(
-                    class = "graficos",
-                    # Saída do Mapa de Calor do Peso das Espécies
-                    plotlyOutput("pesoMes", height = "100%")
-                  ),
-                  sidebar = boxSidebar(
-                    id = "boxsidebar7",
-                    icon = icon("circle-info"),
-                    background = "#A6ACAFEF",
-                    p("Este mapa de calor ilustra a composição de espécies 
-                    presente nos dados de pesca, indicando a porcentagem de 
-                    cada espécie em relação ao total. Cada linha do mapa 
-                    representa uma espécie, facilitando a visualização das 
-                    diferenças da captura média por espécie.")
-                  )
-                )
-              ) 
-            ),
-            fluidRow(
-              column(
-                width = 12,
-                box(
-                  # title = "Gráfico de Área Relativa",
-                  title ='Média Mensal de Captura por Viagem ao Longo do Período',
-                  width = 12,
-                  collapsible = TRUE,
-                  solidHeader = TRUE,
-                  status = "primary",
-                  div(
-                    class = "graficosMaiores",
-                    # Saída do Gráfico Plotly do Desembarque
-                    plotlyOutput("graficoAreaDesembarque", height = "100%")
-                  ),
-                  sidebar = boxSidebar(
-                    id = "boxsidebar82",
-                    icon = icon("circle-info"),
-                    width = 30,
-                    background = "#A6ACAFEF",
-                    p("Este gráfico de área relativa, apresenta a captura média 
-                    em quilos por viagem, categorizada por tipo de peixe, para
-                    cada mês/ano no período analisado. As diferentes cores
-                    representam distintas categorias de pesca, permitindo uma 
-                    comparação clara e imediata entre os meses e anos, bem como 
-                    entre as categorias de peixe.")
-                  )
-                )
+              sidebar = boxSidebar(
+                id = "boxsidebar6",
+                icon = icon("circle-info"),
+                background = "#A6ACAFEF",
+                p("Este gráfico de linha mostra a captura média em quilos por
+                viagem, distribuída por mês e categorizada por tipo de 
+                peixe. Cada barra representa a média mensal de capturas,
+                destacando a variação ao longo do tempo e entre diferentes 
+                categorias de pesca.")
               )
             )
-          # )#,
-          # column(
-          #   width = 3,
-          #   box(
-          #     title = "Opções",
-          #     id = "boxWithoutHeader",
-          #     background = "gray",
-          #     width = 12,
-          #     div(
-          #       class = "boxSliders",
-          #       sliderInput(
-          #         inputId = "anos_desembarque",    # Identificador do controle deslizante
-          #         label = "Intervalo de Anos:",  # Rótulo do controle deslizante
-          #         min = min(dados_ajustados$ANO),# Valor Mínimo do controle deslizante
-          #         max = max(dados_ajustados$ANO),# Valor Máximo do controle deslizante
-          #         value = c(                     # Valor Inicial do controle deslizante
-          #           min(dados_ajustados$ANO),
-          #           max(dados_ajustados$ANO)
-          #         ),
-          #         step = 1,        # Intervalo entre os valores do controle deslizante
-          #         # Opções das animações
-          #         animate = animationOptions(
-          #           interval = 1700,
-          #           playButton = icon("play"),
-          #           pauseButton = icon("pause")
-          #         ),
-          #         sep = NULL
-          #       ),
-          #       checkboxGroupInput(
-          #         inputId = "especies_desembarque",
-          #         label = "Seletor de Espécies:",
-          #         choiceValues = c(
-          #           "Albacora_bandolim", "Albacora_branca","Albacora_lage",
-          #           "Cacao_anequim", "Meca", "Outros", "Prego"
-          #         ),
-          #         choiceNames = c(
-          #           "Albacora bandolim", "Albacora branca", "Albacora lage",
-          #           "Cação Anequim", "Meca", "Outros", "Prego"
-          #         ),
-          #         selected = dados_ajustados$CATEGORIA
-          #       )
-          #     )
-          #   )
-          # )
-        # )
-        # )
+          ),
+          column(
+            width = 6,
+            box(
+              title = "Média Mensal de Captura por Viagem",
+              width = 12,
+              collapsible = TRUE,
+              solidHeader = TRUE,
+              status = "primary",
+              div(
+                class = "graficos",
+                # Saída do Mapa de Calor do Peso das Espécies
+                plotlyOutput("pesoMes", height = "100%")
+              ),
+              sidebar = boxSidebar(
+                id = "boxsidebar7",
+                icon = icon("circle-info"),
+                background = "#A6ACAFEF",
+                p("Este mapa de calor ilustra a composição de espécies 
+                presente nos dados de pesca, indicando a porcentagem de 
+                cada espécie em relação ao total. Cada linha do mapa 
+                representa uma espécie, facilitando a visualização das 
+                diferenças da captura média por espécie.")
+              )
+            )
+          ) 
+        ),
+        fluidRow(
+          column(
+            width = 12,
+            box(
+              # title = "Gráfico de Área Relativa",
+              title ='Média Mensal de Captura por Viagem ao Longo do Período',
+              width = 12,
+              collapsible = TRUE,
+              solidHeader = TRUE,
+              status = "primary",
+              div(
+                class = "graficosMaiores",
+                # Saída do Gráfico Plotly do Desembarque
+                plotlyOutput("graficoAreaDesembarque", height = "100%")
+              ),
+              sidebar = boxSidebar(
+                id = "boxsidebar82",
+                icon = icon("circle-info"),
+                width = 30,
+                background = "#A6ACAFEF",
+                p("Este gráfico de área relativa, apresenta a captura média 
+                em quilos por viagem, categorizada por tipo de peixe, para
+                cada mês/ano no período analisado. As diferentes cores
+                representam distintas categorias de pesca, permitindo uma 
+                comparação clara e imediata entre os meses e anos, bem como 
+                entre as categorias de peixe.")
+              )
+            )
+          )
+        )
       ),
       # Definindo o conteúdo da Distribuição Espacial das Capturas
       tabItem(
@@ -902,324 +840,71 @@ ui <- dashboardPage(
               div(
                 class = "mapa",
                 leafletOutput("Mapas", height = "100%")
+              ),
+              sidebar = boxSidebar(
+                id = "boxsidebar9",
+                icon = icon("circle-info"),
+                width = 30,
+                background = "#A6ACAFEF",
+                uiOutput("textBoxSidebar")
+                # p("Este mapa de calor mostra a localização das capturas, com o
+                # valor total de Quilos capturados, onde a cor dos círculos
+                # varia de verde a roxo, indicando a porcentagem de capturas
+                # em cada área. As áreas com uma porcentagem menor de capturas
+                # são representadas em tons mais claros de verde, enquanto
+                # áreas com uma porcentagem maior são exibidas em tons mais
+                # escuros de roxo. Isso permite visualizar facilmente as
+                # áreas com maior e menor concentração de capturas.")
               )
-            ),
-            sidebar = boxSidebar(
-              id = "boxsidebar9",
-              icon = icon("circle-info"),
-              width = 30,
-              background = "#A6ACAFEF",
-              p("Este mapa de calor mostra a localização das capturas, com o
-                    valor total de Quilos capturados, onde a cor dos círculos
-                    varia de verde a roxo, indicando a porcentagem de capturas
-                    em cada área. As áreas com uma porcentagem menor de capturas
-                    são representadas em tons mais claros de verde, enquanto
-                    áreas com uma porcentagem maior são exibidas em tons mais
-                    escuros de roxo. Isso permite visualizar facilmente as
-                    áreas com maior e menor concentração de capturas.")
             )
           )
         )
       ),
-      # tabItem(
-      #   tabName = "captura_espacial",
-      #   # fluidPage(
-      #   # fluidRow(
-      #     # column(
-      #     #   width = 9,
-      #       fluidRow(
-      #         column(
-      #           width = 12,
-      #           box(
-      #             width = 12,
-      #             title = "Mapa de Capturas (KG Total)",
-      #             solidHeader = TRUE,
-      #             status = "primary",
-      #             closable = T,
-      #             div(
-      #               class = "mapa",
-      #               # Saída do Gráfico do Mapa de Calor
-      #               leafletOutput("MapaCaptura", height = "100%")
-      #             ),
-      #             sidebar = boxSidebar(
-      #               id = "boxsidebar9",
-      #               icon = icon("circle-info"),
-      #               width = 30,
-      #               background = "#A6ACAFEF",
-      #               p("Este mapa de calor mostra a localização das capturas, com o
-      #               valor total de Quilos capturados, onde a cor dos círculos
-      #               varia de verde a roxo, indicando a porcentagem de capturas
-      #               em cada área. As áreas com uma porcentagem menor de capturas
-      #               são representadas em tons mais claros de verde, enquanto
-      #               áreas com uma porcentagem maior são exibidas em tons mais
-      #               escuros de roxo. Isso permite visualizar facilmente as
-      #               áreas com maior e menor concentração de capturas.")
-      #             )
-      #           )
-      #         )
-      #       ),
-      #       fluidRow(
-      #         column(
-      #           width = 12,
-      #           box(
-      #             width = 12,
-      #             title = "Mapa de Capturas (Kg por Viagem)",
-      #             solidHeader = TRUE,
-      #             status = "primary",
-      #             closable = T,
-      #             div(
-      #               class = "mapa",
-      #               # Saída do Gráfico do Mapa de Calor
-      #               leafletOutput("MapaCapturaPorViagem", height = "100%")
-      #             ),
-      #             sidebar = boxSidebar(
-      #               id = "boxsidebar91",
-      #               icon = icon("circle-info"),
-      #               width = 30,
-      #               background = "#A6ACAFEF",
-      #               p("Este mapa de calor mostra a localização das capturas,com o
-      #               valor em Quilos por Viagem, onde a cor dos círculos varia de
-      #               verde a roxo, indicando a porcentagem de capturas em cada
-      #               área. As áreas com uma porcentagem menor de capturas são
-      #               representadas em tons mais claros de verde, enquanto áreas
-      #               com uma porcentagem maior são exibidas em tons mais escuros
-      #               de roxo. Isso permite visualizar facilmente as áreas com
-      #               maior e menor concentração de capturas.")
-      #             )
-      #           )
-      #         )
-      #       ),
-      #       fluidRow(
-      #         column(
-      #           width = 12,
-      #           box(
-      #             width = 12,
-      #             title = "Mapa de Capturas (Kg por Viagem)",
-      #             solidHeader = TRUE,
-      #             status = "primary",
-      #             closable = T,
-      #             div(
-      #               class = "mapa",
-      #               # Saída do Gráfico do Mapa de Calor
-      #               leafletOutput("MapaCapturaPorViagem2", height = "100%")
-      #             ),
-      #             sidebar = boxSidebar(
-      #               id = "boxsidebar92",
-      #               icon = icon("circle-info"),
-      #               width = 30,
-      #               background = "#A6ACAFEF"
-      #             )
-      #           )
-      #         )
-      #       ),
-      #       fluidRow(
-      #         column(
-      #           width = 12,
-      #           box(
-      #             width = 12,
-      #             title = "Mapa de Capturas (Kg por Viagem)",
-      #             solidHeader = TRUE,
-      #             status = "primary",
-      #             closable = T,
-      #             div(
-      #               class = "mapa",
-      #               # Saída do Gráfico do Mapa de Calor
-      #               leafletOutput("MapaCapturaPorViagem3", height = "100%")
-      #             ),
-      #             sidebar = boxSidebar(
-      #               id = "boxsidebar93",
-      #               icon = icon("circle-info"),
-      #               width = 30,
-      #               background = "#A6ACAFEF"
-      #             )
-      #           )
-      #         )
-      #       ),
-      #       fluidRow(
-      #         column(
-      #           width = 12,
-      #           box(
-      #             width = 12,
-      #             title = "Mapa de Viagens",
-      #             solidHeader = TRUE,
-      #             status = "primary",
-      #             div(
-      #               class = "mapa",
-      #               # Saída do Gráfico do Mapa de Calor
-      #               leafletOutput("MapaViagens", height = "100%")
-      #             ),
-      #             sidebar = boxSidebar(
-      #               id = "boxsidebar94",
-      #               icon = icon("circle-info"),
-      #               width = 30,
-      #               background = "#A6ACAFEF"
-      #             )
-      #           )
-      #         )
-      #       )
-      #     # ),
-      #     # column(
-      #     #   width = 3,
-      #     #   box(
-      #     #     title = "Opções",
-      #     #     id = "boxWithoutHeader",
-      #     #     background = "gray",
-      #     #     width = 12,
-      #     #     # solidHeader = TRUE,
-      #     #     # status = "info",
-      #     #     div(
-      #     #       class = "boxSliders",
-      #     #       sliderInput(
-      #     #         inputId = "anos_captura",    # Identificador do controle deslizante
-      #     #         label = "Intervalo de Anos:",  # Rótulo do controle deslizante
-      #     #         min = min(dados_ajustados$ANO),# Valor Mínimo do controle deslizante
-      #     #         max = max(dados_ajustados$ANO),# Valor Máximo do controle deslizante
-      #     #         value = c(                     # Valor Inicial do controle deslizante
-      #     #           min(dados_ajustados$ANO),
-      #     #           max(dados_ajustados$ANO)
-      #     #         ),
-      #     #         step = 1,        # Intervalo entre os valores do controle deslizante
-      #     #         # Opções das animações
-      #     #         animate = animationOptions(
-      #     #           interval = 1700,
-      #     #           playButton = icon("play"),
-      #     #           pauseButton = icon("pause")
-      #     #         ),
-      #     #         sep = NULL
-      #     #       ),
-      #     #       checkboxGroupInput(
-      #     #         inputId = "especies_captura",
-      #     #         label = "Seletor de Espécies:",
-      #     #         choiceValues = c(
-      #     #           "Albacora_bandolim", "Albacora_branca","Albacora_lage",
-      #     #           "Cacao_anequim", "Meca", "Outros", "Prego"
-      #     #         ),
-      #     #         choiceNames = c(
-      #     #           "Albacora bandolim", "Albacora branca", "Albacora lage",
-      #     #           "Cação Anequim", "Meca", "Outros", "Prego"
-      #     #         ),
-      #     #         selected = dados_ajustados$CATEGORIA
-      #     #       )
-      #     #     )
-      #     #   )
-      #     # )
-      #   # )
-      # 
-      #   # )
-      # ),
-      # # Definindo o conteúdo do Administrador
-      # tabItem(
-      #   tabName = "administrador",
-      #   fluidRow(
-      #     column(
-      #       width = 4,
-      #       offset = 4,
-      #       tags$head(
-      #         tags$style(HTML("
-      #           .centered-text {
-      #             text-align: center;  /* Centraliza o texto */
-      #             font-size: 36px;     /* Define o tamanho da fonte */
-      #             # color: #007bff;      /* Define a cor do texto */
-      #             margin-top: 50px;    /* Adiciona margem superior */
-      #           }
-      #         "))
-      #       ),
-      #       uiOutput("TextoRestrito")
-      #     )
-      #   ),
-      #   fluidRow(
-      #     column(
-      #       width = 12,
-      #       # Saída da Tabela com os dados para Interface do Usuário
-      #       DTOutput("tabelaAdm"),
-      #       uiOutput("user_info_box")
-      #     )
-      #   )
-      # ),
       tabItem(
         tabName = "comprimento",
-        # fluidRow(
-        #   box(
-        #     title = "Dados Falsos"
-        #   )
-        # ),
-        # fluidRow(
-          # column(
-          #   width = 9,
-            fluidRow(
-              column(
-                width = 6,
-                box(
-                  width = 12,
-                  solidHeader = T,
-                  title = "Histograma de Comprimento",
-                  status = "primary",
-                  plotlyOutput("histograma_comprimento"),
-                  # flipBox(
-                  #   id = "teste",
-                  #   width = 12,
-                  #   front = plotlyOutput("histograma_comprimentoM"),
-                  #   back = plotlyOutput("histograma_comprimentoF"),
-                  #   trigger = "click"
-                  # ),
-                  sidebar = boxSidebar(
-                    id = "boxsidebar10",
-                    icon = icon("circle-info"),
-                    width = 50,
-                    background = "#A6ACAFEF"#,
-                  #   p("Esta é uma flipBox, que contém os histogramas do comprimento
-                  # de Tubarões azul machos e fêmeas. Que indica a distribuição de
-                  # comprimento por intervalos específicos, que estão em
-                  # centímetros. Para ver o outro histograma é necessário clicar
-                  # no gráfico.")
-                  )
-                )
-              ),
-              column(
-                width = 6,
-                box(
-                  width = 12,
-                  solidHeader = T,
-                  title = "Distribuição de Comprimento de Tubarões azul",
-                  status = "primary",
-                  plotlyOutput("boxplot_comprimento"),
-                  sidebar = boxSidebar(
-                    id = "boxsidebar11",
-                    icon = icon("circle-info"),
-                    width = 50,
-                    background = "#A6ACAFEF",
-                    p("Esta é uma boxplot do comprimento de Tubarões azul machos e
-                  fêmeas. Ela indica 5 dados, o mínimo, o primeiro quartil (Q1),
-                  a mediana (Q2), o terceiro quartil (Q3), e o máximo. Os
-                  círculos fora da linha que se estendem a partir da caixa, são
-                  os outliers")
-                  )
-                )
+        fluidRow(
+          column(
+            width = 6,
+            box(
+              width = 12,
+              solidHeader = T,
+              title = "Histograma de Comprimento",
+              status = "primary",
+              plotlyOutput("histograma_comprimento"),
+              sidebar = boxSidebar(
+                id = "boxsidebar10",
+                icon = icon("circle-info"),
+                width = 50,
+                background = "#A6ACAFEF",
+                p("Esta é um histograma do comprimento de Tubarões azul machos
+                  e fêmeas. Que indica a distribuição de comprimento por 
+                  intervalos específicos, que estão em centímetros. No filtro
+                  é possível trocar o sexo da espécie, no histograma.")
               )
             )
-          # ),
-          # column(
-          #   # width = 4,
-          #   width = 3,
-          #   box(
-          #     title = "Opções",
-          #     id = "boxWithoutHeader",
-          #     background = "gray",
-          #     width = 12,
-          #     div(
-          #       class = "boxSliders",
-          #       checkboxGroupInput(
-          #         inputId = "sexo_comprimento",
-          #         label = "Seletor de Sexo:",
-          #         # choices = c("Macho", "Femea"),
-          #         choiceValues = c("M", "F"),
-          #         choiceNames = c("Macho", "Femea"),
-          #         selected = c(unique(dados_falsos$Sexo))
-          #       )
-          #     )
-          #   )
-          # )
-        # )
+          ),
+          column(
+            width = 6,
+            box(
+              width = 12,
+              solidHeader = T,
+              title = "Distribuição de Comprimento de Tubarões azul",
+              status = "primary",
+              plotlyOutput("boxplot_comprimento"),
+              sidebar = boxSidebar(
+                id = "boxsidebar11",
+                icon = icon("circle-info"),
+                width = 50,
+                background = "#A6ACAFEF",
+                p("Esta é uma boxplot do comprimento de Tubarões azul machos e
+              fêmeas. Ela indica 5 dados, o mínimo, o primeiro quartil (Q1),
+              a mediana (Q2), o terceiro quartil (Q3), e o máximo. Os
+              círculos fora da linha que se estendem a partir da caixa, são
+              os outliers")
+              )
+            )
+          )
+        )
       ),
       # tabItem(
       #   tabName = "comprimento_espacial",
@@ -1250,83 +935,6 @@ ui <- dashboardPage(
       tabItem(
         tabName = "tabela_embarcacoes",
         DTOutput("tabela_embarcacoes")
-        # fluidRow(
-        #   column(
-        #     offset = 0,
-        #     width = 9,
-        #     DTOutput("tabela_embarcacoes")
-        #     # box(
-        #     #   width = 12,
-        #     #   title = "Tabela de Embarcações",
-        #     #   solidHeader = T,
-        #     #   status = "primary",
-        #     #   DTOutput("tabela_embarcacoes")
-        #     # )
-        #   ),
-        #   column(
-        #     offset = 0,
-        #     width = 3,
-        #     # box(
-        #     #   title = "Opções",
-        #     #   id = "boxWithoutHeader",
-        #     #   background = "gray",
-        #     #   width = 12,
-        #     #   solidHeader = TRUE,
-        #     #   status = "info",
-        #     #   div(
-        #     #     class = "boxSliders",
-        #     #     sliderInput(
-        #     #       inputId = "anos_captura",    # Identificador do controle deslizante
-        #     #       label = "Intervalo de Anos:",  # Rótulo do controle deslizante
-        #     #       min = min(dados_ajustados$ANO),# Valor Mínimo do controle deslizante
-        #     #       max = max(dados_ajustados$ANO),# Valor Máximo do controle deslizante
-        #     #       value = c(                     # Valor Inicial do controle deslizante
-        #     #         min(dados_ajustados$ANO),
-        #     #         max(dados_ajustados$ANO)
-        #     #       ),
-        #     #       step = 1,        # Intervalo entre os valores do controle deslizante
-        #     #       # Opções das animações
-        #     #       animate = animationOptions(
-        #     #         interval = 1700,
-        #     #         playButton = icon("play"),
-        #     #         pauseButton = icon("pause")
-        #     #       ),
-        #     #       sep = NULL
-        #     #     ),
-        #     #     checkboxGroupInput(
-        #     #       inputId = "especies_captura",
-        #     #       label = "Seletor de Espécies:",
-        #     #       choiceValues = c(
-        #     #         "Albacora_bandolim", "Albacora_branca","Albacora_lage",
-        #     #         "Cacao_anequim", "Meca", "Outros", "Prego"
-        #     #       ),
-        #     #       choiceNames = c(
-        #     #         "Albacora bandolim", "Albacora branca", "Albacora lage",
-        #     #         "Cação Anequim", "Meca", "Outros", "Prego"
-        #     #       ),
-        #     #       selected = dados_ajustados$CATEGORIA
-        #     #     )
-        #     #   )
-        #     # )
-        #     box(
-        #       title = "Filtro",
-        #       solidHeader = T,
-        #       id = "boxWithoutHeader",
-        #       background = "gray",
-        #       width = 12,
-        #       div(
-        #         class = "boxSliders",
-        #         radioButtons(
-        #           inputId = "status_tabela",
-        #           label = "Defina o Status das Embarcações",
-        #           # choices = c(unique(notificacoesTabela$Status), "Todos"),
-        #           choices = c("Todos", "Hoje", "Passado", "Futuro"),
-        #           selected = "Todos"
-        #         )
-        #       )
-        #     )
-        #   )
-        # )
       )
     )
   ),
@@ -1339,41 +947,10 @@ ui <- dashboardPage(
           margin-bottom: -20px;", 
           h4("Instituições Executoras")
         ),
-        # column(
-        #   width = 2,
-        #   tags$a(
-        #     href = "http://www.univali.br", target = "_blank",
-        #     tags$img(
-        #       # Saída do Logo da UNIVALI 
-        #       imageOutput("Logo_UNIVALI", height = "100%", width = "100%")
-        #     )
-        #   )
-        # ),
-        # column(
-        #   width = 2,
-        #   tags$img(
-        #     # Saída do Logo do LEMA
-        #     imageOutput("Logo_LEMA", height = "100%", width = "100%")
-        #   )
-        # ),
         column(
-          width = 4,
-          tags$a(
-            href = "http://www.univali.br", target = "_blank",
-            tags$img(
-              imageOutput("Logo_UNIVALI_LEMA", height = "100%", width = "100%")
-            )
-          )
-        ),
-        column(
-          width = 1,
-          # offset = 1,
-          tags$a(
-            href = "http://www.furg.br", target = "_blank",
-            tags$img(
-              # Saída do Logo da FURG
-              imageOutput("Logo_FURG",height = "100%", width = "100%")
-            )
+          width = 5,
+          tags$img(
+            imageOutput("Logo_Instituicoes",height = "100%", width = "100%")
           )
         ),
         column(
@@ -1385,53 +962,31 @@ ui <- dashboardPage(
             h4("Apoio"),
             br()
           ),
-          tags$div(
-            style = "margin-right: 20px; padding-right: 0px;",
-            # style = "margin-right: 220px;",
-            tags$a(
-              href = "https://www.gov.br/mpa/pt-br", target = "_blank",
-              # Saída do Logo do MAPA
-              imageOutput("Logo_MAPA",height = "100%", width = "100%")
-            )
-          )
+          imageOutput("Logo_MAPA",height = "100%", width = "100%")
+          # tags$div(
+          #   style = "margin-right: 20px; padding-right: 0px;",
+          #   tags$a(
+          #     href = "https://www.gov.br/mpa/pt-br", target = "_blank",
+          #     # Saída do Logo do MAPA
+          #     imageOutput("Logo_MAPA",height = "100%", width = "100%")
+          #   )
+          # )
         )
       )
-    )#,
-    # right = list(
-    #   # fluidRow(
-    #   #   tags$div(
-    #   #     style = "margin-left: 50px; margin-top: -15px; margin-bottom: -30px;
-    #   #     padding-right: 0px;",
-    #   #     h4("Apoio"),
-    #   #     br()
-    #   #   ),
-    #   #   column(
-    #   #     # offset = 2,
-    #   #     width = 3,
-    #   #     tags$div(
-    #   #       style = "margin-right: 20px; padding-right: 0px;",
-    #   #       # style = "margin-right: 220px;",
-    #   #       tags$a(
-    #   #         href = "https://www.gov.br/mpa/pt-br", target = "_blank",
-    #   #         # Saída do Logo do MAPA
-    #   #         imageOutput("Logo_MAPA",height = "100%", width = "100%")
-    #   #       )
-    #   #     )
-    #   #   )
-    #   # )
-    # )
+    )
   ),
   
   # ControlBar --------------------------------------------------------------
   
   # Definindo o Controlbar do Painel
   controlbar = dashboardControlbar(
-      overlay = FALSE, # Se vai sobrepor o conteúdo
+    overlay = FALSE, # Se vai sobrepor o conteúdo
     collapsed = FALSE,
     skin = "dark",
     id = "controlbar",
     # width = 300,
-    width = 250,
+    # width = 250,
+    width = 230,
     # Definindo controlbar Menu
     controlbarMenu(
       id = "controlbarMenu",
@@ -1451,7 +1006,8 @@ ui <- dashboardPage(
               interval = 1700,
               playButton = icon("play"),
               pauseButton = icon("pause")
-            )
+            ),
+            sep = ""
           ),
           checkboxGroupInput(
             inputId = "especies_captura",
@@ -1497,7 +1053,8 @@ ui <- dashboardPage(
               interval = 1700,
               playButton = icon("play"),
               pauseButton = icon("pause")
-            )
+            ),
+            sep = ""
           ),
           checkboxGroupInput(
             inputId = "especies_desembarque",
@@ -1522,7 +1079,8 @@ ui <- dashboardPage(
               interval = 1700,
               playButton = icon("play"),
               pauseButton = icon("pause")
-            )
+            ),
+            sep = ""
           ),
           checkboxGroupInput(
             inputId = "especies_cap_esp",
@@ -1550,7 +1108,6 @@ ui <- dashboardPage(
           radioButtons(
             inputId = "status_tabela",
             label = "Defina o Status das Embarcações",
-            # choices = c(unique(notificacoesTabela$Status), "Todos"),
             choices = c("Todos", "Hoje", "Passado", "Futuro"),
             selected = "Todos"
           )
@@ -1730,32 +1287,32 @@ server <- function(input, output, session) {
   #     mutate(mes_nome = nomes_meses[MES])
   # }) 
   
-  dados_aux_filtrados <- reactive({
-    # Filtrando as Espécies 
-    dados_aux <- subset(
-      dados_ajustados, CATEGORIA %in% union(input$species, "Cacao_azul")
-    )
-    # Filtrando o Intervalo de Anos
-    dados_aux <- subset(
-      dados_aux,
-      ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2]
-    )
-    data.frame(dados_aux)
-  })
-  
-  # Dividindo os dados em duas categorias, e fazendo a proporção de dados
-  dados_BarraTubOutros <- reactive({
-    dados_aux_filtrados() %>%
-      group_by(MES) %>% 
-      mutate(
-        CATEGORIA = if_else(
-          CATEGORIA != "Cacao_azul", "Outros", CATEGORIA
-          )
-        ) %>%
-      count(CATEGORIA) %>% 
-      mutate(prop = (n / sum(n)) * 100) %>% 
-      mutate(media = round(n / 12, 2))
-  })
+  # dados_aux_filtrados <- reactive({
+  #   # Filtrando as Espécies 
+  #   dados_aux <- subset(
+  #     dados_ajustados, CATEGORIA %in% union(input$species, "Cacao_azul")
+  #   )
+  #   # Filtrando o Intervalo de Anos
+  #   dados_aux <- subset(
+  #     dados_aux,
+  #     ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2]
+  #   )
+  #   data.frame(dados_aux)
+  # })
+  # 
+  # # Dividindo os dados em duas categorias, e fazendo a proporção de dados
+  # dados_BarraTubOutros <- reactive({
+  #   dados_aux_filtrados() %>%
+  #     group_by(MES) %>% 
+  #     mutate(
+  #       CATEGORIA = if_else(
+  #         CATEGORIA != "Cacao_azul", "Outros", CATEGORIA
+  #         )
+  #       ) %>%
+  #     count(CATEGORIA) %>% 
+  #     mutate(prop = (n / sum(n)) * 100) %>% 
+  #     mutate(media = round(n / 12, 2))
+  # })
   
   # # Dividindo os dados Registrados de Cacao-azul em Comparação ao Resto e 
   # # Completando os Mês/Ano sem registros, completando com Zero
@@ -1779,94 +1336,16 @@ server <- function(input, output, session) {
   
   # Header ------------------------------------------------------------------
   
-  # output$notification_menu <- renderMenu({
-  #   notification_items <- lapply(1:nrow(notificacoes), function(i) {
-  #     current_date <- Sys.Date()
-  #     current_time <- format(Sys.time(), "%H:%M")
-  # 
-  #     notification_status <- "primary"
-  # 
-  #     if (notificacoes$Data[i] == current_date) {
-  #       if (notificacoes$Horário[i] <= current_time) {
-  #         notification_status <- "danger"
-  #       } else {
-  #         notification_status <- "warning"
-  #       }
-  #     }
-  # 
-  #     if (notificacoes$Data[i] >= current_date) {
-  #       notification_time <- format(
-  #         as.POSIXct(
-  #           paste(
-  #             notificacoes$Data[i], 
-  #             notificacoes$Horário[i]
-  #             )
-  #           ),
-  #         "%d/%m/%Y %H:%M:%S"
-  #         )
-  #       notificationItem(
-  #         icon = icon("bell"),
-  #         status = notification_status,
-  #         href = notificacoes$Link[i],
-  #         tags$div(
-  #           tags$span(
-  #             paste(
-  #               notificacoes$Titulo[i]
-  #             ),
-  #             style = "font-weight: bold;"
-  #           ),
-  #           br(),
-  #           tags$span(
-  #             paste(
-  #               "Local:",
-  #               notificacoes$Local[i]
-  #             ),
-  #             style = "font-weight: bold;"
-  #           ),
-  #           br(),
-  #           tags$span(
-  #             paste(
-  #               "Ocorrerá em ",
-  #               "dias"
-  #             )
-  #           )
-  #           # tags$span(
-  #           #   paste(
-  #           #     "Hora exata:",
-  #           #     notification_time
-  #           #   ),
-  #           #   style = "font-weight: bold;"
-  #           # )
-  #         )
-  #       )
-  #     }
-  #   })
-  # 
-  #   # Remover itens NULL da lista
-  #   notification_items <- notification_items[!sapply(notification_items, 
-  #                                                    is.null)]
-  # 
-  #   dropdownMenu(
-  #     type = "notifications",
-  #     headerText = paste(
-  #       "Você tem ", length(notification_items), "notificações"
-  #     ),
-  #     icon = icon("bell"),
-  #     .list = notification_items
-  #   )
-  # })
-  
   output$notification_menu <- renderMenu({
     notification_items <- lapply(1:nrow(notificacoesTabela), function(i) {
       current_date <- Sys.Date()
-      # current_time <- format(Sys.time(), "%H:%M")
-      
+
       notification_status <- "primary"
-      
+
       if (notificacoesTabela$Saída[i] == current_date) {
         notification_status <- "warning"
       }
-      
+
       if (notificacoesTabela$Saída[i] >= current_date) {
         notification_time <- format(
           as.POSIXct(
@@ -1879,7 +1358,6 @@ server <- function(input, output, session) {
         notificationItem(
           icon = icon("bell"),
           status = notification_status,
-          # href = notificacoes$Link[i],
           tags$div(
             tags$span(
               paste(
@@ -1887,14 +1365,6 @@ server <- function(input, output, session) {
               ),
               style = "font-weight: bold;"
             ),
-            # br(),
-            # tags$span(
-            #   paste(
-            #     "Local:",
-            #     notificacoesTabela$Local[i]
-            #   ),
-            #   style = "font-weight: bold;"
-            # ),
             br(),
             if (notificacoesTabela$Saída[i] == current_date) {
               tags$span(
@@ -1912,27 +1382,15 @@ server <- function(input, output, session) {
                 )
               )
             }
-            # tags$span(
-            #   paste(
-            #     
-            #   )
-            # )
-            # tags$span(
-            #   paste(
-            #     "Hora exata:",
-            #     notification_time
-            #   ),
-            #   style = "font-weight: bold;"
-            # )
           )
         )
       }
     })
-    
+
     # Remover itens NULL da lista
-    notification_items <- notification_items[!sapply(notification_items, 
+    notification_items <- notification_items[!sapply(notification_items,
                                                      is.null)]
-    
+
     dropdownMenu(
       type = "notifications",
       headerText = paste(
@@ -1942,47 +1400,6 @@ server <- function(input, output, session) {
       .list = notification_items
     )
   })
-  
-#   output$user <- renderUI({
-#     req(credentials()$user_auth)
-#     
-#     user_name <- credentials()$info$user
-#     
-#     user_permission <- credentials()$info$permissions
-#     
-#     user_image <- if(user_name == "admin") {
-#       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXZkyeTC
-#       33b_Pt2uAVgTX3165QIuSf73Vzlw&s"
-#     } else {
-#       "https://cdn-icons-png.freepik.com/512/6543/6543634.png"
-#     }
-#     
-#     dashboardUser(
-#       name = user_name,
-#       title = paste("Usuário: ", user_permission),
-#       image = user_image,
-#       if(credentials()$user_auth && credentials()$info$permissions == "admin") {
-#         fluidRow(
-#           dashboardUserItem(
-#             width = 6,
-#             socialButton(
-#               href = "https://github.com/thiagoyukiop",
-#               icon = icon("square-github")
-#             )
-#           ),
-#           dashboardUserItem(
-#             width = 6,
-#             socialButton(
-#               href = "https://www.linkedin.com/in/thiago-yukio-horita-pacheco-
-# 451050236/",
-#               icon = icon("linkedin-in")
-#             )
-#           )
-#         )
-#       }
-#     )
-#   })
-  
   
   # Sidebar -----------------------------------------------------------------
   
@@ -2028,54 +1445,18 @@ server <- function(input, output, session) {
     )
   }, deleteFile = FALSE)                   # Não Deleta o Arquivo após o Uso
   
-  output$Logo_FURG <- renderImage({
+  output$Logo_Instituicoes <- renderImage({
     list(
-      src = "dados_brutos/FURG_fundo.png",
-      # height = "80px",
-      # width = "55px",
-      height = "auto",
-      width = "100%",
-      contentType = "image/png"
-    )
-  }, deleteFile = FALSE)
-  
-  output$Logo_UNIVALI_LEMA <- renderImage({
-    list(
-      src = "dados_brutos/univali-lema-nova-logo.png",
+      src = "dados_brutos/instituicoes_executoras.png",
       height = "auto",
       width = "100%",
       contentType = "image/jpg"
     )
   }, deleteFile = FALSE)
   
-  # output$Logo_UNIVALI <- renderImage({
-  #   list(
-  #     src = "dados_brutos/Logo_univali2.png",
-  #     # height = "80px",
-  #     # width = "140px",
-  #     height = "auto",
-  #     width = "100%",
-  #     contentType = "image/jpg"
-  #   )
-  # }, deleteFile = FALSE)
-  # 
-  # output$Logo_LEMA <- renderImage({
-  #   list(
-  #     src = "dados_brutos/Logo_Lema3.png",
-  #     # height = "80px",
-  #     # width = "175px",
-  #     height = "auto",
-  #     width = "100%",
-  #     contentType = "image/png"
-  #   )
-  # }, deleteFile = FALSE)
-  
   output$Logo_MAPA <- renderImage({
     list(
       src = "dados_brutos/logo_MAPA2.png",
-      # height = "80px",
-      # width = "315px",
-      # width = "100vh",
       height = "auto",
       width = "100%",
       contentType = "image/png"
@@ -2169,6 +1550,33 @@ server <- function(input, output, session) {
         margin = list(t = 10, b = 40, l = 20, r = 20)
       ) %>%
       config(displayModeBar = FALSE)
+  })
+  
+  dados_aux_filtrados <- reactive({
+    # Filtrando as Espécies 
+    dados_aux <- subset(
+      dados_ajustados, CATEGORIA %in% union(input$especies_captura, "Cacao_azul")
+    )
+    # Filtrando o Intervalo de Anos
+    dados_aux <- subset(
+      dados_aux,
+      ANO >= input$anos_captura[1] & ANO <= input$anos_captura[2]
+    )
+    data.frame(dados_aux)
+  })
+  
+  # Dividindo os dados em duas categorias, e fazendo a proporção de dados
+  dados_BarraTubOutros <- reactive({
+    dados_aux_filtrados() %>%
+      group_by(MES) %>% 
+      mutate(
+        CATEGORIA = if_else(
+          CATEGORIA != "Cacao_azul", "Outros", CATEGORIA
+        )
+      ) %>%
+      count(CATEGORIA) %>% 
+      mutate(prop = (n / sum(n)) * 100) %>% 
+      mutate(media = round(n / 12, 2))
   })
   
   output$BarraTubOutros <- renderPlotly({
@@ -2305,9 +1713,6 @@ server <- function(input, output, session) {
       dplyr::select(-MediaKG_Mes_Viagem) %>%
       mutate(mes_nome = nomes_meses[MES])
   })
-  
-  # anos_desembarque
-  # especies_desembarque
   
   # Renderização do Gráfico Plotly da Média Mensal de Capturas (mes)
   output$graficoCaptura <- renderPlotly({
@@ -2518,7 +1923,6 @@ server <- function(input, output, session) {
     }
     plot_data <- plot_data %>% 
       layout(
-        # title = 'Média Mensal de Captura por Viagem ao Longo do Período',
         xaxis = list(
           title = "",
           tickvals = data_wide_filtrado$mes_ano_formatado[seq(
@@ -2769,7 +2173,8 @@ server <- function(input, output, session) {
         options = layersControlOptions(collapsed = FALSE)
       ) %>%
       addMiniMap(
-        position = "bottomleft"
+        position = "bottomleft",
+        toggleDisplay = T
       ) %>%
       # Adicionando um Medidor
       addMeasure(
@@ -2833,7 +2238,8 @@ server <- function(input, output, session) {
           layersControlOptions(collapsed = FALSE)
       ) %>%
       addMiniMap(
-        position = "bottomleft"
+        position = "bottomleft",
+        toggleDisplay = T
       ) %>%
       addMeasure(
         position = "bottomleft"
@@ -2861,411 +2267,33 @@ server <- function(input, output, session) {
     
   })
   
-  # # Renderização do Mapa de Calor das Capturas de Todas as Categorias
-  # output$MapaCaptura <- renderLeaflet({
-  #   tab01 <- db_filtrado()$tab01
-  #   
-  #   # Cálculo dos quantis para categorizar os dados do mapa de calor
-  #   breaks <- quantile(tab01$prod, probs = seq(0, 1, 0.1), na.rm = TRUE)
-  #   
-  #   # Verificando se há breaks duplicados 
-  #   if (any(duplicated(breaks))) {
-  #     # Jitter é usado para variar um pouco o valor dos duplicados
-  #     tab01$prod <- jitter(tab01$prod, factor = 0.1)
-  #   }
-  #   
-  #   # Criar a paleta de cores com base nos intervalos
-  #   pal <- colorQuantile(
-  #     palette = "viridis",
-  #     domain = tab01$prod,
-  #     probs = seq(0, 1, 0.1)
-  #   )
-  #   
-  #   leaflet() %>%
-  #     # Definindo a primeira opção do estilo do Mapa (Claro)
-  #     addProviderTiles(
-  #       providers$CartoDB.Positron,
-  #       group = "Light Map"
-  #     ) %>%
-  #     # Definindo a segunda opção do estilo do Mapa (Escuro)
-  #     addProviderTiles(
-  #       providers$CartoDB.DarkMatter,
-  #       group = "Dark Map"
-  #     ) %>%
-  #     # Definindo a Posição Inicial da visão sobre o Mapa
-  #     setView(
-  #       lng = -40,
-  #       lat = -28, 
-  #       zoom = 4
-  #     ) %>%
-  #     # Definindo a adição dos Marcadores no Mapa
-  #     addCircleMarkers(
-  #       group = tab01$prod,      # Define os marcadores com base na soma dos KG
-  #       # radius = 12,             # Define o raio dos marcadores como 12 pixels
-  #       radius = 7,
-  #       lng = tab01$LON,         # Define tab01$LON como longitude
-  #       lat = tab01$LAT,         # Define tab01$LAT como latitude
-  #       stroke = FALSE,          # Define que não haverá borda dos marcadores
-  #       color = pal(tab01$prod), # Define a paleta de cores dos marcadores
-  #       fillOpacity = 0.7,       # Define a opacidade dos marcadores como 70%
-  #       label = lapply(paste0(
-  #         "Captura: ", round(tab01$prod, 0), " kg <br> Viagens: ", tab01$viagem
-  #       ), HTML)
-  #     ) %>%
-  #     # Definindo a legenda com a paleta de cores e suas Porcentagens
-  #     addLegend(
-  #       pal = pal, 
-  #       values = tab01$prod,
-  #       group = tab01$prod,
-  #       position = "bottomright", 
-  #       title = "Percentual da Captura"
-  #     ) %>%
-  #     # Controle de Estilo de Mapa
-  #     addLayersControl(
-  #       position = "topleft",
-  #       baseGroups = c("Dark Map", "Light Map"),
-  #       options = layersControlOptions(collapsed = FALSE)
-  #     ) %>%
-  #     # Adicionando Mini Mapa
-  #     addMiniMap(
-  #       position = "bottomleft",
-  #       toggleDisplay = T
-  #     ) %>%
-  #     # Adicionando um Medidor 
-  #     addMeasure(
-  #       position = "bottomleft",
-  #       primaryLengthUnit = "meters",
-  #       secondaryLengthUnit = "kilometers",
-  #       primaryAreaUnit = "sqmeters",
-  #       secondaryAreaUnit = "hectares",
-  #       localization = "pt_br"
-  #     ) %>%
-  #     addScaleBar(
-  #       position = "bottomright",
-  #       options = scaleBarOptions(metric = TRUE, imperial = FALSE)
-  #     ) %>%
-  #     addFullscreenControl(
-  #       position = "topright"
-  #     ) %>%
-  #     addResetMapButton() %>%
-  #     setMaxBounds(
-  #       lng1 = -180, lat1 = -90,  # Limite inferior esquerdo
-  #       lng2 = 180, lat2 = 90     # Limite superior direito
-  #     )
-  # })
-  
-  # output$MapaCapturaPorViagem <- renderLeaflet({
-  #   tab01 <- db_filtrado()$tab01
-  # 
-  #   # Cálculo dos quantis para categorizar os dados do mapa de calor
-  #   breaks <- quantile(tab01$prod2, probs = seq(0, 1, 0.1), na.rm = TRUE)
-  # 
-  #   # Verificando se há breaks duplicados
-  #   if (any(duplicated(breaks))) {
-  #     # Jitter é usado para variar um pouco o valor dos duplicados
-  #     tab01$prod2 <- jitter(tab01$prod2, factor = 0.1)
-  #   }
-  # 
-  #   # Criar a paleta de cores com base nos intervalos
-  #   pal <- colorQuantile(
-  #     palette = "viridis",
-  #     domain = tab01$prod2,
-  #     probs = seq(0, 1, 0.1)
-  #   )
-  # 
-  #   leaflet() %>%
-  #     # Definindo a primeira opção do estilo do Mapa (Claro)
-  #     addProviderTiles(
-  #       providers$CartoDB.Positron,
-  #       group = "Light Map"
-  #     ) %>%
-  #     # Definindo a segunda opção do estilo do Mapa (Escuro)
-  #     addProviderTiles(
-  #       providers$CartoDB.DarkMatter,
-  #       group = "Dark Map"
-  #     ) %>%
-  #     # Definindo a Posição Inicial da visão sobre o Mapa
-  #     setView(
-  #       lng = -40, lat = -28, zoom = 4
-  #     ) %>%
-  #     # Definindo a adição dos Marcadores no Mapa
-  #     addCircleMarkers(
-  #       group = "Marcadores Circulares",
-  #       # group = tab01$prod2,   # Define os marcadores com base na soma dos KG
-  #       # radius = 12,           # Define o raio dos marcadores como 12 pixels
-  #       radius = 7,
-  #       lng = tab01$LON,         # Define tab01$LON como longitude
-  #       lat = tab01$LAT,         # Define tab01$LAT como latitude
-  #       stroke = FALSE,          # Define que não haverá borda dos marcadores
-  #       color = pal(tab01$prod2), # Define a paleta de cores dos marcadores
-  #       fillOpacity = 0.7,       # Define a opacidade dos marcadores como 70%
-  #       label = paste0(
-  #         "Captura: ", round(tab01$prod2, 0), " kg"
-  #       )
-  #     ) %>%
-  #     # Definindo a legenda com a paleta de cores e suas Porcentagens
-  #     addLegend(
-  #       pal = pal, values = tab01$prod2, group = tab01$prod,
-  #       position = "bottomright", title = "Percentual da Captura"
-  #     ) %>%
-  #     # Controle de Estilo de Mapa
-  #     addLayersControl(
-  #       position = "topleft",
-  #       baseGroups = c("Dark Map", "Light Map"),
-  #       options = layersControlOptions(collapsed = FALSE)
-  #     ) %>%
-  #     # addLayersControl(
-  #     #   position = "bottomleft",
-  #     #   baseGroups = c("Marcadores Circulares", "Mapa de Calor"),
-  #     #   options = layersControlOptions(collapsed = FALSE)
-  #     # ) %>%
-  #     # Adicionando Mini Mapa
-  #     addMiniMap(
-  #       position = "bottomleft"
-  #     ) %>%
-  #     # Adicionando um Medidor
-  #     addMeasure(
-  #       position = "bottomleft"
-  #     ) %>%
-  #     addScaleBar(
-  #       position = "bottomright",
-  #       options = scaleBarOptions(metric = TRUE, imperial = FALSE)
-  #     ) %>%
-  #     addFullscreenControl(
-  #       position = "topright"
-  #     ) %>%
-  #     addResetMapButton() %>%
-  #     # addHeatmap(
-  #     #   group = "Mapa de Calor",
-  #     #   lng = tab01$LON,
-  #     #   lat = tab01$LAT,
-  #     #   intensity = tab01$prod2,
-  #     #   blur = 20,
-  #     #   max = 0.05,
-  #     #   radius = 12
-  #     # ) %>% 
-  #     setMaxBounds(
-  #       lng1 = -180, lat1 = -90,  # Limite inferior esquerdo
-  #       lng2 = 180, lat2 = 90     # Limite superior direito
-  #     )
-  # })
-  
-  # output$MapaCapturaPorViagem2 <- renderLeaflet({
-  #   tab01 <- db_filtrado()$tab01
-  #   
-  #   # Criar a paleta de cores com base nos intervalos
-  #   pal <- colorQuantile(
-  #     palette = "viridis",
-  #     domain = tab01$prod2,
-  #     probs = seq(0, 1, 0.1)
-  #   )
-  #   
-  #   tab01 <- tab01 %>% 
-  #     mutate(
-  #       radii = (tab01$prod2 - min(tab01$prod2)) / 
-  #         (max(tab01$prod2) - min(tab01$prod2)) * 30 + 6 
-  #       )
-  #   
-  #   leaflet() %>%
-  #     addProviderTiles(
-  #       providers$CartoDB.Positron,
-  #       group = "Light Map"
-  #     ) %>%
-  #     addProviderTiles(
-  #       providers$CartoDB.DarkMatter,
-  #       group = "Dark Map"
-  #     ) %>%
-  #     setView(
-  #       lng = -40, lat = -28, zoom = 4
-  #     ) %>%
-  #     addCircleMarkers(
-  #       lng = tab01$LON,
-  #       lat = tab01$LAT,
-  #       radius = tab01$radii,
-  #       stroke = FALSE,
-  #       color = pal(tab01$prod2),
-  #       fillOpacity = 0.7,
-  #       label = paste0(
-  #         "Captura: ", round(tab01$prod2, 0), " kg"
-  #       )
-  #     ) %>%
-  #     addLegend(
-  #       pal = pal, values = tab01$prod2,
-  #       position = "bottomright", title = "Percentual da Captura"
-  #     ) %>%
-  #     addLayersControl(
-  #       position = "topleft",
-  #       baseGroups = c("Dark Map", "Light Map"),
-  #       options = layersControlOptions(collapsed = FALSE)
-  #     ) %>%
-  #     addMiniMap(
-  #       position = "bottomleft"
-  #     ) %>%
-  #     addMeasure(
-  #       position = "bottomleft"
-  #     ) %>%
-  #     addScaleBar(
-  #       position = "bottomright",
-  #       options = scaleBarOptions(metric = TRUE, imperial = FALSE)
-  #     ) %>%
-  #     addFullscreenControl(
-  #       position = "topright"
-  #     ) %>%
-  #     addResetMapButton() %>%
-  #     setMaxBounds(
-  #       lng1 = -180, lat1 = -90,  # Limite inferior esquerdo
-  #       lng2 = 180, lat2 = 90     # Limite superior direito
-  #     )
-  # })
-  
-  # output$MapaCapturaPorViagem3 <- renderLeaflet({
-  #   tab01 <- db_filtrado()$tab01
-  # 
-  #   # Definindo uma cor fixa para todos os círculos
-  #   fixedColor <- "#FF5733" # Escolha uma cor fixa, por exemplo, vermelho
-  # 
-  #   # Normalizando os valores de prod2 para o intervalo [0.1, 1]
-  #   minProd2 <- min(tab01$prod2, na.rm = TRUE)
-  #   maxProd2 <- max(tab01$prod2, na.rm = TRUE)
-  #   tab01 <- tab01 %>%
-  #     # Intervalo [0.1, 1]
-  #     mutate(opct = (prod2 - minProd2) / (maxProd2 - minProd2) * 0.9 + 0.1)
-  #   leaflet() %>%
-  #     # Definindo a primeira opção do estilo do Mapa (Claro)
-  #     addProviderTiles(
-  #       providers$CartoDB.Positron,
-  #       group = "Light Map"
-  #     ) %>%
-  #     # Definindo a segunda opção do estilo do Mapa (Escuro)
-  #     addProviderTiles(
-  #       providers$CartoDB.DarkMatter,
-  #       group = "Dark Map"
-  #     ) %>%
-  #     # Definindo a Posição Inicial da visão sobre o Mapa
-  #     setView(
-  #       lng = -40, lat = -28, zoom = 4
-  #     ) %>%
-  #     # Definindo a adição dos Marcadores no Mapa
-  #     addCircleMarkers(
-  #       group = "Capturas",       # Define o grupo dos marcadores
-  #       radius = 7,               # Define o raio dos marcadores como 7 pixels
-  #       lng = tab01$LON,          # Define tab01$LON como longitude
-  #       lat = tab01$LAT,          # Define tab01$LAT como latitude
-  #       stroke = FALSE,           # Define que não haverá borda dos marcadores
-  #       color = fixedColor,       # Define uma cor fixa para todos os marcadores
-  #       fillOpacity = tab01$opct, # Define a opacidade baseado em prod2
-  #       label = paste0(
-  #         "Captura: ", round(tab01$prod2, 0), " kg"
-  #       )
-  #     ) %>%
-  #     # Controle de Estilo de Mapa
-  #     addLayersControl(
-  #       position = "topleft",
-  #       baseGroups = c("Dark Map", "Light Map"),
-  #       options = layersControlOptions(collapsed = FALSE)
-  #     ) %>%
-  #     # Adicionando Mini Mapa
-  #     addMiniMap(
-  #       position = "bottomleft"
-  #     ) %>%
-  #     # Adicionando um Medidor
-  #     addMeasure(
-  #       position = "bottomleft"
-  #     ) %>%
-  #     addScaleBar(
-  #       position = "bottomright",
-  #       options = scaleBarOptions(metric = TRUE, imperial = FALSE)
-  #     ) %>%
-  #     addFullscreenControl(
-  #       position = "topright"
-  #     ) %>%
-  #     addResetMapButton() %>%
-  #     setMaxBounds(
-  #       lng1 = -180, lat1 = -90,  # Limite inferior esquerdo
-  #       lng2 = 180, lat2 = 90     # Limite superior direito
-  #     )
-  # })
-  
-  # output$MapaViagens <- renderLeaflet({
-  #   tab01 <- db_filtrado()$tab01
-  #   
-  #   # Cálculo dos quantis para categorizar os dados do mapa de calor
-  #   breaks <- quantile(tab01$viagem, probs = seq(0, 1, 0.1), na.rm = TRUE)
-  #   
-  #   # Verificando se há breaks duplicados 
-  #   if (any(duplicated(breaks))) {
-  #     # Jitter é usado para variar um pouco o valor dos duplicados
-  #     tab01$viagem <- jitter(tab01$viagem, factor = 0.1)
-  #   }
-  #   
-  #   # Criar a paleta de cores com base nos intervalos
-  #   pal <- colorQuantile(
-  #     palette = "viridis",
-  #     domain = tab01$viagem,
-  #     probs = seq(0, 1, 0.1)
-  #   )
-  #   
-  #   leaflet() %>%
-  #     # Definindo a primeira opção do estilo do Mapa (Claro)
-  #     addProviderTiles(
-  #       providers$CartoDB.Positron,
-  #       group = "Light Map"
-  #     ) %>%
-  #     # Definindo a segunda opção do estilo do Mapa (Escuro)
-  #     addProviderTiles(
-  #       providers$CartoDB.DarkMatter,
-  #       group = "Dark Map"
-  #     ) %>%
-  #     # Definindo a Posição Inicial da visão sobre o Mapa
-  #     setView(
-  #       lng = -40, lat = -28, zoom = 4
-  #     ) %>%
-  #     # Definindo a adição dos Marcadores no Mapa
-  #     addCircleMarkers(
-  #       group = tab01$viagem,    # Define os marcadores com base na soma dos KG
-  #       # radius = 12,           # Define o raio dos marcadores como 12 pixels
-  #       radius = 7,
-  #       lng = tab01$LON,         # Define tab01$LON como longitude
-  #       lat = tab01$LAT,         # Define tab01$LAT como latitude
-  #       stroke = FALSE,          # Define que não haverá borda dos marcadores
-  #       color = pal(tab01$viagem), # Define a paleta de cores dos marcadores
-  #       fillOpacity = 0.7,       # Define a opacidade dos marcadores como 70%
-  #       label = paste0("Viagens: ", round(tab01$viagem),0)
-  #     ) %>%
-  #     # Definindo a legenda com a paleta de cores e suas Porcentagens
-  #     addLegend(
-  #       pal = pal, values = tab01$viagem, group = tab01$viagem,
-  #       position = "bottomright", title = "Percentual da Viagens"
-  #     ) %>%
-  #     # Controle de Estilo de Mapa
-  #     addLayersControl(
-  #       position = "topleft",
-  #       baseGroups = c("Dark Map", "Light Map"),
-  #       options =
-  #         layersControlOptions(collapsed = FALSE)
-  #     ) %>%
-  #     # Adicionando Mini Mapa
-  #     addMiniMap(
-  #       position = "bottomleft"
-  #     ) %>%
-  #     # Adicionando um Medidor 
-  #     addMeasure(
-  #       position = "bottomleft"
-  #     ) %>%
-  #     addScaleBar(
-  #       position = "bottomright",
-  #       options = scaleBarOptions(metric = TRUE, imperial = FALSE)
-  #     ) %>%
-  #     addFullscreenControl(
-  #       position = "topright"
-  #     ) %>%
-  #     addResetMapButton() %>%
-  #     setMaxBounds(
-  #       lng1 = -180, lat1 = -90,  # Limite inferior esquerdo
-  #       lng2 = 180, lat2 = 90     # Limite superior direito
-  #     )
-  # })
-  
+  output$textBoxSidebar <- renderUI({
+    if (input$mapa_cap_esp == "KilosTotais") {
+      p("Este mapa de calor mostra a localização das capturas, com o valor total
+      de Quilos capturados, onde a cor dos círculos varia de verde a roxo, 
+      indicando a porcentagem de capturas em cada área. As áreas com uma
+      porcentagem menor de capturas são representadas em tons mais claros de 
+      verde, enquanto áreas com uma porcentagem maior são exibidas em tons mais
+      escuros de roxo. Isso permite visualizar facilmente as áreas com maior e 
+      menor concentração de capturas.")
+    } else if (input$mapa_cap_esp == "KiloPorViagem") {
+      p("Este mapa de calor mostra a localização das capturas, com o valor em 
+      Quilos por Viagem, onde a cor dos círculos varia de verde a roxo, 
+      indicando a porcentagem de capturas em cada área. As áreas com uma 
+      porcentagem menor de capturas são representadas em tons mais claros de 
+      verde, enquanto áreas com uma porcentagem maior são exibidas em tons mais 
+      escuros de roxo. Isso permite visualizar facilmente as áreas com maior e
+      menor concentração de capturas.")
+    } else if (input$mapa_cap_esp == "Viagens") {
+      p("Este mapa de calor mostra a localização das viagens, onde a cor dos 
+      círculos varia de verde a roxo, indicando a porcentagem de viagens em cada
+      área. As áreas com uma porcentagem menor de viagens são representadas em
+      tons mais claros de verde, enquanto áreas com uma porcentagem maior são
+      exibidas em tons mais escuros de roxo. Isso permite visualizar facilmente 
+      as áreas com maior e menor concentração de viagens.")
+    }
+  })
+ 
   output$MapaComprimento <- renderLeaflet({
     leaflet() %>%
       # Definindo a primeira opção do estilo do Mapa (Claro)
@@ -3310,80 +2338,9 @@ server <- function(input, output, session) {
         lng2 = 180, lat2 = 90     # Limite superior direito
       )
   })
-  
-  # Administrador -----------------------------------------------------------
-
-  credentials <- loginServer(
-    id = "login",
-    data = user_base,
-    user_col = user,
-    pwd_col = password,
-    sodium_hashed = TRUE,
-    log_out = reactive(logout_init())
-  )
-  
-  # Configura o módulo de logout
-  logout_init <- logoutServer(
-    id = "logout",
-    active = reactive(credentials()$user_auth)
-  )
-  
-  # Renderiza a box de informações do usuário após o login
-  output$user_info_box <- renderUI({
-    # Só mostra a box se o usuário estiver autenticado
-    req(credentials()$user_auth && !credentials()$info$permissions == "standard")
-    fluidRow(
-      box(
-        title = "Informações do Usuário",
-        status = "primary",
-        solidHeader = TRUE,
-        tableOutput("user_table")
-      )
-    )
-  })
-  
-  # Renderiza a tabela de usuários
-  output$user_table <- renderTable({
-    req(credentials()$user_auth) 
-    credentials()$info %>% dplyr::select(-password)
-  })
-
-  output$TextoRestrito <- renderUI({
-    req(!credentials()$user_auth || credentials()$info$permissions == "standard")
-    div(class = "centered-text", "ACESSO RESTRITO A ADMINISTRADORES!")
-  })
-  
-  output$tabelaAdm <- renderDT({
-    req(credentials()$user_auth && !credentials()$info$permissions == "standard")
-    dados_aux_filtrados()
-  },options = list(
-    paging = TRUE,
-    searching = FALSE,
-    rownames = FALSE,
-    columnDefs = list(
-      list(className = 'dt-center', targets = "_all")
-    )
-  ),
-  class = "cell-border stripe hover",
-  selection = "single"
-  )
 
 # Distribuição de Comprimentos --------------------------------------------
-  
-  
-  # dados_aux_filtrados <- reactive({
-  #   # Filtrando as Espécies 
-  #   dados_aux <- subset(
-  #     dados_ajustados, CATEGORIA %in% union(input$species, "Cacao_azul")
-  #   )
-  #   # Filtrando o Intervalo de Anos
-  #   dados_aux <- subset(
-  #     dados_aux,
-  #     ANO >= input$intervalo_anos[1] & ANO <= input$intervalo_anos[2]
-  #   )
-  #   data.frame(dados_aux)
-  # })
-  
+
   dados_falsos_filtro <- reactive({
     subset(dados_falsos, Sexo %in% input$sexo_comprimento)
   })
@@ -3411,60 +2368,6 @@ server <- function(input, output, session) {
         showlegend = FALSE
       )
   })
-  
-  # output$histograma_comprimentoM <- renderPlotly({
-  #   plot_ly(
-  #     data = dados_falsos %>% filter(Sexo == "M"),
-  #     x = ~IDL,
-  #     name = "Masculino",
-  #     type = 'histogram',
-  #   marker = list(
-  #     line = list(
-  #       color = 'black',  # cor da borda
-  #       width = 1        # espessura da borda
-  #     )
-  #   )
-  #   ) %>% 
-  #     layout(
-  #       title = "Macho",
-  #       hovermode = "x",
-  #       xaxis = list(
-  #         title = "Comprimento (cm)",
-  #         showgrid = TRUE
-  #       ),
-  #       yaxis = list(
-  #         showgrid = TRUE,
-  #         ticksuffix = '%'
-  #       )
-  #     )
-  # })
-  
-  # output$histograma_comprimentoF <- renderPlotly({
-  #   plot_ly(
-  #     data = dados_falsos %>% filter(Sexo == "F"),
-  #     x = ~IDL,
-  #     name = "Masculino",
-  #     type = 'histogram',
-  #     marker = list(
-  #       line = list(
-  #         color = 'black',  # cor da borda
-  #         width = 1        # espessura da borda
-  #       )
-  #     )
-  #   ) %>% 
-  #     layout(
-  #       title = "Fêmea",
-  #       hovermode = "x",
-  #       xaxis = list(
-  #         title = "Comprimento (cm)",
-  #         showgrid = TRUE
-  #       ),
-  #       yaxis = list(
-  #         showgrid = TRUE,
-  #         ticksuffix = '%'
-  #       )
-  #     )
-  # })
   
   output$boxplot_comprimento <- renderPlotly({
     plot_ly(
@@ -3513,12 +2416,14 @@ server <- function(input, output, session) {
         options = list(
           paging = T,
           searching = FALSE,
-          pageLength = 10,
+          pageLength = 8,
+          lengthMenu = list(c(5, 8, 10, 15, -1),c('5','8', '10', '15', 'all')),
+          
           columnDefs = list(
             list(className = 'dt-center', targets = "_all")  # Centraliza o texto
           ),
-          # order = list(list(4, 'desc'))
-          order = list(list(3, 'desc'))
+          order = list(list(4, 'desc'))
+          # order = list(list(3, 'desc'))
         ),
         class = "cell-border stripe hover",
         selection = "single"
