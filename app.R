@@ -2,12 +2,13 @@
 
 # Carregando os Pacotes que serão utilizados no dashboard
 pacman::p_load(
-  shiny, shinydashboard, shinydashboardPlus, shinyauthr,
+  shiny, shinydashboard, shinydashboardPlus,# shinyauthr,
   leaflet, leaflet.extras,
   dplyr, tidyverse, scales, zoo, DT, tibble,
   plotly, shinyjs,
   raster, digest, sodium,
-  DBI, RSQLite
+  DBI, RSQLite,
+  RColorBrewer
 )
 
 # Habilita o recarregamento automático do aplicativo ao detectar mudanças.
@@ -32,10 +33,10 @@ notificacoes$Chegada <- as.Date(notificacoes$Chegada)
 
 novas_linhas <- data.frame(
   Embarcação = c("Nova Embarcação 1", "Nova Embarcação 2", "Nova Embarcação 3"),
-  AvisoDeDesembarque = as.Date(c("2024-09-17", "2024-09-19", "2024-09-26")),
-  DataDoDesembarque = as.Date(c("2024-09-18", "2024-09-22", "2024-10-03")),
-  Saída = as.Date(c("2024-09-17", "2024-09-19", "2024-09-27")),
-  Chegada = as.Date(c("2024-09-18", "2024-09-18","2024-10-03")),
+  AvisoDeDesembarque = as.Date(c(Sys.Date(), "2024-09-19", "2024-09-26")),
+  DataDoDesembarque = as.Date(c(Sys.Date(), "2024-09-22", "2024-10-03")),
+  Saída = as.Date(c(Sys.Date(), "2024-09-19", "2024-09-27")),
+  Chegada = as.Date(c(Sys.Date(), "2024-09-18","2024-10-03")),
   IndivíduosMedidosDeTubarãoAzul = c(150, 75, 97),
   IndivíduosMedidosDeTubarãoAnequim = c(0, 0, 0)
 )
@@ -339,10 +340,10 @@ ui <- dashboardPage(
       background-color: #FFFFFF; /* cor de fundo branca */
     }
     
-    #LogoPTA img {
-      min-width: 200px;   /* Defina a largura mínima desejada */
-      max-width: 400px;   /* Defina a largura máxima desejada */
-    }
+    # #LogoPTA img {
+    #   min-width: 200px;   /* Defina a largura mínima desejada */
+    #   max-width: 400px;   /* Defina a largura máxima desejada */
+    # }
     
     # .box-header .box-title{
     #   font-size: 18px;
@@ -360,6 +361,16 @@ ui <- dashboardPage(
     }
     .box {
       overflow-x: auto; /* Impede que o conteúdo transborde horizontalmente */
+    }
+    
+    #LogoPTA img {
+      width: 60%;
+      height: auto;
+    }
+    
+    #FluxogramaTubAzul img {
+      width: 70%;
+      height: auto;
     }
     
     #Logo_Instituicoes img {
@@ -484,7 +495,7 @@ ui <- dashboardPage(
               offset = 2,
               div(
                 style = "text-align: center;",
-                imageOutput("LogoPTA", width = "100%", height = "100%")
+                imageOutput("LogoPTA", height = "100%")
               )
               # div(
               #   style = "text-align: center;",
@@ -876,7 +887,7 @@ ui <- dashboardPage(
                 icon = icon("circle-info"),
                 width = 50,
                 background = "#A6ACAFEF",
-                p("Esta é um histograma do comprimento de Tubarões azul machos
+                p("Este é um histograma do comprimento de Tubarões azul machos
                   e fêmeas. Que indica a distribuição de comprimento por 
                   intervalos específicos, que estão em centímetros. No filtro
                   é possível trocar o sexo da espécie, no histograma.")
@@ -1012,10 +1023,14 @@ ui <- dashboardPage(
           checkboxGroupInput(
             inputId = "especies_captura",
             label = "Seletor de Espécies:",
-            choiceValues = c("Albacora_bandolim", "Albacora_branca", "Albacora_lage",
-                             "Cacao_anequim", "Meca", "Outros", "Prego"),
-            choiceNames = c("Albacora bandolim", "Albacora branca", "Albacora lage",
-                            "Cação Anequim", "Meca", "Outros", "Prego"),
+            choiceValues = c(
+              "Albacora_bandolim", "Albacora_branca", "Albacora_lage",
+              "Cacao_anequim", "Meca", "Outros", "Prego"
+              ),
+            choiceNames = c(
+              "Albacora bandolim", "Albacora branca", "Albacora lage",
+              "Cação Anequim", "Meca", "Outros", "Prego"
+              ),
             selected = dados_ajustados$CATEGORIA
           )#,
           # actionButton(
@@ -1031,13 +1046,12 @@ ui <- dashboardPage(
         ),
         conditionalPanel(
           condition = "input.sidebarMenu == 'comprimento'",
-          checkboxGroupInput(
+          radioButtons(
             inputId = "sexo_comprimento",
             label = "Seletor de Sexo:",
-            # choices = c("Macho", "Femea"),
-            choiceValues = c("M", "F"),
-            choiceNames = c("Macho", "Femea"),
-            selected = c(unique(dados_falsos$Sexo))
+            choiceValues = c("Todos", "M", "F"),
+            choiceNames = c("Todos", "Macho", "Femea"),
+            selected = "Todos"
           )
         ),
         conditionalPanel(
@@ -1139,20 +1153,18 @@ server <- function(input, output, session) {
     "Agosto", "Setembro", "Outubro", "Novembro","Dezembro"
   )
   
-  # Cores amigáveis para pessoas com daltonismo
-  cores <- c(
-    "Albacora_bandolim" = "#9467bd","Albacora_branca" = "#E6194B",
-    "Albacora_lage" = "#3CB44B", "Meca" = "#911EB4","Outros" = "#F58231", 
-    "Cacao_azul" = "#4363D8","Cacao_anequim" = "#FFE119", "Prego" = "#42D4F4"
-  )
-
-  # Definindo as Cores de cada Mês (cores amigáveis para pessoas com daltonismo)
-  cores_mes <- c(
-    "Janeiro"="#42D4F4","Fevereiro"="#FABED4","Março"="#BFEF45",
-    "Abril"="#FFE119","Maio"="#F032E6","Junho"="#9A6324",
-    "Julho"="#4363D8","Agosto"="#911EB4","Setembro"="#3CB44B",
-    "Outubro"="#A9A9A9","Novembro"="#F58231","Dezembro"="#E6194B"
-  )
+  categorias <- unique(dados_ajustados$CATEGORIA)
+  
+  cores <- brewer.pal(n = 8, name = "Set1")
+  
+  cores <- cores[cores != "#377EB8"]
+  
+  cores_categoria <- setNames(c(rep(NA, length(categorias))), categorias)
+  
+  cores_categoria["Cacao_azul"] <- "#377EB8"
+  
+  outras_categorias <- categorias[categorias != "Cacao_azul"]
+  cores_categoria[outras_categorias] <- cores[1:length(outras_categorias)]
   
   # Filtro de Dados ---------------------------------------------------------
   
@@ -1343,7 +1355,7 @@ server <- function(input, output, session) {
       notification_status <- "primary"
 
       if (notificacoesTabela$Saída[i] == current_date) {
-        notification_status <- "warning"
+        notification_status <- "danger"
       }
 
       if (notificacoesTabela$Saída[i] >= current_date) {
@@ -1370,7 +1382,7 @@ server <- function(input, output, session) {
               tags$span(
                 paste(
                   "Ocorrerá/Ocorreu Hoje"
-                )
+                ), style = "color: #a94442;"
               )
             }
             else{
@@ -1379,7 +1391,7 @@ server <- function(input, output, session) {
                   "Ocorrerá em ",
                   notificacoesTabela$DiasRestantes[i],
                   "dias"
-                )
+                ), style = "color: #337ab7;"
               )
             }
           )
@@ -1428,7 +1440,8 @@ server <- function(input, output, session) {
   output$LogoPTA <- renderImage({
     list(
       src = "dados_brutos/logo_tuba_azul_3.png", # Local do arquivo da Imagem
-      height = "100%",                     # Altura da Imagem
+      # height = "100%",                     # Altura da Imagem
+      height = "auto",
       width = "100%",                      # Largura da Imagem
       contentType = "image/png",            # Tipo do Conteúdo da Imagem
       id = "LogoPTA"
@@ -1505,6 +1518,7 @@ server <- function(input, output, session) {
       x = ~mes_ano_formatado,
       y = ~percentage,
       color = ~CATEGORIA,
+      colors = cores_categoria,
       type = 'scatter',
       stackgroup = 'one',
       groupnorm = 'percent',
@@ -1513,14 +1527,8 @@ server <- function(input, output, session) {
       text = ~paste(
         " Data: ", mes_ano, "<br>",
         "Categoria: ",case_when(
-          CATEGORIA == "Albacora_bandolim" ~ "Albacora bandolim",
-          CATEGORIA == "Albacora_branca" ~ "Albacora branca",
-          CATEGORIA == "Albacora_lage" ~ "Albacora lage",
-          CATEGORIA == "Cacao_anequim" ~ "Cação anequim",
           CATEGORIA == "Cacao_azul" ~ "Tubarão azul",
-          CATEGORIA == "Meca" ~ CATEGORIA,
           CATEGORIA == "Outros" ~ CATEGORIA,
-          CATEGORIA == "Prego" ~ CATEGORIA,
           TRUE ~ CATEGORIA
         ),
         "<br>",
@@ -1585,7 +1593,7 @@ server <- function(input, output, session) {
       x = ~MES,
       y = ~prop,
       color = ~CATEGORIA,
-      colors = cores,
+      colors = cores_categoria,
       type = 'bar',
       text = ~paste(
         " Categoria: ",case_when(
@@ -1723,8 +1731,10 @@ server <- function(input, output, session) {
       type = 'scatter',
       mode = 'lines+markers',
       color = ~CATEGORIA,
-      colors = cores,
-      marker = list(size = 10), # Tamanho do Marcador
+      colors = cores_categoria,
+      marker = list(
+        size = 10#, # Tamanho do Marcador
+        ), 
       hoverinfo = "text",
       text = ~paste(
         " Espécie: ",
@@ -1740,7 +1750,7 @@ server <- function(input, output, session) {
           TRUE ~ CATEGORIA
         ),
         "<br>",
-        "Média de KG: ", MediaKGMesViagem, "<br>"
+        "Média de Captura por Viagem: ", MediaKGMesViagem, "kg <br>"
       ),
       hoverlabel = list(
         font = list(
@@ -1823,11 +1833,11 @@ server <- function(input, output, session) {
       hoverinfo = "text",
       y = ~Cacao_azul,
       name = "Tubarão Azul",
-      fillcolor = "#4363D8",
+      fillcolor = "#377EB8",
       text = ~paste(
         " Espécie: ", 'Tubarão azul', "<br>",
         "Data: ", mes_ano, "<br>",
-        "Média de KG: ", Cacao_azul, "<br>"
+        "Média de Captura por Viagem: ", Cacao_azul, "kg <br>"
       )
     )
     if(any(names(data_wide_filtrado) == "Albacora_bandolim")) {
@@ -1835,11 +1845,11 @@ server <- function(input, output, session) {
         add_trace(
           y = ~Albacora_bandolim,
           name = "Albacora bandolim",
-          fillcolor = "#F032E6",
+          fillcolor = "#F781BF",
           text = ~paste(
             " Espécie: ", 'Albacora bandolim', "<br>",
             "Data: ", mes_ano, "<br>",
-            "Média de KG: ", Albacora_bandolim, "<br>"
+            "Média de Captura por Viagem: ", Albacora_bandolim, "kg <br>"
           )
         )
     }
@@ -1848,11 +1858,11 @@ server <- function(input, output, session) {
         add_trace(
           y = ~Albacora_branca,
           name = 'Albacora branca',
-          fillcolor = '#E6194B',
+          fillcolor = '#E41A1C',
           text = ~paste(
             " Espécie: ", 'Albacora branca', "<br>",
             "Data: ", mes_ano, "<br>",
-            "Média de KG: ", Albacora_branca, "<br>"
+            "Média de Captura por Viagem: ", Albacora_branca, "kg <br>"
           )
         )
     }
@@ -1861,11 +1871,11 @@ server <- function(input, output, session) {
         add_trace(
           y = ~Albacora_lage,
           name = 'Albacora lage',
-          fillcolor = '#3CB44B',
+          fillcolor = '#4DAF4A',
           text = ~paste(
             " Espécie: ", 'Albacora lage', "<br>",
             "Data: ", mes_ano, "<br>",
-            "Média de KG: ", Albacora_lage, "<br>"
+            "Média de Captura por Viagem: ", Albacora_lage, "kg <br>"
           )
         )
     }
@@ -1874,11 +1884,11 @@ server <- function(input, output, session) {
         add_trace(
           y = ~Cacao_anequim,
           name = 'Cação anequim',
-          fillcolor = '#FFE119',
+          fillcolor = '#984EA3',
           text = ~paste(
             " Espécie: ", 'Cação anequim', "<br>",
             "Data: ", mes_ano, "<br>",
-            "Média de KG: ", Cacao_anequim, "<br>"
+            "Média de Captura por Viagem: ", Cacao_anequim, "kg <br>"
           )
         )
     }
@@ -1887,11 +1897,11 @@ server <- function(input, output, session) {
         add_trace(
           y = ~Meca,
           name = 'Meca',
-          fillcolor = '#911EB4',
+          fillcolor = '#FFFF33',
           text = ~paste(
             " Espécie: ", 'Meca', "<br>",
             "Data: ", mes_ano, "<br>",
-            "Média de KG: ", Meca, "<br>"
+            "Média de Captura por Viagem: ", Meca, "kg <br>"
           )
         )
     }
@@ -1900,11 +1910,11 @@ server <- function(input, output, session) {
         add_trace(
           y = ~Outros,
           name = 'Outros',
-          fillcolor = '#F58231',
+          fillcolor = '#FF7F00',
           text = ~paste(
             " Espécie: ", 'Outros', "<br>",
             "Data: ", mes_ano, "<br>",
-            "Média de KG: ", Outros, "<br>"
+            "Média de Captura por Viagem: ", Outros, "kg <br>"
           )
         )
     }
@@ -1913,11 +1923,11 @@ server <- function(input, output, session) {
         add_trace(
           y = ~Prego,
           name = 'Prego',
-          fillcolor = '#42D4F4',
+          fillcolor = '#A65628',
           text = ~paste(
             " Espécie: ", 'Prego', "<br>",
             "Data: ", mes_ano, "<br>",
-            "Média de KG: ", Prego, "<br>"
+            "Média de Captura por Viagem: ", Prego, "kg <br>"
           )
         )
     }
@@ -1946,7 +1956,8 @@ server <- function(input, output, session) {
   dados_desembarque_calor <- reactive({
     # Filtrando as Espécies 
     dados_aux <- subset(
-      dados_ajustados, CATEGORIA %in% union(input$especies_desembarque, "Cacao_azul")
+      dados_ajustados, CATEGORIA %in% union(
+        input$especies_desembarque, "Cacao_azul")
     )
     # Filtrando o Intervalo de Anos
     dados_aux <- subset(
@@ -1992,7 +2003,7 @@ server <- function(input, output, session) {
       text = ~paste(
         " Mês: ", mes_nome, "<br>",
         "Categoria: ", CATEGORIA, "<br>",
-        "Média de KG por Viagem: ", Media_KG, "<br>"
+        "Média de Captura por Viagem: ", Media_KG, "kg <br>"
       )
     ) %>%
       layout(
@@ -2283,7 +2294,7 @@ server <- function(input, output, session) {
       porcentagem menor de capturas são representadas em tons mais claros de 
       verde, enquanto áreas com uma porcentagem maior são exibidas em tons mais 
       escuros de roxo. Isso permite visualizar facilmente as áreas com maior e
-      menor concentração de capturas.")
+      menor média de concentração de capturas.")
     } else if (input$mapa_cap_esp == "Viagens") {
       p("Este mapa de calor mostra a localização das viagens, onde a cor dos 
       círculos varia de verde a roxo, indicando a porcentagem de viagens em cada
@@ -2342,9 +2353,12 @@ server <- function(input, output, session) {
 # Distribuição de Comprimentos --------------------------------------------
 
   dados_falsos_filtro <- reactive({
-    subset(dados_falsos, Sexo %in% input$sexo_comprimento)
+    if (input$sexo_comprimento == "Todos") {
+      dados_falsos
+    } else {
+      dados_falsos[dados_falsos$Sexo == input$sexo_comprimento, ]
+    }
   })
-  
   
   output$histograma_comprimento <- renderPlotly({
     plot_ly(
@@ -2373,7 +2387,6 @@ server <- function(input, output, session) {
     plot_ly(
       data = dados_falsos_filtro(),
       y = ~IDL,
-      # x = ~Sexo,
       type = "box",
       marker = list(color = "primary")
     ) %>% 
@@ -2407,9 +2420,8 @@ server <- function(input, output, session) {
       }
       
       datatable(
-        # notificacoes[, !names(notificacoes) %in% c("TextoOpcional", "Link")],
         tabela_filtrada[, !names(tabela_filtrada) %in% c(
-          "DiasRestantes"#, "Data do Desembarque"
+          "DiasRestantes", "Status"
           )],
         rownames = FALSE,
         filter = "none",
@@ -2422,8 +2434,8 @@ server <- function(input, output, session) {
           columnDefs = list(
             list(className = 'dt-center', targets = "_all")  # Centraliza o texto
           ),
-          order = list(list(4, 'desc'))
-          # order = list(list(3, 'desc'))
+          # order = list(list(4, 'desc'))
+          order = list(list(3, 'desc'))
         ),
         class = "cell-border stripe hover",
         selection = "single"
@@ -2437,47 +2449,6 @@ server <- function(input, output, session) {
           params = list("pt-BR")
           )
     })
-  
-  # observeEvent(input$tabela_embarcacoes_rows_selected, {
-  #   i <- input$tabela_embarcacoes_rows_selected
-  #   if (length(i) == 1) {
-  #     # Verifica se há link disponível e cria o título do modal
-  #     title_text <- paste("Detalhes da Embarcação", notificacoes$id[i])
-  #     title_text <- tags$a(
-  #       title_text,
-  #       href = notificacoes$Link[i],
-  #       target = "_blank"
-  #       )
-  #     
-  #     # Verifica se há informações extras disponíveis
-  #     info_extra <- if(!is.na(notificacoes$TextoOpcional[i])){
-  #       tags$span(
-  #         paste(
-  #           "Texto:"
-  #         ),
-  #         br(),
-  #         paste(
-  #           notificacoes$TextoOpcional[i]
-  #         )
-  #       )
-  #     }
-  #     else{
-  #       tags$span(
-  #         paste(
-  #           "Não há texto adicional!"
-  #         )
-  #       )
-  #     }
-  #     
-  #     # Exibe o modal com o título e informações extras
-  #     showModal(modalDialog(
-  #       title = title_text,
-  #       info_extra,
-  #       easyClose = TRUE,
-  #       footer = NULL
-  #     ))
-  #   }
-  # })
 
   # ControlBar --------------------------------------------------------------
   
