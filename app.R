@@ -295,7 +295,6 @@ ui <- dashboardPage(
     .mapa {
     display: flex;
     width: 100%;
-    # height: calc(100vh - 145px);
     height: 60vh;
     visibility: inherit;
     position: relative;
@@ -305,7 +304,7 @@ ui <- dashboardPage(
     .graficos {
     display: flex;
     width: 100%;
-    # height: calc(50vh - 120px);
+    # height: 30vh;
     height: 40vh;
     visibility: inherit;
     position: relative;
@@ -322,11 +321,6 @@ ui <- dashboardPage(
     z-index: 100;
     }
 
-    # .boxSliders {
-    #   min-height: calc(75vh - 20px);
-    #   height: 100%;
-    # }
-
     .direct-chat-contacts {
       z-index: 100 !important;
     }
@@ -338,21 +332,6 @@ ui <- dashboardPage(
     
     .content-wrapper {
       background-color: #FFFFFF; /* cor de fundo branca */
-    }
-    
-    # #LogoPTA img {
-    #   min-width: 200px;   /* Defina a largura mínima desejada */
-    #   max-width: 400px;   /* Defina a largura máxima desejada */
-    # }
-    
-    # .box-header .box-title{
-    #   font-size: 18px;
-    #   # font-size: 15px;
-    #   # Tentar alinhar o título, mas ver o que é melhor
-    # }
-    
-    #loginDropdown .dropdown-menu {
-      background-color: rgba(255, 255, 255, 0.6) !important;
     }
     
     .box-header {
@@ -387,17 +366,6 @@ ui <- dashboardPage(
       overflow: auto;
       height: 76vh;
     }
-    
-    # .col-sm-6 {
-    #   width: 50%;
-    #   padding-right: 5px;
-    #   padding-left: 5px;
-    # }
-    # 
-    # .col-sm-12 {
-    #   padding-right: 5px;
-    #   padding-left: 5px;
-    # }
                               ')
                          )
               ),
@@ -415,7 +383,7 @@ ui <- dashboardPage(
               width = 5,
               infoBox(
                 title = tags$div(
-                  p("Tubarões Medidos"),
+                  h6("Tubarões Medidos"),
                   style = "display: block; text-align: center;"
                 ),
                 # title = "Tubarões Medidos",
@@ -435,7 +403,7 @@ ui <- dashboardPage(
               width = 5,
               infoBox(
                 title = tags$div(
-                  p("Entrevista de Desembarque"),
+                  h6("Entrevista de Desembarque"),
                   style = "display: block; text-align: center;"
                 ),
                 # title = "Entrevista de Desembarque",
@@ -456,7 +424,7 @@ ui <- dashboardPage(
               width = 5,
               infoBox(
                 title = tags$div(
-                  p("Cadernos de Bordo"),
+                  h6("Cadernos de Bordo"),
                   style = "display: block; text-align: center;"
                 ),
                 # title = "Cadernos de Bordo",
@@ -475,7 +443,7 @@ ui <- dashboardPage(
               width = 5,
               infoBox(
                 title = tags$div(
-                  p("Embarcações Monitoradas"),
+                  h6("Embarcações Monitoradas"),
                   style = "display: block; text-align: center;"
                 ),
                 fill = TRUE,
@@ -497,14 +465,6 @@ ui <- dashboardPage(
                 style = "text-align: center;",
                 imageOutput("LogoPTA", height = "100%")
               )
-              # div(
-              #   style = "text-align: center;",
-              #   tags$a(
-              #     href = "https://demersais.furg.br/projeto-tubarão-azul.html",
-              #     target = "_blank",
-              #     imageOutput("LogoPTA", width = "100%", height = "100%")
-              #   )
-              # )
             )
           ),
           fluidRow(
@@ -523,7 +483,6 @@ ui <- dashboardPage(
                 style = "text-align:center;",
                 h4("Como surgiu o Projeto Tubarão Azul?")
               ),
-              # h4("Como surgiu o Projeto Tubarão Azul?")
               # Cria uma tag que define um parágrafo de texto 
               tags$div(
                 style = "text-align:justify;",
@@ -1623,7 +1582,7 @@ server <- function(input, output, session) {
         xaxis = list(
           title = "Mês",
           categoryorder = "category descending",
-          tickvals = unique(dados_BarraTubOutros()$MES), 
+          tickvals = unique(dados_BarraTubOutros()$MES),
           ticktext = unique(dados_BarraTubOutros()$MES)
         ),
         margin = list(t = 10, b = 40, l = 20, r = 20)
@@ -1655,7 +1614,7 @@ server <- function(input, output, session) {
       y = ~ANO,
       z = ~Quantidade,
       type = "heatmap",
-      colorscale = "Viridis",
+      colorscale = "Plasma",
       hoverinfo = "text",
       text = ~paste(
         " Mês: ", mes_nome, "<br>",
@@ -2061,7 +2020,7 @@ server <- function(input, output, session) {
     
     # Criar a paleta de cores com base nos intervalos
     pal <- colorQuantile(
-      palette = "viridis",
+      palette = "Blues",
       domain = tab01$prod,
       probs = seq(0, 1, 0.1)
     )
@@ -2145,7 +2104,7 @@ server <- function(input, output, session) {
     }
     
     pal <- colorQuantile(
-      palette = "viridis",
+      palette = "Blues",
       domain = tab01$prod2,
       probs = seq(0, 1, 0.1)
     )
@@ -2211,7 +2170,7 @@ server <- function(input, output, session) {
     }
     
     pal <- colorQuantile(
-      palette = "viridis",
+      palette = "Blues",
       domain = tab01$viagem,
       probs = seq(0, 1, 0.1)
     )
